@@ -4,10 +4,16 @@ import * as user from "../firebaseAuth/user";
 import LogInComponent from "./LogInComponent";
 import SignUpComponent from "./SignUpComponent";
 import { signInWithEmailPassword, signUpWithEmailPassword } from "../firebaseAuth/email";
+import { firebaseAuth } from "../firebase";
 
 const AccountComponent = () => {
   const [signUpActive, setSignUpActive] = useState(true);
   const [isLoggedIn, setIsLoggedIn] = useState(user.isLoggedIn()); // bodging in action
+
+  firebaseAuth.onAuthStateChanged((user) => {
+    // set isLoggedIn to true if user is logged in
+    user ? setIsLoggedIn(true) : setIsLoggedIn(false);
+  });
 
   const changeSignUpActive = () => {
     setSignUpActive(!signUpActive);
@@ -16,18 +22,15 @@ const AccountComponent = () => {
   const handleSubmitLogIn = (e) => {
     e.preventDefault();
     signInWithEmailPassword(e.target.email.value, e.target.password.value);
-    setIsLoggedIn(true);
   };
 
   const handleSubmitSignUp = (e) => {
     e.preventDefault();
     signUpWithEmailPassword(e.target.email.value, e.target.password.value);
-    setIsLoggedIn(true);
   };
 
   const handleLogOut = () => {
     user.signOut();
-    setIsLoggedIn(false);
   };
 
   return (
