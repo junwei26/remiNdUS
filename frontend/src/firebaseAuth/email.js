@@ -10,8 +10,7 @@ export function signInWithEmailPassword(email, password) {
     .then((userCredential) => {
       // Signed in
       var user = userCredential.user;
-      alert(`Signed in as user ${user}`);
-      alert("You have successfully logged in!");
+      alert(`Successfully logged in as user ${user.displayName}!`);
       // ...
     })
     .catch((error) => {
@@ -63,4 +62,17 @@ export function sendPasswordReset(email) {
       prompt(`Error: Unable to send password reset with error code ${errorCode}. ${errorMessage}`);
     });
   // [END auth_send_password_reset]
+}
+
+export function confirmPasswordReset(code, newPassword) {
+  firebaseAuth
+    .confirmPasswordReset(code, newPassword)
+    .then(() => {
+      alert("Password successfully reset");
+    })
+    .catch((error) => {
+      var errorCode = error.code;
+      var errorMessage = error.message;
+      prompt(`Error: Unable to confirm password reset ${errorCode}. ${errorMessage}`);
+    });
 }

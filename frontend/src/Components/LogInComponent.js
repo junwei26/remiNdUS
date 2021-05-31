@@ -2,6 +2,7 @@ import React from "react";
 import PropTypes from "prop-types";
 import { TextField, Button } from "@material-ui/core";
 import { makeStyles } from "@material-ui/core/styles";
+import { signInWithEmailPassword } from "../firebaseAuth/email";
 
 const classes = makeStyles((theme) => ({
   root: {
@@ -12,12 +13,17 @@ const classes = makeStyles((theme) => ({
   },
 }));
 
-const LogInComponent = (props) => {
+const LogInComponent = () => {
   // const [email, setEmail] = useState("Example@domain.com");
   // const [password, setPassword] = useState("password");
 
+  const handleSubmitLogIn = (e) => {
+    e.preventDefault();
+    signInWithEmailPassword(e.target.email.value, e.target.password.value);
+  };
+
   return (
-    <form className={classes.root} noValidate autoComplete="off" onSubmit={props.onSubmit}>
+    <form className={classes.root} noValidate autoComplete="off" onSubmit={handleSubmitLogIn}>
       <div>
         <TextField
           required
@@ -26,7 +32,6 @@ const LogInComponent = (props) => {
           label="Email"
           defaultValue="test@domain.com"
           variant="filled"
-          // onChange={setEmail}
         />
       </div>
       <div>
@@ -37,7 +42,6 @@ const LogInComponent = (props) => {
           type="password"
           autoComplete="current-password"
           variant="filled"
-          // onChange={setPassword}
         />
       </div>
       <div>

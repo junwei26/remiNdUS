@@ -1,14 +1,14 @@
 import React, { useState } from "react";
 import { Button, Grid } from "@material-ui/core";
-import * as user from "../firebaseAuth/user";
+import * as userSettings from "../firebaseAuth/userSettings";
 import LogInComponent from "./LogInComponent";
 import SignUpComponent from "./SignUpComponent";
-import { signInWithEmailPassword, signUpWithEmailPassword } from "../firebaseAuth/email";
 import { firebaseAuth } from "../firebase";
+import UserInfoComponent from "./UserSettings/UserInfoComponent";
 
 const AccountComponent = () => {
   const [signUpActive, setSignUpActive] = useState(true);
-  const [isLoggedIn, setIsLoggedIn] = useState(user.isLoggedIn()); // bodging in action
+  const [isLoggedIn, setIsLoggedIn] = useState(userSettings.isLoggedIn()); // bodging in action, probably
 
   firebaseAuth.onAuthStateChanged((user) => {
     // set isLoggedIn to true if user is logged in
@@ -19,39 +19,29 @@ const AccountComponent = () => {
     setSignUpActive(!signUpActive);
   };
 
-  const handleSubmitLogIn = (e) => {
-    e.preventDefault();
-    signInWithEmailPassword(e.target.email.value, e.target.password.value);
-  };
-
-  const handleSubmitSignUp = (e) => {
-    e.preventDefault();
-    signUpWithEmailPassword(e.target.email.value, e.target.password.value);
-  };
-
   const handleLogOut = () => {
-    user.signOut();
+    userSettings.signOut();
   };
 
   return (
     <>
       {isLoggedIn ? (
+        // If User is logged in, then welcome to the app, allow log out and show user profile detail
         <Grid container direction="row" justify="center" alignItems="center">
           <div>Welcome to the app</div>
           <Button onClick={handleLogOut} variant="contained" color="primary">
             Log Out
           </Button>
+          <UserInfoComponent />
         </Grid>
       ) : (
+        // If User is not logged in, then show either sign up or log in component/option
         <Grid container direction="row" justify="center" alignItems="center">
-          <Button onClick={changeSignUpActive} variant="contained">
-            {signUpActive ? "Log In" : "Sign Up"}{" "}
+          {/* Need to change to different links instead, replace with <a> and work it out into different pages instead of just conditional rendering */}
+          <Button onClick={changeSignUpActive}>
+            {signUpActive ? "Click here to log in" : "Click here to sign up"}{" "}
           </Button>
-          {signUpActive ? (
-            <SignUpComponent onSubmit={handleSubmitSignUp} />
-          ) : (
-            <LogInComponent onSubmit={handleSubmitLogIn} />
-          )}
+          {signUpActive ? <SignUpComponent /> : <LogInComponent />}
         </Grid>
       )}
     </>
