@@ -5,12 +5,20 @@ import PropTypes from "prop-types";
 const DisplayUserInfo = (props) => {
   return (
     <>
-      <Grid container direction="row" justify="center" alignItems="center">
-        <div>Name: {props.name}</div>
-        <div>email: {props.email}</div>
-        <div>photoUrl: {props.photoUrl}</div>
-        <div>emailVerified: {props.emailVerified}</div>
-        <div>uid: {props.uid}</div>
+      <Grid
+        container
+        direction="column"
+        justify="center"
+        alignItems="flex-start"
+        style={{
+          width: "25%",
+        }}
+      >
+        <Grid item>Name: {props.name}</Grid>
+        <Grid item>email: {props.email}</Grid>
+        <Grid item>photoUrl: {props.photoUrl}</Grid>
+        <Grid item>emailVerified: {props.emailVerified}</Grid>
+        <Grid item>uid: {props.uid}</Grid>
       </Grid>
     </>
   );

@@ -27,7 +27,14 @@ const AccountComponent = () => {
     <>
       {isLoggedIn ? (
         // If User is logged in, then welcome to the app, allow log out and show user profile detail
-        <Grid container direction="row" justify="center" alignItems="center">
+        <Grid
+          container
+          spacing={0}
+          direction="column"
+          alignItems="center"
+          justify="center"
+          style={{ minHeight: "50vh" }}
+        >
           <div>Welcome to the app</div>
           <Button onClick={handleLogOut} variant="contained" color="primary">
             Log Out
@@ -36,7 +43,14 @@ const AccountComponent = () => {
         </Grid>
       ) : (
         // If User is not logged in, then show either sign up or log in component/option
-        <Grid container direction="row" justify="center" alignItems="center">
+        <Grid
+          container
+          spacing={0}
+          direction="column"
+          alignItems="center"
+          justify="center"
+          style={{ minHeight: "50vh" }}
+        >
           {/* Need to change to different links instead, replace with <a> and work it out into different pages instead of just conditional rendering */}
           <Button onClick={changeSignUpActive}>
             {signUpActive ? "Click here to log in" : "Click here to sign up"}{" "}
