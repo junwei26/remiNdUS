@@ -1,7 +1,7 @@
 import React from "react";
 import PropTypes from "prop-types";
 import { Button, Grid, TextField } from "@material-ui/core";
-import { sendPasswordReset } from "../../firebaseAuth/email";
+import { sendPasswordReset } from "../../../../firebaseAuth/email";
 
 // Change to a pop-up in the future
 
