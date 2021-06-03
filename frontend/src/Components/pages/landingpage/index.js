@@ -1,12 +1,11 @@
 import React, { useState } from "react";
 import { Button, Grid } from "@material-ui/core";
-import * as userSettings from "../firebaseAuth/userSettings";
-import LogInComponent from "./LogInComponent";
-import SignUpComponent from "./SignUpComponent";
-import { firebaseAuth } from "../firebase";
-import UserInfoComponent from "./UserSettings/UserInfoComponent";
+import * as userSettings from "../../../firebaseAuth/userSettings";
+import LogInComponent from "./login";
+import SignUpComponent from "./signup";
+import { firebaseAuth } from "../../../firebase";
 
-const AccountComponent = () => {
+const LandingPage = () => {
   const [signUpActive, setSignUpActive] = useState(true);
   const [isLoggedIn, setIsLoggedIn] = useState(userSettings.isLoggedIn()); // bodging in action, probably
 
@@ -32,7 +31,6 @@ const AccountComponent = () => {
           <Button onClick={handleLogOut} variant="contained" color="primary">
             Log Out
           </Button>
-          <UserInfoComponent />
         </Grid>
       ) : (
         // If User is not logged in, then show either sign up or log in component/option
@@ -48,4 +46,4 @@ const AccountComponent = () => {
   );
 };
 
-export default AccountComponent;
+export default LandingPage;

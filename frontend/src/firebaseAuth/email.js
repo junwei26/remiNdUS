@@ -3,6 +3,8 @@
 // ensuring sample correctness offline.
 import { firebaseAuth } from "../firebase";
 
+const { REACT_APP_URL } = process.env;
+
 export function signInWithEmailPassword(email, password) {
   // [START auth_signin_password]
   firebaseAuth
@@ -11,6 +13,7 @@ export function signInWithEmailPassword(email, password) {
       // Signed in
       var user = userCredential.user;
       alert(`Successfully logged in as user ${user.displayName}!`);
+      window.location.replace(REACT_APP_URL + "/dashboard");
       // ...
     })
     .catch((error) => {
@@ -29,6 +32,7 @@ export function signUpWithEmailPassword(email, password) {
       // Signed in
       var user = userCredential.user;
       alert(`Signed up as user ${user}`);
+      window.location.replace(REACT_APP_URL + "/dashboard");
       // ...
     })
     .catch((error) => {
