@@ -2,6 +2,8 @@ import React, { useState } from "react";
 import ChangeUserInfo from "./ChangeUserInfo";
 import DisplayUserInfo from "./DisplayUserInfo";
 import { firebaseAuth } from "../../firebase";
+import PasswordReset from "./PasswordReset";
+import { Grid } from "@material-ui/core";
 
 const UserInfoComponent = () => {
   const user = firebaseAuth.currentUser;
@@ -22,16 +24,23 @@ const UserInfoComponent = () => {
     };
 
     return (
-      <>
-        <DisplayUserInfo
-          name={name}
-          email={email}
-          photoUrl={photoUrl}
-          emailVerified={emailVerified}
-          uid={uid}
-        />
-        <ChangeUserInfo onChangeUserInfo={onChangeUserInfo} />
-      </>
+      <Grid container direction="column" justify="center" alignItems="center">
+        <Grid item>
+          <DisplayUserInfo
+            name={name}
+            email={email}
+            photoUrl={photoUrl}
+            emailVerified={emailVerified}
+            uid={uid}
+          />
+        </Grid>
+        <Grid item>
+          <ChangeUserInfo onChangeUserInfo={onChangeUserInfo} />
+        </Grid>
+        <Grid item>
+          <PasswordReset email={email} />
+        </Grid>
+      </Grid>
     );
   } else {
     return <div>No user stuff to display</div>;

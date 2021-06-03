@@ -13,8 +13,9 @@ const ChangeUserInfo = (props) => {
   };
 
   return (
-    <Grid container direction="column" justify="center" alignItems="center">
-      <form noValidate autoComplete="off" onSubmit={handleSubmitChangeUserInfo}>
+    // got some UI to fix here, with the button
+    <form noValidate autoComplete="off" onSubmit={handleSubmitChangeUserInfo}>
+      <Grid container direction="column" justify="center" alignItems="center">
         <Grid item>
           <TextField
             required
@@ -39,8 +40,8 @@ const ChangeUserInfo = (props) => {
             Submit Changes
           </Button>
         </Grid>
-      </form>
-    </Grid>
+      </Grid>
+    </form>
   );
 };
 

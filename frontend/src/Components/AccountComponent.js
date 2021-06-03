@@ -29,33 +29,57 @@ const AccountComponent = () => {
         // If User is logged in, then welcome to the app, allow log out and show user profile detail
         <Grid
           container
-          spacing={0}
           direction="column"
-          alignItems="center"
           justify="center"
+          alignItems="center"
           style={{ minHeight: "50vh" }}
         >
-          <div>Welcome to the app</div>
-          <Button onClick={handleLogOut} variant="contained" color="primary">
-            Log Out
-          </Button>
-          <UserInfoComponent />
+          <Grid
+            container
+            direction="column"
+            justify="center"
+            alignItems="center"
+            style={{
+              width: "50%",
+            }}
+          >
+            <Grid item>Welcome to the app</Grid>
+            <Grid item>
+              <Button onClick={handleLogOut} variant="contained" color="primary">
+                Log Out
+              </Button>
+            </Grid>
+            <Grid item>
+              <UserInfoComponent />
+            </Grid>
+          </Grid>
         </Grid>
       ) : (
         // If User is not logged in, then show either sign up or log in component/option
         <Grid
           container
-          spacing={0}
           direction="column"
           alignItems="center"
           justify="center"
           style={{ minHeight: "50vh" }}
         >
-          {/* Need to change to different links instead, replace with <a> and work it out into different pages instead of just conditional rendering */}
-          <Button onClick={changeSignUpActive}>
-            {signUpActive ? "Click here to log in" : "Click here to sign up"}{" "}
-          </Button>
-          {signUpActive ? <SignUpComponent /> : <LogInComponent />}
+          <Grid
+            container
+            direction="column"
+            justify="center"
+            alignItems="center"
+            style={{
+              width: "50%",
+            }}
+          >
+            {/* Need to change to different links instead, replace with <a> and work it out into different pages instead of just conditional rendering */}
+            <Grid item>
+              <Button onClick={changeSignUpActive}>
+                {signUpActive ? "Click here to log in" : "Click here to sign up"}{" "}
+              </Button>
+            </Grid>
+            <Grid item>{signUpActive ? <SignUpComponent /> : <LogInComponent />}</Grid>
+          </Grid>
         </Grid>
       )}
     </>

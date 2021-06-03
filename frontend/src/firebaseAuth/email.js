@@ -28,7 +28,9 @@ export function signUpWithEmailPassword(email, password) {
     .then((userCredential) => {
       // Signed in
       var user = userCredential.user;
-      alert(`Signed up as user ${user}`);
+      // Send email verification
+      sendEmailVerification(email);
+      alert(`Signed up as user ${user}. Please check your email for email verification.`);
       // ...
     })
     .catch((error) => {
@@ -54,7 +56,7 @@ export function sendPasswordReset(email) {
     .sendPasswordResetEmail(email)
     .then(() => {
       // Password reset email sent!
-      alert("Password reset email sent!");
+      alert("Password reset email sent.");
     })
     .catch((error) => {
       var errorCode = error.code;
