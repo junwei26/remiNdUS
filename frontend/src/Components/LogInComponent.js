@@ -1,6 +1,6 @@
 import React from "react";
 import PropTypes from "prop-types";
-import { TextField, Button } from "@material-ui/core";
+import { TextField, Button, Grid } from "@material-ui/core";
 import { makeStyles } from "@material-ui/core/styles";
 import { signInWithEmailPassword } from "../firebaseAuth/email";
 
@@ -24,31 +24,33 @@ const LogInComponent = () => {
 
   return (
     <form className={classes.root} noValidate autoComplete="off" onSubmit={handleSubmitLogIn}>
-      <div>
-        <TextField
-          required
-          id="filled-required"
-          name="email"
-          label="Email"
-          defaultValue="test@domain.com"
-          variant="filled"
-        />
-      </div>
-      <div>
-        <TextField
-          id="filled-password-input"
-          name="password"
-          label="Password"
-          type="password"
-          autoComplete="current-password"
-          variant="filled"
-        />
-      </div>
-      <div>
-        <Button variant="contained" color="primary" type="submit">
-          Log In
-        </Button>
-      </div>
+      <Grid container direction="column" justify="center" alignItems="center">
+        <Grid item>
+          <TextField
+            required
+            id="filled-required"
+            name="email"
+            label="Email"
+            defaultValue="test@domain.com"
+            variant="filled"
+          />
+        </Grid>
+        <Grid item>
+          <TextField
+            id="filled-password-input"
+            name="password"
+            label="Password"
+            type="password"
+            autoComplete="current-password"
+            variant="filled"
+          />
+        </Grid>
+        <Grid item>
+          <Button variant="contained" color="primary" type="submit">
+            Log In
+          </Button>
+        </Grid>
+      </Grid>
     </form>
   );
 };
