@@ -1,8 +1,8 @@
 import React from "react";
-import AccountComponent from "./Components/AccountComponent";
+import LandingPage from "./Components/Landing Page/LandingPage";
 
 const App = () => {
-  return <AccountComponent />;
+  return <LandingPage />;
 };
 
 export default App;

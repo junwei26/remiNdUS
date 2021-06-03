@@ -61,7 +61,7 @@ export function sendPasswordReset(email) {
     .catch((error) => {
       var errorCode = error.code;
       var errorMessage = error.message;
-      prompt(`Error: Unable to send password reset with error code ${errorCode}. ${errorMessage}`);
+      alert(`Error: Unable to send password reset with error code ${errorCode}. ${errorMessage}`);
     });
   // [END auth_send_password_reset]
 }
@@ -75,6 +75,6 @@ export function confirmPasswordReset(code, newPassword) {
     .catch((error) => {
       var errorCode = error.code;
       var errorMessage = error.message;
-      prompt(`Error: Unable to confirm password reset ${errorCode}. ${errorMessage}`);
+      alert(`Error: Unable to confirm password reset ${errorCode}. ${errorMessage}`);
     });
 }
