@@ -5,6 +5,7 @@ import LogInComponent from "./LogInComponent";
 import SignUpComponent from "./SignUpComponent";
 import { firebaseAuth } from "../firebase";
 import UserInfoComponent from "./UserSettings/UserInfoComponent";
+import PasswordReset from "./UserSettings/PasswordReset";
 
 const AccountComponent = () => {
   const [signUpActive, setSignUpActive] = useState(true);
@@ -73,12 +74,31 @@ const AccountComponent = () => {
             }}
           >
             {/* Need to change to different links instead, replace with <a> and work it out into different pages instead of just conditional rendering */}
-            <Grid item>
-              <Button onClick={changeSignUpActive}>
-                {signUpActive ? "Click here to log in" : "Click here to sign up"}{" "}
-              </Button>
-            </Grid>
-            <Grid item>{signUpActive ? <SignUpComponent /> : <LogInComponent />}</Grid>
+            {signUpActive ? (
+              <>
+                <Grid item>
+                  <Button onClick={changeSignUpActive}>Click here to log in</Button>
+                </Grid>
+                <Grid item>
+                  <SignUpComponent />
+                </Grid>
+              </>
+            ) : (
+              <>
+                <Grid item>
+                  <Button onClick={changeSignUpActive}>Click here to sign up</Button>
+                </Grid>
+                {/* <Grid item>
+                  <a onClick={resetPassword}>Click here if you forgot your password</a>
+                </Grid> */}
+                <Grid item>
+                  <LogInComponent />
+                </Grid>
+                <Grid item>
+                  <PasswordReset />
+                </Grid>
+              </>
+            )}
           </Grid>
         </Grid>
       )}

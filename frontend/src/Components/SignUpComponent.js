@@ -4,6 +4,8 @@ import { TextField, Button, Grid } from "@material-ui/core";
 import { makeStyles } from "@material-ui/core/styles";
 import { signUpWithEmailPassword } from "../firebaseAuth/email";
 
+// Change to a pop-up in the future
+
 const classes = makeStyles((theme) => ({
   root: {
     "& .MuiTextField-root": {
