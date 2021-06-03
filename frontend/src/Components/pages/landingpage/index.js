@@ -1,13 +1,13 @@
 import React, { useState } from "react";
+import { firebaseAuth } from "../../../firebase";
+import * as userSettings from "../../../firebaseAuth/userSettings";
+import LogInComponent from "./login";
+import SignUpComponent from "./signup";
+import UserInfoComponent from "../usersettings";
+import PasswordReset from "../usersettings/passwordreset";
 import { Button, Grid } from "@material-ui/core";
-import * as userSettings from "../firebaseAuth/userSettings";
-import LogInComponent from "./LogInComponent";
-import SignUpComponent from "./SignUpComponent";
-import { firebaseAuth } from "../firebase";
-import UserInfoComponent from "./UserSettings/UserInfoComponent";
-import PasswordReset from "./UserSettings/PasswordReset";
 
-const AccountComponent = () => {
+const LandingPage = () => {
   const [signUpActive, setSignUpActive] = useState(true);
   const [isLoggedIn, setIsLoggedIn] = useState(userSettings.isLoggedIn()); // bodging in action, probably
 
@@ -78,4 +78,4 @@ const AccountComponent = () => {
   );
 };
 
-export default AccountComponent;
+export default LandingPage;

@@ -2,7 +2,7 @@ import React from "react";
 import PropTypes from "prop-types";
 import { TextField, Button, Grid } from "@material-ui/core";
 import { makeStyles } from "@material-ui/core/styles";
-import { signInWithEmailPassword } from "../firebaseAuth/email";
+import { signInWithEmailPassword } from "../../../../firebaseAuth/email";
 
 // Change to a pop-up in the future
 
@@ -16,9 +16,6 @@ const classes = makeStyles((theme) => ({
 }));
 
 const LogInComponent = () => {
-  // const [email, setEmail] = useState("Example@domain.com");
-  // const [password, setPassword] = useState("password");
-
   const handleSubmitLogIn = (e) => {
     e.preventDefault();
     signInWithEmailPassword(e.target.email.value, e.target.password.value);

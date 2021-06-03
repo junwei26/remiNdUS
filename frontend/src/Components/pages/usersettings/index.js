@@ -1,13 +1,12 @@
 import React, { useState } from "react";
-import ChangeUserInfo from "./ChangeUserInfo";
-import DisplayUserInfo from "./DisplayUserInfo";
-import { firebaseAuth } from "../../firebase";
-import PasswordReset from "./PasswordReset";
+import ChangeUserInfo from "./changeuserinfo";
+import DisplayUserInfo from "./displayuserinfo";
+import { firebaseAuth } from "../../../firebase";
+import PasswordReset from "./passwordreset";
 import { Grid } from "@material-ui/core";
 
 const UserInfoComponent = () => {
   const user = firebaseAuth.currentUser;
-
   if (user != null) {
     const [name, setName] = useState(user.displayName);
     const [email, setEmail] = useState(user.email);

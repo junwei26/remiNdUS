@@ -2,7 +2,7 @@ import React from "react";
 import PropTypes from "prop-types";
 import { TextField, Button, Grid } from "@material-ui/core";
 import { makeStyles } from "@material-ui/core/styles";
-import { signUpWithEmailPassword } from "../firebaseAuth/email";
+import { signUpWithEmailPassword } from "../../../../firebaseAuth/email";
 
 // Change to a pop-up in the future
 
