@@ -1,19 +1,7 @@
 import React from "react";
 import PropTypes from "prop-types";
 import { TextField, Button, Grid } from "@material-ui/core";
-import { makeStyles } from "@material-ui/core/styles";
 import { signInWithEmailPassword } from "../../../../firebaseAuth/email";
-
-// Change to a pop-up in the future
-
-const classes = makeStyles((theme) => ({
-  root: {
-    "& .MuiTextField-root": {
-      margin: theme.spacing(1),
-      width: "25ch",
-    },
-  },
-}));
 
 const LogInComponent = () => {
   const handleSubmitLogIn = (e) => {
@@ -22,30 +10,33 @@ const LogInComponent = () => {
   };
 
   return (
-    <form className={classes.root} noValidate autoComplete="off" onSubmit={handleSubmitLogIn}>
-      <Grid container direction="column" justify="center" alignItems="center">
+    <form noValidate autoComplete="off" onSubmit={handleSubmitLogIn}>
+      <Grid container direction="column" justify="center" alignItems="center" spacing={2}>
         <Grid item>
           <TextField
+            variant="outlined"
             required
-            id="filled-required"
+            fullWidth
             name="email"
             label="Email"
-            defaultValue="test@domain.com"
-            variant="filled"
+            color="primary"
+            autofocus
           />
         </Grid>
         <Grid item>
           <TextField
-            id="filled-password-input"
+            variant="outlined"
+            required
+            fullWidth
             name="password"
             label="Password"
             type="password"
             autoComplete="current-password"
-            variant="filled"
+            color="primary"
           />
         </Grid>
         <Grid item>
-          <Button variant="contained" color="primary" type="submit">
+          <Button type="submit" fullWidth variant="contained" color="primary">
             Log In
           </Button>
         </Grid>
