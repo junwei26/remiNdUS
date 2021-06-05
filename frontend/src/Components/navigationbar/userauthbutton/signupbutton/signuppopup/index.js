@@ -1,12 +1,12 @@
 import React from "react";
 import PropTypes from "prop-types";
 import { TextField, Button, Grid, Card } from "@material-ui/core";
-import { signInWithEmailPassword } from "../../../../firebaseAuth/email";
+import { signUpWithEmailPassword } from "../../../../../firebaseAuth/email";
 
-const LoginPopup = (props) => {
-  const handleSubmitLogIn = (e) => {
+const SignUpPopup = (props) => {
+  const handleSubmitSignUp = (e) => {
     e.preventDefault();
-    signInWithEmailPassword(e.target.email.value, e.target.password.value);
+    signUpWithEmailPassword(e.target.email.value, e.target.password.value);
   };
 
   return (
@@ -16,20 +16,12 @@ const LoginPopup = (props) => {
         <Grid item>
           <Button onClick={props.close}>X</Button>
         </Grid>
-        {/* Login form */}
+        {/* Signup form */}
         <Grid item>
-          <form noValidate autoComplete="off" onSubmit={handleSubmitLogIn}>
+          <form noValidate autoComplete="off" onSubmit={handleSubmitSignUp}>
             <Grid container direction="column" justify="center" alignItems="center" spacing={2}>
               <Grid item>
-                <TextField
-                  variant="outlined"
-                  required
-                  fullWidth
-                  name="email"
-                  label="Email"
-                  color="primary"
-                  autofocus
-                />
+                <TextField variant="outlined" required fullWidth name="email" label="Email" />
               </Grid>
               <Grid item>
                 <TextField
@@ -40,12 +32,11 @@ const LoginPopup = (props) => {
                   label="Password"
                   type="password"
                   autoComplete="current-password"
-                  color="primary"
                 />
               </Grid>
               <Grid item>
                 <Button type="submit" fullWidth variant="contained" color="primary">
-                  Log In
+                  Sign Up
                 </Button>
               </Grid>
             </Grid>
@@ -56,8 +47,8 @@ const LoginPopup = (props) => {
   );
 };
 
-LoginPopup.propTypes = {
+SignUpPopup.propTypes = {
   close: PropTypes.func,
 };
 
-export default LoginPopup;
+export default SignUpPopup;

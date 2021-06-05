@@ -2,7 +2,7 @@ import React, { useState } from "react";
 import ChangeUserInfo from "./changeuserinfo";
 import DisplayUserInfo from "./displayuserinfo";
 import { firebaseAuth } from "../../../firebase";
-import PasswordReset from "./passwordreset";
+import PasswordReset from "../../navigationbar/userauthbutton/passwordreset";
 import { Grid } from "@material-ui/core";
 
 const SettingsPage = () => {

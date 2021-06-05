@@ -1,32 +1,20 @@
 import React, { useState } from "react";
-// import LogInPopup from "./loginpopup";
-// import SignUpPopup from "./signuppopup";
-// import PasswordReset from "../pages/settingspage/passwordreset";
 import { firebaseAuth } from "../../firebase";
 import * as userSettings from "../../firebaseAuth/userSettings";
-// import { Button, Grid, AppBar, Toolbar, Menu, MenuItem } from "@material-ui/core";
-// import SettingsPage from "../pages/settingspage";
 import { AppBar, Toolbar, Typography } from "@material-ui/core";
-import LoginButton from "./loginbutton";
 import SettingsButton from "./settingsbutton";
-// import SignupButton from "./signupbutton";
+import UserAuthButton from "./userauthbutton";
 
 // const { REACT_APP_URL } = process.env;
 
 const NavigationBar = () => {
-  const [isLoggedIn, setIsLoggedIn] = useState(userSettings.isLoggedIn()); // bodging in action, probably
-  // const [signUpActive, setSignUpActive] = useState(true);
+  const [isLoggedIn, setIsLoggedIn] = useState(userSettings.isLoggedIn());
   // const [anchorEl, setAnchorEl] = React.useState(null);
 
   firebaseAuth.onAuthStateChanged((user) => {
     // set isLoggedIn to true if user is logged in
     user ? setIsLoggedIn(true) : setIsLoggedIn(false);
   });
-
-  // const changeSignUpActive = () => {
-  //   setSignUpActive(!signUpActive);
-  // };
-
   // const handleLogOut = () => {
   //   userSettings.signOut();
   // };
@@ -48,7 +36,7 @@ const NavigationBar = () => {
       <Toolbar>
         <Typography variant="h6">Navigation Bar</Typography>
 
-        {isLoggedIn ? <SettingsButton /> : <LoginButton />}
+        {isLoggedIn ? <SettingsButton /> : <UserAuthButton />}
       </Toolbar>
     </AppBar>
   );
