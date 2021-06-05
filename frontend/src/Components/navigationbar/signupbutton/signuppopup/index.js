@@ -1,24 +1,47 @@
 import React from "react";
 import PropTypes from "prop-types";
+import { makeStyles } from "@material-ui/core/styles";
 import { TextField, Button, Grid, Card } from "@material-ui/core";
-import { signInWithEmailPassword } from "../../../../../firebaseAuth/email";
+import { signUpWithEmailPassword } from "../../../../firebaseAuth/email";
 
-const LoginPopup = (props) => {
-  const handleSubmitLogIn = (e) => {
+const useStyles = makeStyles(() => ({
+  topbar: {
+    padding: 10,
+  },
+  title: {
+    flexGrow: 1,
+  },
+}));
+
+const SignUpPopup = (props) => {
+  const classes = useStyles();
+
+  const handleSubmitSignUp = (e) => {
     e.preventDefault();
-    signInWithEmailPassword(e.target.email.value, e.target.password.value);
+    signUpWithEmailPassword(e.target.email.value, e.target.password.value);
   };
 
   return (
     <Card>
       <Grid container direction="column">
         {/* Close prompt button */}
-        <Grid item>
-          <Button onClick={props.close}>X</Button>
+        <Grid
+          container
+          className={classes.topbar}
+          direction="row"
+          justify="center"
+          alignItems="center"
+        >
+          <Grid item className={classes.title}>
+            <span>Sign Up</span>
+          </Grid>
+          <Grid item>
+            <Button onClick={props.close}>X</Button>
+          </Grid>
         </Grid>
-        {/* Login form */}
+        {/* Signup form */}
         <Grid item>
-          <form noValidate autoComplete="off" onSubmit={handleSubmitLogIn}>
+          <form noValidate autoComplete="off" onSubmit={handleSubmitSignUp}>
             <Grid container direction="column" justify="center" alignItems="center" spacing={2}>
               <Grid item>
                 <TextField
@@ -26,9 +49,9 @@ const LoginPopup = (props) => {
                   required
                   fullWidth
                   name="email"
-                  label="Email"
-                  color="primary"
-                  autofocus
+                  label="Email Address"
+                  autoComplete="email"
+                  autoFocus
                 />
               </Grid>
               <Grid item>
@@ -40,12 +63,11 @@ const LoginPopup = (props) => {
                   label="Password"
                   type="password"
                   autoComplete="current-password"
-                  color="primary"
                 />
               </Grid>
               <Grid item>
                 <Button type="submit" fullWidth variant="contained" color="primary">
-                  Log In
+                  Sign Up
                 </Button>
               </Grid>
             </Grid>
@@ -56,8 +78,8 @@ const LoginPopup = (props) => {
   );
 };
 
-LoginPopup.propTypes = {
+SignUpPopup.propTypes = {
   close: PropTypes.func,
 };
 
-export default LoginPopup;
+export default SignUpPopup;

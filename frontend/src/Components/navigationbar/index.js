@@ -2,9 +2,10 @@ import React, { useState } from "react";
 import { firebaseAuth } from "../../firebase";
 import * as userSettings from "../../firebaseAuth/userSettings";
 import { makeStyles } from "@material-ui/core/styles";
-import { AppBar, Toolbar, Typography } from "@material-ui/core";
+import { AppBar, Toolbar, Typography, Grid } from "@material-ui/core";
 import SettingsButton from "./settingsbutton";
-import UserAuthButton from "./userauthbutton";
+import SignupButton from "./signupbutton";
+import LoginButton from "./loginbutton";
 
 const useStyles = makeStyles(() => ({
   title: {
@@ -52,7 +53,14 @@ const NavigationBar = () => {
           </div>
         ) : (
           <div>
-            <UserAuthButton />
+            <Grid container direction="row" justify="center" alignItems="center">
+              <Grid item>
+                <SignupButton />
+              </Grid>
+              <Grid item>
+                <LoginButton />
+              </Grid>
+            </Grid>
           </div>
         )}
       </Toolbar>
