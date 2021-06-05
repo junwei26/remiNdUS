@@ -5,7 +5,11 @@ import SignUpPopup from "./signuppopup";
 
 const SignupButton = () => {
   return (
-    <Popup trigger={<Button color="inherit">Sign Up</Button>} style={{ width: "100%" }} modal>
+    <Popup
+      contentStyle={{ width: "400px" }}
+      trigger={<Button color="inherit">Sign Up</Button>}
+      modal
+    >
       {(close) => <SignUpPopup close={close} />}
     </Popup>
   );

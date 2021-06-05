@@ -55,10 +55,10 @@ const NavigationBar = () => {
           <div>
             <Grid container direction="row" justify="center" alignItems="center">
               <Grid item>
-                <SignupButton />
+                <LoginButton />
               </Grid>
               <Grid item>
-                <LoginButton />
+                <SignupButton />
               </Grid>
             </Grid>
           </div>

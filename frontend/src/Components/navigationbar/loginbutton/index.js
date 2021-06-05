@@ -5,7 +5,7 @@ import LoginPopup from "./loginpopup";
 
 const LoginButton = () => {
   return (
-    <Popup trigger={<Button color="inherit">Login</Button>} modal>
+    <Popup contentStyle={{ width: "400px" }} trigger={<Button color="inherit">Login</Button>} modal>
       {(close) => <LoginPopup close={close} />}
     </Popup>
   );

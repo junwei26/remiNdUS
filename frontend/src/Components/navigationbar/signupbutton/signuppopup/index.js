@@ -11,6 +11,14 @@ const useStyles = makeStyles(() => ({
   title: {
     flexGrow: 1,
   },
+  card: {
+    padding: 10,
+  },
+  close: {
+    position: "relative",
+    left: 20,
+    top: -20,
+  },
 }));
 
 const SignUpPopup = (props) => {
@@ -23,7 +31,7 @@ const SignUpPopup = (props) => {
 
   return (
     <Card>
-      <Grid container direction="column">
+      <Grid container className={classes.card} direction="column">
         {/* Close prompt button */}
         <Grid
           container
@@ -35,7 +43,7 @@ const SignUpPopup = (props) => {
           <Grid item className={classes.title}>
             <Typography>Sign Up</Typography>
           </Grid>
-          <Grid item>
+          <Grid item className={classes.close}>
             <Button onClick={props.close}>X</Button>
           </Grid>
         </Grid>
@@ -43,7 +51,7 @@ const SignUpPopup = (props) => {
         <Grid item>
           <form noValidate autoComplete="off" onSubmit={handleSubmitSignUp}>
             <Grid container direction="column" justify="center" alignItems="center" spacing={2}>
-              <Grid item>
+              <Grid item style={{ width: "80%" }}>
                 <TextField
                   variant="outlined"
                   required
@@ -54,7 +62,7 @@ const SignUpPopup = (props) => {
                   autoFocus
                 />
               </Grid>
-              <Grid item>
+              <Grid item style={{ width: "80%" }}>
                 <TextField
                   variant="outlined"
                   required
