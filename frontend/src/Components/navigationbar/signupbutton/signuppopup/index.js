@@ -1,7 +1,7 @@
 import React from "react";
 import PropTypes from "prop-types";
 import { makeStyles } from "@material-ui/core/styles";
-import { TextField, Button, Grid, Card } from "@material-ui/core";
+import { TextField, Button, Grid, Card, Typography } from "@material-ui/core";
 import { signUpWithEmailPassword } from "../../../../firebaseAuth/email";
 
 const useStyles = makeStyles(() => ({
@@ -33,7 +33,7 @@ const SignUpPopup = (props) => {
           alignItems="center"
         >
           <Grid item className={classes.title}>
-            <span>Sign Up</span>
+            <Typography>Sign Up</Typography>
           </Grid>
           <Grid item>
             <Button onClick={props.close}>X</Button>
