@@ -5,7 +5,7 @@ import { firebaseAuth } from "../../../firebase";
 import PasswordReset from "./passwordreset";
 import { Grid } from "@material-ui/core";
 
-const UserInfoComponent = () => {
+const SettingsPage = () => {
   const user = firebaseAuth.currentUser;
   if (user != null) {
     const [name, setName] = useState(user.displayName);
@@ -46,4 +46,4 @@ const UserInfoComponent = () => {
   }
 };
 
-export default UserInfoComponent;
+export default SettingsPage;
