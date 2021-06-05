@@ -1,13 +1,21 @@
 import React, { useState } from "react";
 import { firebaseAuth } from "../../firebase";
 import * as userSettings from "../../firebaseAuth/userSettings";
+import { makeStyles } from "@material-ui/core/styles";
 import { AppBar, Toolbar, Typography } from "@material-ui/core";
 import SettingsButton from "./settingsbutton";
 import UserAuthButton from "./userauthbutton";
 
+const useStyles = makeStyles(() => ({
+  title: {
+    flexGrow: 1,
+  },
+}));
+
 // const { REACT_APP_URL } = process.env;
 
 const NavigationBar = () => {
+  const classes = useStyles();
   const [isLoggedIn, setIsLoggedIn] = useState(userSettings.isLoggedIn());
   // const [anchorEl, setAnchorEl] = React.useState(null);
 
@@ -34,9 +42,19 @@ const NavigationBar = () => {
   return (
     <AppBar>
       <Toolbar>
-        <Typography variant="h6">Navigation Bar</Typography>
+        <Typography className={classes.title} variant="h6">
+          Navigation Bar
+        </Typography>
 
-        {isLoggedIn ? <SettingsButton /> : <UserAuthButton />}
+        {isLoggedIn ? (
+          <div>
+            <SettingsButton />
+          </div>
+        ) : (
+          <div>
+            <UserAuthButton />
+          </div>
+        )}
       </Toolbar>
     </AppBar>
   );
