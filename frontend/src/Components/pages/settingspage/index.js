@@ -3,6 +3,7 @@ import ChangeUserInfo from "./changeuserinfo";
 import DisplayUserInfo from "./displayuserinfo";
 import { firebaseAuth } from "../../../firebase";
 import PasswordReset from "../../navigationbar/passwordreset";
+import NavigationBar from "../../navigationbar";
 import { Grid } from "@material-ui/core";
 
 const SettingsPage = () => {
@@ -23,23 +24,34 @@ const SettingsPage = () => {
     };
 
     return (
-      <Grid container direction="column" justify="center" alignItems="center">
-        <Grid item>
-          <DisplayUserInfo
-            name={name}
-            email={email}
-            photoUrl={photoUrl}
-            emailVerified={emailVerified}
-            uid={uid}
-          />
+      <>
+        <Grid container direction="column" justify="space-between" alignItems="stretch" spacing={2}>
+          <Grid item>
+            <NavigationBar />
+          </Grid>
+          <Grid item style={{ minHeight: 300 }}>
+            <div style={{ textAlign: "center" }}>Welcome to the Settings Page</div>
+          </Grid>
         </Grid>
-        <Grid item>
-          <ChangeUserInfo onChangeUserInfo={onChangeUserInfo} />
+
+        <Grid container direction="column" justify="center" alignItems="center">
+          <Grid item>
+            <DisplayUserInfo
+              name={name}
+              email={email}
+              photoUrl={photoUrl}
+              emailVerified={emailVerified}
+              uid={uid}
+            />
+          </Grid>
+          <Grid item>
+            <ChangeUserInfo onChangeUserInfo={onChangeUserInfo} />
+          </Grid>
+          <Grid item>
+            <PasswordReset email={email} />
+          </Grid>
         </Grid>
-        <Grid item>
-          <PasswordReset email={email} />
-        </Grid>
-      </Grid>
+      </>
     );
   } else {
     return <div>No user stuff to display</div>;
