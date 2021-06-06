@@ -1,8 +1,9 @@
-import React from "react";
+import React, { useState } from "react";
 import PropTypes from "prop-types";
 import { makeStyles } from "@material-ui/core/styles";
-import { TextField, Button, Grid, Card, Typography } from "@material-ui/core";
-import { signInWithEmailPassword } from "../../../../firebaseAuth/email";
+import { Button, Grid, Card, Typography } from "@material-ui/core";
+import LoginForm from "./loginform";
+import ResetPasswordForm from "./resetpasswordform";
 
 const useStyles = makeStyles(() => ({
   topbar: {
@@ -23,64 +24,46 @@ const useStyles = makeStyles(() => ({
 
 const LoginPopup = (props) => {
   const classes = useStyles();
+  const [loginActive, setLoginActive] = useState(true);
 
-  const handleSubmitLogIn = (e) => {
-    e.preventDefault();
-    signInWithEmailPassword(e.target.email.value, e.target.password.value);
+  const flipLoginActive = () => {
+    setLoginActive(!loginActive);
   };
 
   return (
     <Card>
-      <Grid container direction="column" className={classes.card}>
+      <Grid container direction="column" className={classes.card} spacing={2}>
         {/* Close prompt button */}
-        <Grid
-          container
-          className={classes.topbar}
-          direction="row"
-          justify="center"
-          alignItems="center"
-        >
-          <Grid item className={classes.title}>
-            <Typography>Login</Typography>
-          </Grid>
-          <Grid item className={classes.close}>
-            <Button onClick={props.close}>X</Button>
+        <Grid item>
+          <Grid
+            container
+            className={classes.topbar}
+            direction="row"
+            justify="center"
+            alignItems="center"
+          >
+            <Grid item className={classes.title}>
+              <Typography>{loginActive ? "Login" : "Forgot Password"}</Typography>
+            </Grid>
+            <Grid item className={classes.close}>
+              <Button onClick={props.close}>X</Button>
+            </Grid>
           </Grid>
         </Grid>
-        {/* Login form */}
+        {/* Login or reset password form */}
         <Grid item>
-          <form noValidate onSubmit={handleSubmitLogIn}>
-            <Grid container direction="column" justify="center" alignItems="center" spacing={2}>
-              <Grid item style={{ width: "80%" }}>
-                <TextField
-                  variant="outlined"
-                  required
-                  fullWidth
-                  name="email"
-                  label="Email"
-                  color="primary"
-                  autofocus
-                />
-              </Grid>
-              <Grid item style={{ width: "80%" }}>
-                <TextField
-                  variant="outlined"
-                  required
-                  fullWidth
-                  name="password"
-                  label="Password"
-                  type="password"
-                  autoComplete="current-password"
-                  color="primary"
-                />
-              </Grid>
-              <Grid item>
-                <Button type="submit" fullWidth variant="contained" color="primary">
-                  Log In
-                </Button>
-              </Grid>
-            </Grid>
-          </form>
+          {loginActive ? (
+            <LoginForm flipLoginActive={flipLoginActive} />
+          ) : (
+            <ResetPasswordForm flipLoginActive={flipLoginActive} />
+          )}
+        </Grid>
+        <Grid item>
+          {loginActive ? (
+            <Button onClick={flipLoginActive}>Forgot password?</Button>
+          ) : (
+            <Button onClick={flipLoginActive}>Back</Button>
+          )}
         </Grid>
       </Grid>
     </Card>

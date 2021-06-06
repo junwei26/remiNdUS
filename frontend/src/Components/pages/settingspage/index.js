@@ -2,8 +2,8 @@ import React, { useState } from "react";
 import ChangeUserInfo from "./changeuserinfo";
 import DisplayUserInfo from "./displayuserinfo";
 import { firebaseAuth } from "../../../firebase";
-import PasswordReset from "../../navigationbar/passwordreset";
 import { Grid } from "@material-ui/core";
+import ResetPasswordForm from "../../navigationbar/loginbutton/loginpopup/resetpasswordform";
 
 const SettingsPage = () => {
   const user = firebaseAuth.currentUser;
@@ -40,7 +40,7 @@ const SettingsPage = () => {
             <ChangeUserInfo onChangeUserInfo={onChangeUserInfo} />
           </Grid>
           <Grid item>
-            <PasswordReset email={email} />
+            <ResetPasswordForm />
           </Grid>
         </Grid>
       </>

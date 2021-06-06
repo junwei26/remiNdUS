@@ -60,7 +60,7 @@ export function sendPasswordReset(email) {
     .sendPasswordResetEmail(email)
     .then(() => {
       // Password reset email sent!
-      alert("Password reset email sent.");
+      alert(`Password reset email sent to ${email}`);
     })
     .catch((error) => {
       var errorCode = error.code;
