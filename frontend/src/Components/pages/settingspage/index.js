@@ -3,7 +3,6 @@ import ChangeUserInfo from "./changeuserinfo";
 import DisplayUserInfo from "./displayuserinfo";
 import { firebaseAuth } from "../../../firebase";
 import PasswordReset from "../../navigationbar/passwordreset";
-import NavigationBar from "../../navigationbar";
 import { Grid } from "@material-ui/core";
 
 const SettingsPage = () => {
@@ -25,14 +24,7 @@ const SettingsPage = () => {
 
     return (
       <>
-        <Grid container direction="column" justify="space-between" alignItems="stretch" spacing={2}>
-          <Grid item>
-            <NavigationBar />
-          </Grid>
-          <Grid item style={{ minHeight: 300 }}>
-            <div style={{ textAlign: "center" }}>Welcome to the Settings Page</div>
-          </Grid>
-        </Grid>
+        <div style={{ textAlign: "center" }}>Welcome to the Settings Page</div>
 
         <Grid container direction="column" justify="center" alignItems="center">
           <Grid item>
