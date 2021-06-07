@@ -3,6 +3,8 @@
 // ensuring sample correctness offline.
 import { firebaseAuth } from "../firebase";
 
+const { REACT_APP_URL } = process.env;
+
 export function signInWithEmailPassword(email, password) {
   // [START auth_signin_password]
   firebaseAuth
@@ -11,6 +13,7 @@ export function signInWithEmailPassword(email, password) {
       // Signed in
       var user = userCredential.user;
       alert(`Successfully logged in as user ${user.displayName}!`);
+      window.location.replace(REACT_APP_URL + "/dashboard");
       // ...
     })
     .catch((error) => {
@@ -28,7 +31,10 @@ export function signUpWithEmailPassword(email, password) {
     .then((userCredential) => {
       // Signed in
       var user = userCredential.user;
-      alert(`Signed up as user ${user}`);
+      // Send email verification
+      sendEmailVerification(email);
+      alert(`Signed up as user ${user}. Please check your email for email verification.`);
+      window.location.replace(REACT_APP_URL + "/dashboard");
       // ...
     })
     .catch((error) => {
@@ -54,12 +60,12 @@ export function sendPasswordReset(email) {
     .sendPasswordResetEmail(email)
     .then(() => {
       // Password reset email sent!
-      alert("Password reset email sent!");
+      alert(`Password reset email sent to ${email}`);
     })
     .catch((error) => {
       var errorCode = error.code;
       var errorMessage = error.message;
-      prompt(`Error: Unable to send password reset with error code ${errorCode}. ${errorMessage}`);
+      alert(`Error: Unable to send password reset with error code ${errorCode}. ${errorMessage}`);
     });
   // [END auth_send_password_reset]
 }
@@ -73,6 +79,6 @@ export function confirmPasswordReset(code, newPassword) {
     .catch((error) => {
       var errorCode = error.code;
       var errorMessage = error.message;
-      prompt(`Error: Unable to confirm password reset ${errorCode}. ${errorMessage}`);
+      alert(`Error: Unable to confirm password reset ${errorCode}. ${errorMessage}`);
     });
 }

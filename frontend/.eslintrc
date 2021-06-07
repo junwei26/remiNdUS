@@ -1,20 +1,21 @@
 {
   "env": {
     "browser": true,
-    "es6": true
+    "es6": true,
+    "node": true
   },
   "extends": [
-      "eslint:recommended",
-      "plugin:react/recommended",
-      "plugin:import/errors",
-      "plugin:import/warnings",
-      "plugin:prettier/recommended"
+    "eslint:recommended",
+    "plugin:react/recommended",
+    "plugin:import/errors",
+    "plugin:import/warnings",
+    "plugin:prettier/recommended"
   ],
   "parserOptions": {
     "ecmaVersion": 2018, // Allows for the parsing of modern ECMAScript features
     "sourceType": "module", // Allows for the use of imports
     "ecmaFeatures": {
-        "jsx": true // Allows for the parsing of JSX
+      "jsx": true // Allows for the parsing of JSX
     }
   },
   "rules": {
@@ -22,7 +23,5 @@
     "no-eval": "error",
     "import/first": "error"
   },
-  "plugins": [
-    "html"
-  ]
+  "plugins": ["html"]
 }
