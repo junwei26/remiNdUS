@@ -23,4 +23,4 @@ app.use(bodyParser.urlencoded({ extended: true }));
 
 require("./src/routes/reminder.routes")(app);
 
-exports.app = functions.https.onRequest(app);
+exports.backendAPI = functions.region("asia-southeast2").https.onRequest(app);
