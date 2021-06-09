@@ -1,34 +1,6 @@
 const admin = require("firebase-admin");
 const db = admin.firestore();
 
-exports.getAll = (req, res) => {
-  var reminders = [];
-
-  db.collection("users")
-    .where("uid", "==", req.query.uid)
-    .limit(1)
-    .get()
-    .then((data) => {
-      if (data.empty) {
-        return res.status(404).send({ message: "No reminders found." });
-      }
-      data.forEach((doc) => {
-        db.collection("users")
-          .doc(doc.id)
-          .collection("reminders")
-          .where("date", "==", req.query.date)
-          .get()
-          .then((querySnapshot) => {
-            querySnapshot.forEach((reminder) => {
-              reminders.push(reminder.data());
-            });
-            res.send(reminders);
-            return res.status(200).send();
-          });
-      });
-    });
-};
-
 exports.create = (req, res) => {
   if (!req.body.uid) {
     return res.status(400).send({ message: "You must be logged in to make this operation!" });
@@ -65,4 +37,32 @@ exports.create = (req, res) => {
           })
       )
     );
+};
+
+exports.getAll = (req, res) => {
+  var reminders = [];
+
+  db.collection("users")
+    .where("uid", "==", req.query.uid)
+    .limit(1)
+    .get()
+    .then((data) => {
+      if (data.empty) {
+        return res.status(404).send({ message: "No reminders found." });
+      }
+      data.forEach((doc) => {
+        db.collection("users")
+          .doc(doc.id)
+          .collection("reminders")
+          .where("date", "==", req.query.date)
+          .get()
+          .then((querySnapshot) => {
+            querySnapshot.forEach((reminder) => {
+              reminders.push(reminder.data());
+            });
+            res.send(reminders);
+            return res.status(200).send();
+          });
+      });
+    });
 };
