@@ -6,7 +6,7 @@ import { AppBar, Toolbar, Typography, Grid, IconButton } from "@material-ui/core
 import AccountButton from "./accountbutton";
 import SignupButton from "./signupbutton";
 import LoginButton from "./loginbutton";
-import HomeIcon from "@material-ui/icons/Home";
+// import HomeIcon from "@material-ui/icons/Home";
 
 const { REACT_APP_URL } = process.env;
 
@@ -14,6 +14,8 @@ const useStyles = makeStyles((theme) => ({
   appbar: {
     margin: 0,
     flexGrow: 1,
+    position: "relative",
+    zIndex: theme.zIndex.drawer + 1,
   },
   homeButton: {
     marginRight: theme.spacing(2),
@@ -46,9 +48,7 @@ const NavigationBar = () => {
             color="inherit"
             aria-label="home"
             onClick={handleClickHome}
-          >
-            <HomeIcon />
-          </IconButton>
+          ></IconButton>
         ) : (
           <div></div>
         )}
