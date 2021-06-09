@@ -5,7 +5,7 @@ import PropTypes from "prop-types";
 const DisplayUserInfo = (props) => {
   return (
     <>
-      <Grid container direction="column" justify="center" alignItems="flex-start">
+      <Grid container direction="column" justify="center" alignItems="flex-start" spacing={2}>
         <Grid item>Name: {props.name}</Grid>
         <Grid item>Email: {props.email}</Grid>
         <Grid item>Photo URL: {props.photoUrl}</Grid>
