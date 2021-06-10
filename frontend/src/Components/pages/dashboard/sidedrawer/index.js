@@ -37,9 +37,6 @@ const useStyles = makeStyles((theme) => ({
   },
 }));
 
-const Test1 = () => {
-  return <div> Test 1</div>;
-};
 const Test2 = () => {
   return <div> Test 2</div>;
 };
@@ -57,7 +54,7 @@ const Sidedrawer = () => {
       case 2:
         return <Test2 />;
       default:
-        return <Test1 />;
+        return <WeeklyView />;
     }
   };
   const classes = useStyles();
