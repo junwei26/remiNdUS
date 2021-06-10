@@ -4,6 +4,7 @@ module.exports = (app) => {
   var router = require("express").Router();
 
   router.post("/create", settings.create);
+  router.post("/update", settings.update);
 
   router.get("/", settings.get);
 
