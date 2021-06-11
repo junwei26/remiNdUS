@@ -5,9 +5,12 @@ module.exports = (app) => {
 
   // Fetch all reminders of a specified user for a specified date
   router.get("/", reminders.getAll);
+  router.get("/get", reminders.get);
 
   // Creates a new reminder for a specified user
   router.post("/create", reminders.create);
+
+  router.post("/update", reminders.update);
 
   app.use("/api/reminder", router);
 };

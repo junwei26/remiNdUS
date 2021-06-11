@@ -72,7 +72,7 @@ exports.update = (req, res) => {
             return res.status(200).send({ message: "Successfully updated settings!" });
           })
           .catch((error) => {
-            return res.status(404).send({ message: `Error updating settings: ${error}` });
+            return res.status(404).send({ message: `Error updating settings. ${error}` });
           });
       });
     });
