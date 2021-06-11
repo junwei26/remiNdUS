@@ -46,6 +46,9 @@ exports.update = (req, res) => {
   if (!req.body.uid) {
     return res.status(400).send({ message: "You must be logged in to make this operation!" });
   }
+  if (!req.body.reminderId) {
+    return res.status(400).send({ message: "Missing Reminder ID!" });
+  }
   if (!req.body.name) {
     return res.status(400).send({ message: "Reminders must have a name!" });
   }

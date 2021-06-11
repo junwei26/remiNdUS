@@ -9,7 +9,6 @@ module.exports = (app) => {
 
   // Creates a new reminder for a specified user
   router.post("/create", reminders.create);
-
   router.post("/update", reminders.update);
 
   app.use("/api/reminder", router);
