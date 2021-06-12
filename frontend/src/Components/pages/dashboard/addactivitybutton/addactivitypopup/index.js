@@ -57,7 +57,7 @@ const AddActivityPopup = (props) => {
         alert(response.data.id);
       })
       .catch((error) => {
-        alert(`${error}`);
+        alert(`Issue creating activity. ${error}`);
       });
   };
 

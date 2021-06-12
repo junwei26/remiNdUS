@@ -2,6 +2,7 @@
 // done in HTML however using modules here is more convenient for
 // ensuring sample correctness offline.
 import { firebaseAuth } from "../firebase";
+import axios from "axios";
 
 const { REACT_APP_URL } = process.env;
 
@@ -33,7 +34,24 @@ export function signUpWithEmailPassword(email, password) {
       var user = userCredential.user;
       // Send email verification
       sendEmailVerification(email);
-      alert(`Signed up as user ${user}. Please check your email for email verification.`);
+      const userDetails = {
+        uid: user.uid,
+        username: email.substring(0, email.indexOf("@")),
+        telegramHandle: "",
+      };
+      axios
+        .post(
+          "https://asia-southeast2-remindus-76402.cloudfunctions.net/backendAPI/api/user/create/",
+          userDetails
+        ) //articleId receives the response
+        .then(() => {
+          // do nothing, success
+          // alert(response.data.id);
+        })
+        .catch((error) => {
+          alert(`Issue creating user database. Please inform the administrator ${error}`);
+        });
+      alert(`Signed up as user ${user.uid}. Please check your email for email verification.`);
       window.location.replace(REACT_APP_URL + "/dashboard");
       // ...
     })
