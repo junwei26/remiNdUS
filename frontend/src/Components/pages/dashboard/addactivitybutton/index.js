@@ -1,13 +1,18 @@
 import React from "react";
 import Popup from "reactjs-popup";
-import { Button } from "@material-ui/core";
+import ListItem from "@material-ui/core/ListItem";
+import ListItemText from "@material-ui/core/ListItemText";
 import AddActivityPopup from "./addactivitypopup";
 
 const AddActivityButton = () => {
   return (
     <Popup
       contentStyle={{ width: "400px" }}
-      trigger={<Button color="inherit">Add Activity</Button>}
+      trigger={
+        <ListItem button key="Add Activity">
+          <ListItemText primary="Add Activity" />
+        </ListItem>
+      }
       closeOnDocumentClick={false}
       modal
     >

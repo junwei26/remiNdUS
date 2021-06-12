@@ -1,13 +1,8 @@
 import React from "react";
-import AddActivityButton from "./addactivitybutton";
+import Sidedrawer from "./sidedrawer";
 
 const Dashboard = () => {
-  return (
-    <>
-      <div style={{ textAlign: "center" }}>Welcome to the Dashboard</div>
-      <AddActivityButton />
-    </>
-  );
+  return <Sidedrawer />;
 };
 
 export default Dashboard;
