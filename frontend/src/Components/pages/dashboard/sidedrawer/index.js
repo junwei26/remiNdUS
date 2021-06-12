@@ -7,7 +7,7 @@ import Divider from "@material-ui/core/Divider";
 import ListItem from "@material-ui/core/ListItem";
 import ListItemText from "@material-ui/core/ListItemText";
 import WeeklyView from "./weeklyview";
-
+import AddActivityButton from "../addactivitybutton";
 const drawerWidth = 240;
 
 const useStyles = makeStyles((theme) => ({
@@ -33,10 +33,6 @@ const useStyles = makeStyles((theme) => ({
     padding: theme.spacing(3),
   },
 }));
-
-const AddActivity = () => {
-  return <div> Add activity popup </div>;
-};
 
 const AddReminder = () => {
   return <div> Add reminder popup</div>;
@@ -64,8 +60,6 @@ const Sidedrawer = () => {
     switch (active) {
       case "Planner View":
         return <WeeklyView />;
-      case "Add Activity":
-        return <AddActivity />;
       case "Add Reminder":
         return <AddReminder />;
       case "Mass edit planner":
@@ -97,9 +91,7 @@ const Sidedrawer = () => {
           <ListItem button key="Planner View">
             <ListItemText primary="Planner View" onClick={() => SetView("Planner View")} />
           </ListItem>
-          <ListItem button key="Add Activity">
-            <ListItemText primary="Add Activity" onClick={() => SetView("Add Activity")} />
-          </ListItem>
+          <AddActivityButton />
           <ListItem button key="Add Reminder">
             <ListItemText primary="Add Reminder" onClick={() => SetView("Add Reminder")} />
           </ListItem>

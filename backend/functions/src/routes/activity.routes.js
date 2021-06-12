@@ -3,9 +3,11 @@ module.exports = (app) => {
 
   var router = require("express").Router();
 
-  router.post("/create", activities.create);
-
   router.get("/", activities.getAll);
+  router.get("/get", activities.get);
+
+  router.post("/create", activities.create);
+  router.post("/update", activities.update);
 
   app.use("/api/activity", router);
 };
