@@ -2,18 +2,21 @@ import React, { useEffect, useCallback, useReducer } from "react";
 import Paper from "@material-ui/core/Paper";
 import LinearProgress from "@material-ui/core/LinearProgress";
 import { withStyles } from "@material-ui/core/styles";
-import { ViewState, EditingState, IntegratedEditing } from "@devexpress/dx-react-scheduler";
+import PropTypes from "prop-types";
+import { ViewState, EditingState } from "@devexpress/dx-react-scheduler";
 import {
   Scheduler,
   WeekView,
-  DayView,
   Appointments,
   Toolbar,
   DateNavigator,
+  DragDropProvider,
   ViewSwitcher,
   AppointmentForm,
   AppointmentTooltip,
   TodayButton,
+  MonthView,
+  EditRecurrenceMenu,
 } from "@devexpress/dx-react-scheduler-material-ui";
 
 const PUBLIC_KEY = "AIzaSyBnNAISIUKe6xdhq1_rjor2rxoI3UlMY7k";
@@ -67,14 +70,52 @@ const mapAppointmentData = (appointment) => ({
   startDate: usaTime(appointment.start.dateTime),
   endDate: usaTime(appointment.end.dateTime),
   title: appointment.summary,
-  description: "test",
+  description: "description",
 });
+const TextEditor = (props) => {
+  if (props.type === "multilineTextEditor") {
+    return null;
+  }
+  return <AppointmentForm.TextEditor {...props} />;
+};
+
+const BooleanEditor = (props) => {
+  if (props.label === "") {
+    return null;
+  }
+  return <AppointmentForm.BooleanEditor {...props} />;
+};
+const BasicLayout = ({ onFieldChange, appointmentData, ...restProps }) => {
+  const onDescriptionFieldChange = (nextValue) => {
+    onFieldChange({ description: nextValue });
+  };
+
+  return (
+    <AppointmentForm.BasicLayout
+      appointmentData={appointmentData}
+      onFieldChange={onFieldChange}
+      {...restProps}
+    >
+      <AppointmentForm.Label text="Description" type="title" />
+      <AppointmentForm.TextEditor
+        value={appointmentData.description}
+        onValueChange={onDescriptionFieldChange}
+        placeholder="Custom field"
+      />
+    </AppointmentForm.BasicLayout>
+  );
+};
 
 const initialState = {
   data: [],
   loading: false,
   currentDate: "2017-05-23",
-  currentViewName: "Day",
+  currentViewName: "Week",
+};
+const messages = {
+  detailsLabel: "Activity",
+  moreInformationLabel: "",
+  allDayLabel: "",
 };
 
 const reducer = (state, action) => {
@@ -134,13 +175,13 @@ const WeeklyView = () => {
 
   const handleChange = ({ added, changed, deleted }) => {
     if (added) {
-      alert("stuff added");
+      alert("imagine event is added");
     }
     if (changed) {
-      alert("stuff changed");
+      alert("imagine event is changed");
     }
     if (deleted) {
-      alert("stuff deleted");
+      alert("imagine event is deleted");
     }
   };
   return (
@@ -152,20 +193,37 @@ const WeeklyView = () => {
           onCurrentViewNameChange={setCurrentViewName}
           onCurrentDateChange={setCurrentDate}
         />
-        <DayView startDayHour={7.5} endDayHour={17.5} />
         <WeekView startDayHour={7.5} endDayHour={17.5} />
+        <MonthView startDayHour={7.5} endDayHour={17.5} />
         <Appointments />
         <Toolbar {...(loading ? { rootComponent: ToolbarWithLoading } : null)} />
         <EditingState onCommitChanges={handleChange} />
-        <IntegratedEditing />
+        <EditRecurrenceMenu />
         <DateNavigator />
         <TodayButton />
         <ViewSwitcher />
+        <DragDropProvider allowDrag={() => true} allowResize={() => true} />
         <AppointmentTooltip showOpenButton showCloseButton showDeleteButton />
-        <AppointmentForm />
+        <AppointmentForm
+          basicLayoutComponent={BasicLayout}
+          textEditorComponent={TextEditor}
+          booleanEditorComponent={BooleanEditor}
+          messages={messages}
+        />
       </Scheduler>
     </Paper>
   );
 };
+BasicLayout.propTypes = {
+  onFieldChange: PropTypes.any,
+  appointmentData: PropTypes.any,
+};
 
+TextEditor.propTypes = {
+  type: PropTypes.string,
+};
+
+BooleanEditor.propTypes = {
+  label: PropTypes.string,
+};
 export default WeeklyView;

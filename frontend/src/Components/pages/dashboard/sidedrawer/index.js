@@ -2,10 +2,7 @@ import React, { useState } from "react";
 import { makeStyles } from "@material-ui/core/styles";
 import Drawer from "@material-ui/core/Drawer";
 import CssBaseline from "@material-ui/core/CssBaseline";
-import AppBar from "@material-ui/core/AppBar";
-import Toolbar from "@material-ui/core/Toolbar";
 import List from "@material-ui/core/List";
-import Typography from "@material-ui/core/Typography";
 import Divider from "@material-ui/core/Divider";
 import ListItem from "@material-ui/core/ListItem";
 import ListItemText from "@material-ui/core/ListItemText";
@@ -37,8 +34,24 @@ const useStyles = makeStyles((theme) => ({
   },
 }));
 
-const Test2 = () => {
-  return <div> Test 2</div>;
+const AddActivity = () => {
+  return <div> Add activity popup </div>;
+};
+
+const AddReminder = () => {
+  return <div> Add reminder popup</div>;
+};
+
+const MassEditPlanner = () => {
+  return <div> Mass edit planner </div>;
+};
+
+const SearchActivities = () => {
+  return <div> Search activities </div>;
+};
+
+const SearchReminders = () => {
+  return <div> Search reminders </div>;
 };
 
 const Sidedrawer = () => {
@@ -49,10 +62,18 @@ const Sidedrawer = () => {
 
   const ActiveView = () => {
     switch (active) {
-      case "Weekly View":
+      case "Planner View":
         return <WeeklyView />;
-      case 2:
-        return <Test2 />;
+      case "Add Activity":
+        return <AddActivity />;
+      case "Add Reminder":
+        return <AddReminder />;
+      case "Mass edit planner":
+        return <MassEditPlanner />;
+      case "Search activities":
+        return <SearchActivities />;
+      case "Search reminders":
+        return <SearchReminders />;
       default:
         return <WeeklyView />;
     }
@@ -62,13 +83,6 @@ const Sidedrawer = () => {
   return (
     <div className={classes.root}>
       <CssBaseline />
-      <AppBar position="fixed" className={classes.appBar}>
-        <Toolbar>
-          <Typography variant="h6" noWrap>
-            Permanent drawer
-          </Typography>
-        </Toolbar>
-      </AppBar>
       <Drawer
         className={classes.drawer}
         variant="permanent"
@@ -80,26 +94,29 @@ const Sidedrawer = () => {
         <div className={classes.toolbar} />
         <Divider />
         <List>
-          <ListItem button key="Weekly View">
-            <ListItemText primary="Weekly View" onClick={() => SetView("Weekly View")} />
-          </ListItem>
-          <ListItem button key="Monthly View">
-            <ListItemText primary="Monthly View" onClick={() => SetView(2)} />
+          <ListItem button key="Planner View">
+            <ListItemText primary="Planner View" onClick={() => SetView("Planner View")} />
           </ListItem>
           <ListItem button key="Add Activity">
-            <ListItemText primary="Add Activity" onClick={() => SetView(2)} />
+            <ListItemText primary="Add Activity" onClick={() => SetView("Add Activity")} />
           </ListItem>
           <ListItem button key="Add Reminder">
-            <ListItemText primary="Add Reminder" onClick={() => SetView(2)} />
+            <ListItemText primary="Add Reminder" onClick={() => SetView("Add Reminder")} />
           </ListItem>
           <ListItem button key="Mass edit planner">
-            <ListItemText primary="Mass edit planner" onClick={() => SetView(2)} />
+            <ListItemText
+              primary="Mass edit planner"
+              onClick={() => SetView("Mass edit planner")}
+            />
           </ListItem>
           <ListItem button key="Search activities">
-            <ListItemText primary="Search activities" onClick={() => SetView(2)} />
+            <ListItemText
+              primary="Search activities"
+              onClick={() => SetView("Search activities")}
+            />
           </ListItem>
           <ListItem button key="Search reminders">
-            <ListItemText primary="Search reminders" onClick={() => SetView(2)} />
+            <ListItemText primary="Search reminders" onClick={() => SetView("Search reminders")} />
           </ListItem>
         </List>
       </Drawer>
