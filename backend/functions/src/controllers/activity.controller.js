@@ -48,8 +48,16 @@ exports.create = (req, res) => {
           .then(() => {
             return res.status(200).send({ message: "Activity created successfully!" });
           })
+          .catch((error) => {
+            return res.status(400).send({ message: `Error creating activity. ${error}` });
+          })
       )
-    );
+    )
+    .catch((error) => {
+      return res
+        .status(400)
+        .send({ message: `Error getting user database when creating activity. ${error}` });
+    });
 };
 
 exports.update = (req, res) => {
@@ -107,7 +115,12 @@ exports.update = (req, res) => {
             return res.status(404).send({ message: `Error updating activity. ${error}` });
           })
       )
-    );
+    )
+    .catch((error) => {
+      return res
+        .status(400)
+        .send({ message: `Error getting user database when updating activity. ${error}` });
+    });
 };
 
 exports.get = (req, res) => {
@@ -140,6 +153,11 @@ exports.get = (req, res) => {
             return res.status(404).send({ message: `Error getting activity. ${error}` });
           });
       });
+    })
+    .catch((error) => {
+      return res
+        .status(400)
+        .send({ message: `Error getting user database when getting activity. ${error}` });
     });
 };
 
@@ -167,5 +185,10 @@ exports.getAll = (req, res) => {
             return res.status(200).send();
           });
       });
+    })
+    .catch((error) => {
+      return res
+        .status(400)
+        .send({ message: `Error getting user database when getting all activities. ${error}` });
     });
 };
