@@ -1,9 +1,11 @@
 import React, { useState } from "react";
 import PropTypes from "prop-types";
+import axios from "axios";
 import { makeStyles } from "@material-ui/core/styles";
 import { Button, Grid, TextField, Card, Typography } from "@material-ui/core";
 import DateFnsUtils from "@date-io/date-fns";
 import { MuiPickersUtilsProvider, TimePicker, DatePicker } from "@material-ui/pickers";
+import { firebaseAuth } from "../../../../../firebase";
 
 const useStyles = makeStyles(() => ({
   topbar: {
@@ -38,9 +40,25 @@ const AddActivityPopup = (props) => {
 
   const handleSubmitAddActivity = (e) => {
     e.preventDefault();
-    alert(
-      `ActivityName: ${e.target.activityName.value}\nDescription:${e.target.description.value}\nDate: ${e.target.date.value}\nStart Time:${e.target.startTime.value}\nEnd Time:${e.target.endTime.value}`
-    );
+    const activity = {
+      uid: firebaseAuth.currentUser.uid,
+      name: e.target.activityName.value,
+      description: e.target.description.value,
+      date: e.target.date.value,
+      starttime: e.target.startTime.value,
+      endtime: e.target.endTime.value,
+    };
+    axios
+      .post(
+        "https://asia-southeast2-remindus-76402.cloudfunctions.net/backendAPI/api/activity/create",
+        activity
+      ) //articleId receives the response
+      .then((response) => {
+        alert(response.data.id);
+      })
+      .catch((error) => {
+        alert(`${error}`);
+      });
   };
 
   return (
