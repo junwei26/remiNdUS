@@ -18,27 +18,22 @@ import {
   MonthView,
   EditRecurrenceMenu,
 } from "@devexpress/dx-react-scheduler-material-ui";
-
-const PUBLIC_KEY = "AIzaSyBnNAISIUKe6xdhq1_rjor2rxoI3UlMY7k";
-const CALENDAR_ID = "f7jnetm22dsjc3npc2lu3buvu4@group.calendar.google.com";
+import axios from "axios";
 
 const getData = (setData, setLoading) => {
-  const dataUrl = [
-    "https://www.googleapis.com/calendar/v3/calendars/",
-    CALENDAR_ID,
-    "/events?key=",
-    PUBLIC_KEY,
-  ].join("");
+  const dataUrl =
+    "https://asia-southeast2-remindus-76402.cloudfunctions.net/backendAPI/api/activity/";
+
   setLoading(true);
 
-  return fetch(dataUrl)
-    .then((response) => response.json())
-    .then((data) => {
-      setTimeout(() => {
-        setData(data.items);
-        setLoading(false);
-      }, 600);
-    });
+  return axios.get(dataUrl, { params: { uid: "myuid1" } }).then((response) => {
+    if (response.data) {
+      setData(response.data);
+      setLoading(false);
+    } else {
+      alert("No data!");
+    }
+  });
 };
 
 const styles = {
@@ -62,16 +57,28 @@ const ToolbarWithLoading = withStyles(styles, { name: "Toolbar" })(
   )
 );
 
-const usaTime = (date) =>
-  new Date(date).toLocaleString("en-US", { timeZone: "America/Los_Angeles" });
+const parseTime = (date, time) => {
+  if (date && time) {
+    return new Date(
+      date.slice(0, 4),
+      date.slice(4, 6) - 1,
+      date.slice(6, 8),
+      time.slice(0, 2),
+      time.slice(2, 4)
+    ).toLocaleString("en-US");
+  }
+  return "";
+};
 
-const mapAppointmentData = (appointment) => ({
-  id: appointment.id,
-  startDate: usaTime(appointment.start.dateTime),
-  endDate: usaTime(appointment.end.dateTime),
-  title: appointment.summary,
-  description: "description",
-});
+const mapAppointmentData = (appointment) => {
+  return {
+    id: appointment.id,
+    startDate: parseTime(appointment.date, appointment.starttime),
+    endDate: parseTime(appointment.date, appointment.endtime),
+    title: appointment.name,
+    description: appointment.description,
+  };
+};
 const TextEditor = (props) => {
   if (props.type === "multilineTextEditor") {
     return null;
@@ -85,6 +92,7 @@ const BooleanEditor = (props) => {
   }
   return <AppointmentForm.BooleanEditor {...props} />;
 };
+
 const BasicLayout = ({ onFieldChange, appointmentData, ...restProps }) => {
   const onDescriptionFieldChange = (nextValue) => {
     onFieldChange({ description: nextValue });
@@ -105,17 +113,29 @@ const BasicLayout = ({ onFieldChange, appointmentData, ...restProps }) => {
     </AppointmentForm.BasicLayout>
   );
 };
+const currentDate = () => {
+  var d = new Date(),
+    month = "" + (d.getMonth() + 1),
+    day = "" + d.getDate(),
+    year = d.getFullYear();
+
+  if (month.length < 2) month = "0" + month;
+  if (day.length < 2) day = "0" + day;
+
+  return [year, month, day].join("-");
+};
 
 const initialState = {
   data: [],
   loading: false,
-  currentDate: "2017-05-23",
+  currentDate: currentDate(),
   currentViewName: "Week",
 };
 const messages = {
   detailsLabel: "Activity",
   moreInformationLabel: "",
   allDayLabel: "",
+  repeatLabel: "",
 };
 
 const reducer = (state, action) => {
