@@ -28,7 +28,8 @@ exports.create = (req, res) => {
           .send({ message: "Error! User already created. Please contact the administrator" });
       } else {
         db.collection("users")
-          .add(settings)
+          .doc(settings.uid)
+          .set(settings)
           .then(() => {
             return res.status(200).send({ message: "User settings successfully created" });
           });

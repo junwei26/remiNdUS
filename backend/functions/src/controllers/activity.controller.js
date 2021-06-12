@@ -158,7 +158,6 @@ exports.getAll = (req, res) => {
         db.collection("users")
           .doc(doc.id)
           .collection("activities")
-          .where("date", "==", req.query.date)
           .get()
           .then((querySnapshot) => {
             querySnapshot.forEach((reminder) => {
