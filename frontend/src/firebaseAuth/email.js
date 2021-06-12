@@ -43,7 +43,7 @@ export function signUpWithEmailPassword(email, password) {
         .post(
           "https://asia-southeast2-remindus-76402.cloudfunctions.net/backendAPI/api/user/create/",
           userDetails
-        ) //articleId receives the response
+        )
         .then(() => {
           // do nothing, success
           // alert(response.data.id);

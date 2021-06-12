@@ -53,11 +53,11 @@ const AddActivityPopup = (props) => {
         "https://asia-southeast2-remindus-76402.cloudfunctions.net/backendAPI/api/activity/create",
         activity
       ) //articleId receives the response
-      .then((response) => {
-        alert(response.data.id);
+      .then(() => {
+        alert("Succesfully created activity");
       })
       .catch((error) => {
-        alert(`Issue creating activity. ${error}`);
+        alert(`Issue creating activity. ${error.message}`);
       });
   };
 
@@ -90,7 +90,7 @@ const AddActivityPopup = (props) => {
             </Grid>
           </Grid>
           <Grid item style={{ width: "100%" }}>
-            <form noValidate onSubmit={handleSubmitAddActivity}>
+            <form noValidate autoComplete="off" onSubmit={handleSubmitAddActivity}>
               <Grid container direction="column" spacing={2}>
                 <Grid item style={{ width: "80%" }}>
                   <TextField
