@@ -1,5 +1,5 @@
 import React, { useState } from "react";
-import ChangeUserInfo from "./changeuserinfo";
+import ChangeUserInfoButton from "./changeuserinfobutton";
 import DisplayUserInfo from "./displayuserinfo";
 import { firebaseAuth } from "../../../firebase";
 import { Grid } from "@material-ui/core";
@@ -26,7 +26,7 @@ const SettingsPage = () => {
       <>
         <div style={{ textAlign: "center" }}>Welcome to the Settings Page</div>
 
-        <Grid container direction="column" justify="center" alignItems="center">
+        <Grid container direction="column" justify="center" alignItems="center" spacing={2}>
           <Grid item>
             <DisplayUserInfo
               name={name}
@@ -37,7 +37,7 @@ const SettingsPage = () => {
             />
           </Grid>
           <Grid item>
-            <ChangeUserInfo onChangeUserInfo={onChangeUserInfo} />
+            <ChangeUserInfoButton onChangeUserInfo={onChangeUserInfo} />
           </Grid>
           <Grid item>
             <ResetPasswordForm />
