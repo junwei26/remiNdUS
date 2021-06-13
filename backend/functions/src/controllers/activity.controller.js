@@ -11,16 +11,13 @@ exports.create = (req, res) => {
   if (!req.body.description) {
     return res.status(400).send({ message: "Activity must have a description!" });
   }
-  if (!req.body.date) {
-    return res.status(400).send({ message: "Activity must have a date!" });
-  }
-  if (!req.body.starttime) {
+  if (!req.body.startDateTime) {
     return res.status(400).send({ message: "Activity must have a start time!" });
   }
-  if (!req.body.endtime) {
+  if (!req.body.endDateTime) {
     return res.status(400).send({ message: "Activity must have an end time!" });
   }
-  if (req.body.endtime < req.body.starttime) {
+  if (req.body.endDateTime <= req.body.startDateTime) {
     return res
       .status(400)
       .send({ message: "Activity start time must be before activity end time!" });
@@ -29,9 +26,8 @@ exports.create = (req, res) => {
   const activity = {
     name: req.body.name,
     description: req.body.description,
-    date: req.body.date,
-    starttime: req.body.starttime,
-    endtime: req.body.endtime,
+    startDateTime: req.body.startDateTime,
+    endDateTime: req.body.endDateTime,
   };
   db.collection("users")
     .where("uid", "==", req.body.uid)
@@ -73,16 +69,13 @@ exports.update = (req, res) => {
   if (!req.body.description) {
     return res.status(400).send({ message: "Activity must have a description!" });
   }
-  if (!req.body.date) {
-    return res.status(400).send({ message: "Activity must have a date!" });
-  }
-  if (!req.body.starttime) {
+  if (!req.body.startDateTime) {
     return res.status(400).send({ message: "Activity must have a start time!" });
   }
-  if (!req.body.endtime) {
+  if (!req.body.endDateTime) {
     return res.status(400).send({ message: "Activity must have an end time!" });
   }
-  if (req.body.endtime < req.body.starttime) {
+  if (req.body.endDateTime < req.body.startDateTime) {
     return res
       .status(400)
       .send({ message: "Activity start time must be before activity end time!" });
@@ -92,8 +85,8 @@ exports.update = (req, res) => {
     name: req.body.name,
     description: req.body.description,
     date: req.body.date,
-    starttime: req.body.starttime,
-    endtime: req.body.endtime,
+    startDateTime: req.body.startDateTime,
+    endDateTime: req.body.endDateTime,
   };
 
   db.collection("users")

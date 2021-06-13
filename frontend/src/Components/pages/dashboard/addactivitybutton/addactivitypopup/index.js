@@ -4,7 +4,7 @@ import axios from "axios";
 import { makeStyles } from "@material-ui/core/styles";
 import { Button, Grid, TextField, Card, Typography } from "@material-ui/core";
 import DateFnsUtils from "@date-io/date-fns";
-import { MuiPickersUtilsProvider, TimePicker, DatePicker } from "@material-ui/pickers";
+import { MuiPickersUtilsProvider, DateTimePicker } from "@material-ui/pickers";
 import { firebaseAuth } from "../../../../../firebase";
 
 const useStyles = makeStyles(() => ({
@@ -27,26 +27,53 @@ const useStyles = makeStyles(() => ({
 const AddActivityPopup = (props) => {
   const classes = useStyles();
 
-  const [startDateTime, setStartDateTime] = useState(new Date("2021-06-12T12:00:00"));
-  const [endDateTime, setEndDateTime] = useState(new Date("2021-06-12T14:00:00"));
+  const roundUpTime = (date) => {
+    const nearestTime = 1000 * 60 * 15; // round up to nearest 15 minutes
+    return new Date(Math.ceil(date.getTime() / nearestTime) * nearestTime);
+  };
+
+  const [startDateTime, setStartDateTime] = useState(roundUpTime(new Date()));
+  const [endDateTime, setEndDateTime] = useState(roundUpTime(new Date()));
 
   const handleStartDateChange = (date) => {
-    setStartDateTime(date);
+    setStartDateTime(roundUpTime(date));
   };
 
   const handleEndDateChange = (date) => {
-    setEndDateTime(date);
+    setEndDateTime(roundUpTime(date));
+  };
+
+  // Parses a given dateString (Current expected format is yyyy/MM/dd HH:mm) into yyyyMMddHHmm
+  const parseTime = (dateString) => {
+    return (
+      dateString.slice(0, 4) +
+      dateString.slice(5, 7) +
+      dateString.slice(8, 10) +
+      dateString.slice(11, 13) +
+      dateString.slice(14, 16)
+    );
   };
 
   const handleSubmitAddActivity = (e) => {
     e.preventDefault();
+
+    if (e.target.activityName.value === "") {
+      alert("Please input an activity name");
+      return;
+    } else if (e.target.description.value === "") {
+      alert("Please input an activity description");
+      return;
+    }
+
+    const parsedStartDateTime = parseTime(e.target.startDateTime.value);
+    const parsedEndDateTime = parseTime(e.target.endDateTime.value);
+
     const activity = {
       uid: firebaseAuth.currentUser.uid,
       name: e.target.activityName.value,
       description: e.target.description.value,
-      date: e.target.date.value,
-      starttime: e.target.startTime.value,
-      endtime: e.target.endTime.value,
+      startDateTime: parsedStartDateTime,
+      endDateTime: parsedEndDateTime,
     };
     axios
       .post(
@@ -57,7 +84,9 @@ const AddActivityPopup = (props) => {
         alert("Succesfully created activity");
       })
       .catch((error) => {
-        alert(`Issue creating activity. ${error.message}`);
+        alert(
+          `Issue creating activity. Error status code: ${error.response.status}. ${error.response.data.message}`
+        );
       });
   };
 
@@ -115,47 +144,31 @@ const AddActivityPopup = (props) => {
                   />
                 </Grid>
                 <Grid item style={{ width: "80%" }}>
-                  <DatePicker
-                    disableToolbar
-                    variant="inline"
-                    format="MM/dd/yyyy"
-                    margin="normal"
-                    id="date-picker-inline"
-                    label="Date picker inline"
-                    name="date"
+                  <DateTimePicker
+                    variant="dialog"
+                    label="Start Date and Time"
+                    name="startDateTime"
+                    disablePast
+                    showTodayButton
+                    minutesStep={15}
+                    todayLabel={"Now"}
                     value={startDateTime}
+                    format="yyyy/MM/dd HH:mm"
                     onChange={handleStartDateChange}
-                    KeyboardButtonProps={{
-                      "aria-label": "change date",
-                    }}
                   />
                 </Grid>
                 <Grid item style={{ width: "80%" }}>
-                  <TimePicker
-                    margin="normal"
-                    id="time-picker"
-                    label="Time picker"
-                    name="startTime"
-                    minutesStep="15"
-                    value={startDateTime}
-                    onChange={handleStartDateChange}
-                    KeyboardButtonProps={{
-                      "aria-label": "change start time",
-                    }}
-                  />
-                </Grid>
-                <Grid item style={{ width: "80%" }}>
-                  <TimePicker
-                    margin="normal"
-                    id="time-picker"
-                    label="Time picker"
-                    name="endTime"
-                    minutesStep="15"
+                  <DateTimePicker
+                    variant="dialog"
+                    label="End Date and Time"
+                    name="endDateTime"
+                    disablePast
+                    showTodayButton
+                    minutesStep={15}
+                    todayLabel={"Now"}
                     value={endDateTime}
+                    format="yyyy/MM/dd HH:mm"
                     onChange={handleEndDateChange}
-                    KeyboardButtonProps={{
-                      "aria-label": "change end time",
-                    }}
                   />
                 </Grid>
                 <Grid item style={{ width: "80%" }}>

@@ -19,6 +19,7 @@ import {
   EditRecurrenceMenu,
 } from "@devexpress/dx-react-scheduler-material-ui";
 import axios from "axios";
+import { firebaseAuth } from "../../../../../firebase";
 
 const getData = (setData, setLoading) => {
   const dataUrl =
@@ -26,7 +27,7 @@ const getData = (setData, setLoading) => {
 
   setLoading(true);
 
-  return axios.get(dataUrl, { params: { uid: "myuid1" } }).then((response) => {
+  return axios.get(dataUrl, { params: { uid: firebaseAuth.currentUser.uid } }).then((response) => {
     if (response.data) {
       setData(response.data);
       setLoading(false);
@@ -57,14 +58,14 @@ const ToolbarWithLoading = withStyles(styles, { name: "Toolbar" })(
   )
 );
 
-const parseTime = (date, time) => {
-  if (date && time) {
+const parseTime = (dateTime) => {
+  if (dateTime) {
     return new Date(
-      date.slice(0, 4),
-      date.slice(4, 6) - 1,
-      date.slice(6, 8),
-      time.slice(0, 2),
-      time.slice(2, 4)
+      dateTime.slice(0, 4),
+      dateTime.slice(4, 6) - 1,
+      dateTime.slice(6, 8),
+      dateTime.slice(8, 10),
+      dateTime.slice(10, 12)
     ).toLocaleString("en-US");
   }
   return "";
@@ -73,8 +74,8 @@ const parseTime = (date, time) => {
 const mapAppointmentData = (appointment) => {
   return {
     id: appointment.id,
-    startDate: parseTime(appointment.date, appointment.starttime),
-    endDate: parseTime(appointment.date, appointment.endtime),
+    startDate: parseTime(appointment.startDateTime),
+    endDate: parseTime(appointment.endDateTime),
     title: appointment.name,
     description: appointment.description,
   };
