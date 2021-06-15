@@ -84,7 +84,6 @@ exports.update = (req, res) => {
   const updatedActivity = {
     name: req.body.name,
     description: req.body.description,
-    date: req.body.date,
     startDateTime: req.body.startDateTime,
     endDateTime: req.body.endDateTime,
   };
@@ -171,8 +170,8 @@ exports.getAll = (req, res) => {
           .collection("activities")
           .get()
           .then((querySnapshot) => {
-            querySnapshot.forEach((reminder) => {
-              activities.push(reminder.data());
+            querySnapshot.forEach((activity) => {
+              activities.push({ activityId: activity.id, ...activity.data() });
             });
             res.send(activities);
             return res.status(200).send();
@@ -183,5 +182,36 @@ exports.getAll = (req, res) => {
       return res
         .status(400)
         .send({ message: `Error getting user database when getting all activities. ${error}` });
+    });
+};
+
+exports.delete = (req, res) => {
+  if (!req.query.uid) {
+    return res.status(400).send({ message: "You must be logged in to make this operation!" });
+  }
+  if (!req.query.activityId) {
+    return res.status(400).send({ message: "You must be logged in to make this operation!" });
+  }
+  db.collection("users")
+    .where("uid", "==", req.query.uid)
+    .limit(1)
+    .get()
+    .then((data) => {
+      if (data.empty) {
+        return res.status(404).send({ message: "No activities found." });
+      }
+      data.forEach((doc) => {
+        db.collection("users")
+          .doc(doc.id)
+          .collection("activities")
+          .doc(req.query.activityId)
+          .delete()
+          .then(() => {
+            return res.status(200).send({ message: "Activity successfully deleted" });
+          });
+      });
+    })
+    .catch((error) => {
+      return res.status(400).send({ message: `Error deleting activity ${error}` });
     });
 };
