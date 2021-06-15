@@ -70,10 +70,21 @@ const parseTime = (dateTime) => {
   }
   return "";
 };
+const convertLocaleDateString = (dateStr) => {
+  const padZero = (num) => (num < 10 ? "0" + num.toString() : num.toString());
+
+  const date = new Date(dateStr);
+  const year = date.getFullYear().toString();
+  const month = padZero(date.getMonth() + 1);
+  const day = padZero(date.getDate());
+  const hour = padZero(date.getHours());
+  const min = padZero(date.getMinutes());
+  return year + month + day + hour + min;
+};
 
 const mapAppointmentData = (appointment) => {
   return {
-    id: appointment.id,
+    id: appointment.activityId,
     startDate: parseTime(appointment.startDateTime),
     endDate: parseTime(appointment.endDateTime),
     title: appointment.name,
@@ -109,7 +120,7 @@ const BasicLayout = ({ onFieldChange, appointmentData, ...restProps }) => {
       <AppointmentForm.TextEditor
         value={appointmentData.description}
         onValueChange={onDescriptionFieldChange}
-        placeholder="Custom field"
+        placeholder="Add a description"
       />
     </AppointmentForm.BasicLayout>
   );
@@ -196,13 +207,55 @@ const WeeklyView = () => {
 
   const handleChange = ({ added, changed, deleted }) => {
     if (added) {
-      alert("imagine event is added");
+      axios
+        .post(
+          "https://asia-southeast2-remindus-76402.cloudfunctions.net/backendAPI/api/activity/create",
+          {
+            uid: firebaseAuth.currentUser.uid,
+            startDateTime: convertLocaleDateString(added.startDate),
+            endDateTime: convertLocaleDateString(added.endDate),
+            name: added.title,
+            description: added.description,
+          }
+        )
+        .then(() => alert("Activity added!"))
+        .catch((e) => {
+          alert(e.response.data.message);
+        });
     }
     if (changed) {
-      alert("imagine event is changed");
+      data.map((activity) => {
+        if (changed[activity.id]) {
+          const updatedActivity = { ...activity, ...changed[activity.id] };
+
+          axios
+            .post(
+              "https://asia-southeast2-remindus-76402.cloudfunctions.net/backendAPI/api/activity/update",
+              {
+                uid: firebaseAuth.currentUser.uid,
+                startDateTime: convertLocaleDateString(updatedActivity.startDate),
+                endDateTime: convertLocaleDateString(updatedActivity.endDate),
+                name: updatedActivity.title,
+                description: updatedActivity.description,
+                activityId: activity.id,
+              }
+            )
+            .then(() => alert("Activity updated!"))
+            .catch((e) => {
+              alert(e.response.data.message);
+            });
+        }
+      });
     }
-    if (deleted) {
-      alert("imagine event is deleted");
+    if (deleted !== null) {
+      axios
+        .delete(
+          "https://asia-southeast2-remindus-76402.cloudfunctions.net/backendAPI/api/activity/",
+          { params: { uid: firebaseAuth.currentUser.uid, activityId: deleted } }
+        )
+        .then(() => {
+          alert("Successfully deleted.");
+        });
     }
   };
   return (
