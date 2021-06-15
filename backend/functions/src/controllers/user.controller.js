@@ -10,8 +10,8 @@ exports.create = (req, res) => {
 
   const settings = {
     uid: req.body.uid,
-    Username: req.body.username,
-    Verified: false,
+    username: req.body.username,
+    verified: false,
     telegramHandle: req.body.telegramHandle,
     telegramSendReminders: false,
     telegramReminderTiming: "0800",
@@ -31,7 +31,10 @@ exports.create = (req, res) => {
           .doc(settings.uid)
           .set(settings)
           .then(() => {
-            return res.status(200).send({ message: "User settings successfully created" });
+            return res.status(200).send({ message: "User database successfully created" });
+          })
+          .catch((error) => {
+            return res.status(400).send({ message: `Error creating user database. ${error}` });
           });
       }
     });
@@ -51,7 +54,7 @@ exports.update = (req, res) => {
   }
 
   const updatedSettings = {
-    Username: req.body.username,
+    username: req.body.username,
     telegramHandle: req.body.telegramHandle,
     telegramSendReminders: req.body.telegramSendReminders,
     telegramReminderTiming: req.body.telegramReminderTiming,
