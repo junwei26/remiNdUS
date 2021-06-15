@@ -45,14 +45,13 @@ export function signUpWithEmailPassword(email, password) {
           userDetails
         )
         .then(() => {
-          // do nothing, success
-          // alert(response.data.id);
+          alert(`Signed up as user ${user.uid}. Please check your email for email verification.`);
+          window.location.replace(REACT_APP_URL + "/dashboard");
         })
         .catch((error) => {
           alert(`Issue creating user database. Please inform the administrator ${error}`);
         });
-      alert(`Signed up as user ${user.uid}. Please check your email for email verification.`);
-      window.location.replace(REACT_APP_URL + "/dashboard");
+
       // ...
     })
     .catch((error) => {

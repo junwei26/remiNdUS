@@ -11,16 +11,13 @@ exports.create = (req, res) => {
   if (!req.body.description) {
     return res.status(400).send({ message: "Activity must have a description!" });
   }
-  if (!req.body.date) {
-    return res.status(400).send({ message: "Activity must have a date!" });
-  }
-  if (!req.body.starttime) {
+  if (!req.body.startDateTime) {
     return res.status(400).send({ message: "Activity must have a start time!" });
   }
-  if (!req.body.endtime) {
+  if (!req.body.endDateTime) {
     return res.status(400).send({ message: "Activity must have an end time!" });
   }
-  if (req.body.endtime < req.body.starttime) {
+  if (req.body.endDateTime <= req.body.startDateTime) {
     return res
       .status(400)
       .send({ message: "Activity start time must be before activity end time!" });
@@ -29,9 +26,8 @@ exports.create = (req, res) => {
   const activity = {
     name: req.body.name,
     description: req.body.description,
-    date: req.body.date,
-    starttime: req.body.starttime,
-    endtime: req.body.endtime,
+    startDateTime: req.body.startDateTime,
+    endDateTime: req.body.endDateTime,
   };
   db.collection("users")
     .where("uid", "==", req.body.uid)
@@ -73,16 +69,13 @@ exports.update = (req, res) => {
   if (!req.body.description) {
     return res.status(400).send({ message: "Activity must have a description!" });
   }
-  if (!req.body.date) {
-    return res.status(400).send({ message: "Activity must have a date!" });
-  }
-  if (!req.body.starttime) {
+  if (!req.body.startDateTime) {
     return res.status(400).send({ message: "Activity must have a start time!" });
   }
-  if (!req.body.endtime) {
+  if (!req.body.endDateTime) {
     return res.status(400).send({ message: "Activity must have an end time!" });
   }
-  if (req.body.endtime < req.body.starttime) {
+  if (req.body.endDateTime < req.body.startDateTime) {
     return res
       .status(400)
       .send({ message: "Activity start time must be before activity end time!" });
@@ -91,9 +84,8 @@ exports.update = (req, res) => {
   const updatedActivity = {
     name: req.body.name,
     description: req.body.description,
-    date: req.body.date,
-    starttime: req.body.starttime,
-    endtime: req.body.endtime,
+    startDateTime: req.body.startDateTime,
+    endDateTime: req.body.endDateTime,
   };
 
   db.collection("users")
@@ -178,8 +170,8 @@ exports.getAll = (req, res) => {
           .collection("activities")
           .get()
           .then((querySnapshot) => {
-            querySnapshot.forEach((reminder) => {
-              activities.push(reminder.data());
+            querySnapshot.forEach((activity) => {
+              activities.push({ activityId: activity.id, ...activity.data() });
             });
             res.send(activities);
             return res.status(200).send();
@@ -190,5 +182,36 @@ exports.getAll = (req, res) => {
       return res
         .status(400)
         .send({ message: `Error getting user database when getting all activities. ${error}` });
+    });
+};
+
+exports.delete = (req, res) => {
+  if (!req.query.uid) {
+    return res.status(400).send({ message: "You must be logged in to make this operation!" });
+  }
+  if (!req.query.activityId) {
+    return res.status(400).send({ message: "You must be logged in to make this operation!" });
+  }
+  db.collection("users")
+    .where("uid", "==", req.query.uid)
+    .limit(1)
+    .get()
+    .then((data) => {
+      if (data.empty) {
+        return res.status(404).send({ message: "No activities found." });
+      }
+      data.forEach((doc) => {
+        db.collection("users")
+          .doc(doc.id)
+          .collection("activities")
+          .doc(req.query.activityId)
+          .delete()
+          .then(() => {
+            return res.status(200).send({ message: "Activity successfully deleted" });
+          });
+      });
+    })
+    .catch((error) => {
+      return res.status(400).send({ message: `Error deleting activity ${error}` });
     });
 };

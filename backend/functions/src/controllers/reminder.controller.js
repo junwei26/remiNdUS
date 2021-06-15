@@ -11,17 +11,14 @@ exports.create = (req, res) => {
   if (!req.body.description) {
     return res.status(400).send({ message: "Reminders must have a description!" });
   }
-  if (!req.body.date) {
+  if (!req.body.dateTime) {
     return res.status(400).send({ message: "Reminders must have a date!" });
   }
-  if (!req.body.time) {
-    return res.status(400).send({ message: "Reminders must have a time!" });
-  }
+
   const reminder = {
     name: req.body.name,
     description: req.body.description,
-    date: req.body.date,
-    time: req.body.time,
+    dateTime: req.body.dateTime,
   };
   db.collection("users")
     .where("uid", "==", req.body.uid)
@@ -55,18 +52,14 @@ exports.update = (req, res) => {
   if (!req.body.description) {
     return res.status(400).send({ message: "Reminders must have a description!" });
   }
-  if (!req.body.date) {
+  if (!req.body.dateTime) {
     return res.status(400).send({ message: "Reminders must have a date!" });
-  }
-  if (!req.body.time) {
-    return res.status(400).send({ message: "Reminders must have a time!" });
   }
 
   const updatedReminder = {
     name: req.body.name,
     description: req.body.description,
-    date: req.body.date,
-    time: req.body.time,
+    dateTime: req.body.dateTime,
   };
 
   db.collection("users")
@@ -139,14 +132,45 @@ exports.getAll = (req, res) => {
         db.collection("users")
           .doc(doc.id)
           .collection("reminders")
-          .where("date", "==", req.query.date)
           .get()
           .then((querySnapshot) => {
             querySnapshot.forEach((reminder) => {
-              reminders.push(reminder.data());
+              reminders.push({ reminderId: reminder.id, ...reminder.data() });
             });
             res.send(reminders);
             return res.status(200).send();
+          });
+      });
+    });
+};
+
+exports.delete = (req, res) => {
+  if (!req.query.uid) {
+    return res.status(400).send({ message: "You must be logged in to make this operation!" });
+  }
+  if (!req.query.reminderId) {
+    return res.status(400).send({ message: "Reminder must have a reminder ID!" });
+  }
+
+  db.collection("users")
+    .where("uid", "==", req.query.uid)
+    .limit(1)
+    .get()
+    .then((data) => {
+      if (data.empty) {
+        return res.status(404).send({ message: "No reminders found." });
+      }
+      data.forEach((doc) => {
+        db.collection("users")
+          .doc(doc.id)
+          .collection("reminders")
+          .doc(req.query.reminderId)
+          .delete()
+          .then(() => {
+            return res.status(200).send({ message: "Successfully deleted reminder!" });
+          })
+          .catch((error) => {
+            return res.status(404).send({ message: `Error deleting reminder. ${error}` });
           });
       });
     });
