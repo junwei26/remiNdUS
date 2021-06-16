@@ -2,6 +2,7 @@ import React from "react";
 import { makeStyles } from "@material-ui/core/styles";
 import { ButtonGroup, Button, Typography } from "@material-ui/core";
 import PropTypes from "prop-types";
+import ChangeTelegramReminderTimingForm from "./changetelegramremindertimingform";
 
 const useStyles = makeStyles(() => ({
   buttonGroup: {
@@ -22,8 +23,8 @@ const DisplaySettings = (props) => {
     <>
       <ButtonGroup
         className={classes.buttonGroup}
-        variant="outlined"
         orientation="vertical"
+        variant="outlined"
         color="primary"
         aria-label="vertical contained primary button group"
       >
@@ -43,9 +44,7 @@ const DisplaySettings = (props) => {
         <Button className={classes.button}>
           <Typography>Telegram reminders: {props.telegramSendReminders ? "On" : "Off"}</Typography>
         </Button>
-        <Button className={classes.button}>
-          <Typography>Telegram Reminder Timing: {props.telegramReminderTiming}</Typography>
-        </Button>
+        <ChangeTelegramReminderTimingForm />
       </ButtonGroup>
     </>
   );

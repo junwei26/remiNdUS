@@ -79,7 +79,7 @@ const AddActivityPopup = (props) => {
       .post(
         "https://asia-southeast2-remindus-76402.cloudfunctions.net/backendAPI/api/activity/create",
         activity
-      ) //articleId receives the response
+      )
       .then(() => {
         alert("Succesfully created activity");
       })
