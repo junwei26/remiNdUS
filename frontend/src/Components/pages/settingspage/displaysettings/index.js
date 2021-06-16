@@ -1,17 +1,52 @@
 import React from "react";
-import { Grid } from "@material-ui/core";
+import { makeStyles } from "@material-ui/core/styles";
+import { ButtonGroup, Button, Typography } from "@material-ui/core";
 import PropTypes from "prop-types";
 
+const useStyles = makeStyles(() => ({
+  buttonGroup: {
+    flexGrow: 1,
+    width: "100%",
+  },
+  button: {
+    justifyContent: "flex-start",
+    paddingTop: "5%",
+    paddingBottom: "5%",
+  },
+}));
+
 const DisplaySettings = (props) => {
+  const classes = useStyles();
+
   return (
     <>
-      <Grid container direction="column" justify="center" alignItems="flex-start" spacing={2}>
-        <Grid item>Username: {props.username}</Grid>
-        <Grid item>Tutor verification: {props.verified ? "Verified" : "Not verified"}</Grid>
-        <Grid item>Telegram Handle: {props.telegramHandle}</Grid>
-        <Grid item>Send reminders on telegram?: {props.telegramSendReminders}</Grid>
-        <Grid item>Telegram Reminder Timing: {props.telegramReminderTiming}</Grid>
-      </Grid>
+      <ButtonGroup
+        className={classes.buttonGroup}
+        variant="outlined"
+        orientation="vertical"
+        color="primary"
+        aria-label="vertical contained primary button group"
+      >
+        <Button className={classes.button}>
+          <Typography>Username: {props.username ? props.username : "Not set-up"}</Typography>
+        </Button>
+        <Button className={classes.button} disabled>
+          <Typography>
+            Tutor verification: {props.verified ? "Verified" : "Not verified"}
+          </Typography>
+        </Button>
+        <Button className={classes.button}>
+          <Typography>
+            Telegram Handle: {props.telegramHandle ? props.telegramHandle : "NIL"}
+          </Typography>
+        </Button>
+        <Button className={classes.button}>
+          <Typography>Telegram reminders: {props.telegramSendReminders ? "On" : "Off"}</Typography>
+        </Button>
+        <Button className={classes.button}>
+          <Typography>Telegram Reminder Timing: {props.telegramReminderTiming}</Typography>
+        </Button>
+      </ButtonGroup>
     </>
   );
 };

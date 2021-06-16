@@ -36,7 +36,7 @@ export const updateProfile = (newDisplayName, newPhotoURL) => {
     })
     .then(function () {
       // Update successful.
-      // alert("Update of profile successful");
+      alert("Update profile successful");
     })
     .catch(function (error) {
       // An error happened.
