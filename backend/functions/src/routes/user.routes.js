@@ -5,6 +5,7 @@ module.exports = (app) => {
 
   router.post("/create", user.create);
   router.post("/update", user.update);
+  router.post("/updateTiming", user.updateTiming);
 
   router.get("/", user.get);
 

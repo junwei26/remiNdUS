@@ -82,6 +82,40 @@ exports.update = (req, res) => {
     });
 };
 
+exports.updateTiming = (req, res) => {
+  if (!req.body.uid) {
+    return res.status(400).send({ message: "You must be logged in to make this operation!" });
+  }
+  if (!req.body.telegramReminderTiming) {
+    return res.status(400).send({ message: "Error! Missing data." });
+  }
+
+  const updatedSettings = {
+    telegramReminderTiming: req.body.telegramReminderTiming,
+  };
+
+  db.collection("users")
+    .where("uid", "==", req.body.uid)
+    .limit(1)
+    .get()
+    .then((data) => {
+      if (data.empty) {
+        return res.status(404).send({ message: "No user found. Please contact the administrator" });
+      }
+      data.forEach((doc) => {
+        db.collection("users")
+          .doc(doc.id)
+          .update(updatedSettings)
+          .then(() => {
+            return res.status(200).send({ message: "Successfully updated reminder timing!" });
+          })
+          .catch((error) => {
+            return res.status(404).send({ message: `Error updating reminder timing. ${error}` });
+          });
+      });
+    });
+};
+
 exports.get = (req, res) => {
   db.collection("users")
     .where("uid", "==", req.query.uid)
