@@ -18,16 +18,11 @@ import {
   MonthView,
   EditRecurrenceMenu,
 } from "@devexpress/dx-react-scheduler-material-ui";
-import axios from "axios";
-import { firebaseAuth } from "../../../../../firebase";
+import activityService from "../../../services/activityService";
 
 const getData = (setData, setLoading) => {
-  const dataUrl =
-    "https://asia-southeast2-remindus-76402.cloudfunctions.net/backendAPI/api/activity/";
-
   setLoading(true);
-
-  return axios.get(dataUrl, { params: { uid: firebaseAuth.currentUser.uid } }).then((response) => {
+  return activityService.getAllActivities().then((response) => {
     if (response.data) {
       setData(response.data);
       setLoading(false);
@@ -70,17 +65,6 @@ const parseTime = (dateTime) => {
   }
   return "";
 };
-const convertLocaleDateString = (dateStr) => {
-  const padZero = (num) => (num < 10 ? "0" + num.toString() : num.toString());
-
-  const date = new Date(dateStr);
-  const year = date.getFullYear().toString();
-  const month = padZero(date.getMonth() + 1);
-  const day = padZero(date.getDate());
-  const hour = padZero(date.getHours());
-  const min = padZero(date.getMinutes());
-  return year + month + day + hour + min;
-};
 
 const mapAppointmentData = (appointment) => {
   return {
@@ -91,6 +75,7 @@ const mapAppointmentData = (appointment) => {
     description: appointment.description,
   };
 };
+
 const TextEditor = (props) => {
   if (props.type === "multilineTextEditor") {
     return null;
@@ -125,6 +110,7 @@ const BasicLayout = ({ onFieldChange, appointmentData, ...restProps }) => {
     </AppointmentForm.BasicLayout>
   );
 };
+
 const currentDate = () => {
   var d = new Date(),
     month = "" + (d.getMonth() + 1),
@@ -143,6 +129,7 @@ const initialState = {
   currentDate: currentDate(),
   currentViewName: "Week",
 };
+
 const messages = {
   detailsLabel: "Activity",
   moreInformationLabel: "",
@@ -165,7 +152,7 @@ const reducer = (state, action) => {
   }
 };
 
-const WeeklyView = () => {
+const Planner = () => {
   const [state, dispatch] = useReducer(reducer, initialState);
   const { data, loading, currentViewName, currentDate } = state;
   const setCurrentViewName = useCallback(
@@ -207,18 +194,12 @@ const WeeklyView = () => {
 
   const handleChange = ({ added, changed, deleted }) => {
     if (added) {
-      axios
-        .post(
-          "https://asia-southeast2-remindus-76402.cloudfunctions.net/backendAPI/api/activity/create",
-          {
-            uid: firebaseAuth.currentUser.uid,
-            startDateTime: convertLocaleDateString(added.startDate),
-            endDateTime: convertLocaleDateString(added.endDate),
-            name: added.title,
-            description: added.description,
-          }
-        )
-        .then(() => alert("Activity added!"))
+      activityService
+        .addActivity(added.startDate, added.endDate, added.title, added.description)
+        .then(() => {
+          getData(setData, setLoading);
+          alert("Activity added!");
+        })
         .catch((e) => {
           alert(e.response.data.message);
         });
@@ -228,19 +209,18 @@ const WeeklyView = () => {
         if (changed[activity.id]) {
           const updatedActivity = { ...activity, ...changed[activity.id] };
 
-          axios
-            .post(
-              "https://asia-southeast2-remindus-76402.cloudfunctions.net/backendAPI/api/activity/update",
-              {
-                uid: firebaseAuth.currentUser.uid,
-                startDateTime: convertLocaleDateString(updatedActivity.startDate),
-                endDateTime: convertLocaleDateString(updatedActivity.endDate),
-                name: updatedActivity.title,
-                description: updatedActivity.description,
-                activityId: activity.id,
-              }
+          activityService
+            .updateActivity(
+              updatedActivity.startDate,
+              updatedActivity.endDate,
+              updatedActivity.title,
+              updatedActivity.description,
+              activity.id
             )
-            .then(() => alert("Activity updated!"))
+            .then(() => {
+              getData(setData, setLoading);
+              alert("Activity updated!");
+            })
             .catch((e) => {
               alert(e.response.data.message);
             });
@@ -248,14 +228,10 @@ const WeeklyView = () => {
       });
     }
     if (deleted !== null) {
-      axios
-        .delete(
-          "https://asia-southeast2-remindus-76402.cloudfunctions.net/backendAPI/api/activity/",
-          { params: { uid: firebaseAuth.currentUser.uid, activityId: deleted } }
-        )
-        .then(() => {
-          alert("Successfully deleted.");
-        });
+      activityService.deleteActivity(deleted).then(() => {
+        getData(setData, setLoading);
+        alert("Successfully deleted.");
+      });
     }
   };
   return (
@@ -300,4 +276,4 @@ TextEditor.propTypes = {
 BooleanEditor.propTypes = {
   label: PropTypes.string,
 };
-export default WeeklyView;
+export default Planner;

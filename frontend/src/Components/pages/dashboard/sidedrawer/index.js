@@ -6,7 +6,7 @@ import List from "@material-ui/core/List";
 import Divider from "@material-ui/core/Divider";
 import ListItem from "@material-ui/core/ListItem";
 import ListItemText from "@material-ui/core/ListItemText";
-import WeeklyView from "./weeklyview";
+import Planner from "./planner";
 import AddActivityButton from "../addactivitybutton";
 const drawerWidth = 240;
 
@@ -59,7 +59,7 @@ const Sidedrawer = () => {
   const ActiveView = () => {
     switch (active) {
       case "Planner View":
-        return <WeeklyView />;
+        return <Planner />;
       case "Add Reminder":
         return <AddReminder />;
       case "Mass edit planner":
@@ -69,7 +69,7 @@ const Sidedrawer = () => {
       case "Search reminders":
         return <SearchReminders />;
       default:
-        return <WeeklyView />;
+        return <Planner />;
     }
   };
   const classes = useStyles();
