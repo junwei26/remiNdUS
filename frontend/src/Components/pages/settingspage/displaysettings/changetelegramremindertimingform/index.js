@@ -10,7 +10,9 @@ import {
   DialogContent,
   DialogTitle,
 } from "@material-ui/core";
+import axios from "axios";
 import PropTypes from "prop-types";
+import { firebaseAuth } from "../../../../../firebase";
 
 const useStyles = makeStyles(() => ({
   button: {
@@ -38,8 +40,24 @@ const ChangeTelegramReminderTimingForm = (props) => {
   };
 
   const closeDialogSave = () => {
-    //   callbackend
-    props.setTelegramReminderTiming(telegramReminderTiming);
+    const timing = {
+      uid: firebaseAuth.currentUser.uid,
+      telegramReminderTiming: telegramReminderTiming,
+    };
+    axios
+      .post(
+        "http://localhost:5001/remindus-76402/asia-southeast2/backendAPI/api/user/updatetiming",
+        timing
+      )
+      .then(() => {
+        alert("Succesfully updated reminder timing");
+        props.setTelegramReminderTiming(telegramReminderTiming);
+      })
+      .catch((error) => {
+        alert(
+          `Issue updating reminder timing. Error status code: ${error.response.status}. ${error.response.data.message}`
+        );
+      });
     handleDialogClose();
   };
 
@@ -49,12 +67,15 @@ const ChangeTelegramReminderTimingForm = (props) => {
 
   const setTimingToSix = () => {
     setTelegramReminderTiming("0600");
+    handleMenuClose();
   };
   const setTimingToEight = () => {
     setTelegramReminderTiming("0800");
+    handleMenuClose();
   };
   const setTimingToTen = () => {
     setTelegramReminderTiming("1000");
+    handleMenuClose();
   };
 
   const handleMenuClose = () => {
@@ -74,7 +95,7 @@ const ChangeTelegramReminderTimingForm = (props) => {
         <DialogTitle id="form-dialog-title">Change Telegram Reminder Timing</DialogTitle>
         <DialogContent>
           <Button aria-controls="simple-menu" aria-haspopup="true" onClick={handleMenuClick}>
-            Open Menu
+            <Typography>{telegramReminderTiming}</Typography>
           </Button>
           <Menu anchorEl={anchorEl} keepMounted open={Boolean(anchorEl)} onClose={handleMenuClose}>
             <MenuItem onClick={setTimingToSix}>06:00 AM</MenuItem>
@@ -96,7 +117,7 @@ const ChangeTelegramReminderTimingForm = (props) => {
 };
 
 ChangeTelegramReminderTimingForm.propTypes = {
-  telegramReminderTiming: PropTypes.bool,
+  telegramReminderTiming: PropTypes.string,
   setTelegramReminderTiming: PropTypes.func,
 };
 

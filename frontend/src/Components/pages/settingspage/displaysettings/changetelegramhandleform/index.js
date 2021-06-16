@@ -7,7 +7,7 @@ const changeTelegramHandleForm = (props) => {
 
   const handleSubmit = (e) => {
     e.preventDefault();
-    setTelegramHandle(e.target.username.value);
+    setTelegramHandle(e.target.telegramHandle.value);
   };
 
   return (

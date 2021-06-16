@@ -44,7 +44,7 @@ const DisplaySettings = (props) => {
         <Button className={classes.button}>
           <Typography>Telegram reminders: {props.telegramSendReminders ? "On" : "Off"}</Typography>
         </Button>
-        <ChangeTelegramReminderTimingForm />
+        <ChangeTelegramReminderTimingForm telegramReminderTiming={props.telegramReminderTiming} />
       </ButtonGroup>
     </>
   );

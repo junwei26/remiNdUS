@@ -113,6 +113,9 @@ exports.updateTiming = (req, res) => {
             return res.status(404).send({ message: `Error updating reminder timing. ${error}` });
           });
       });
+    })
+    .catch((error) => {
+      return res.status(404).send({ message: `Cannot find user with given uid. ${error}` });
     });
 };
 
