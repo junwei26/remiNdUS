@@ -82,7 +82,7 @@ const SettingsPage = () => {
         <Grid item>
           <Typography>Welcome to the Settings Page</Typography>
         </Grid>
-        <Grid item style={{ width: "25%" }}>
+        <Grid item xs={12} sm={6}>
           <Typography variant="h4">Profile</Typography>
           <DisplayUserInfo
             name={displayName}
@@ -92,11 +92,13 @@ const SettingsPage = () => {
             uid={uid}
           />
         </Grid>
-        <Grid item style={{ width: "25%" }}>
+        <Grid item xs={12} sm={6}>
           <ChangeUserInfoButton onChangeUserInfo={onChangeUserInfo} />
         </Grid>
-        <Grid item style={{ width: "25%" }}>
-          <Typography variant="h4">{loading ? "Settings (Loading)" : "Settings"}</Typography>
+        <Grid item xs={12} sm={6}>
+          <Typography variant="h4" fullWidth>
+            {loading ? "Settings (Loading)" : "Settings"}
+          </Typography>
           <DisplaySettings
             username={username}
             verified={verified}
@@ -105,7 +107,7 @@ const SettingsPage = () => {
             telegramReminderTiming={telegramReminderTiming}
           />
         </Grid>
-        <Grid item style={{ width: "25%" }}>
+        <Grid item xs={12} sm={6}>
           <ResetPasswordForm />
         </Grid>
       </Grid>
