@@ -33,6 +33,7 @@ const ChangeTelegramReminderTimingForm = (props) => {
 
   const handleDialogClickOpen = () => {
     setDialogOpen(true);
+    setTelegramReminderTiming(props.telegramReminderTiming); // botching because it is not being correctly set on its own
   };
 
   const handleDialogClose = () => {
@@ -51,6 +52,7 @@ const ChangeTelegramReminderTimingForm = (props) => {
       )
       .then(() => {
         alert("Succesfully updated reminder timing");
+        // alert(props.setTelegramReminderTiming);
         props.setTelegramReminderTiming(telegramReminderTiming);
       })
       .catch((error) => {
@@ -81,6 +83,7 @@ const ChangeTelegramReminderTimingForm = (props) => {
   const handleMenuClose = () => {
     setAnchorEl(null);
   };
+
   return (
     <>
       <Button
@@ -95,7 +98,13 @@ const ChangeTelegramReminderTimingForm = (props) => {
         <DialogTitle id="form-dialog-title">Change Telegram Reminder Timing</DialogTitle>
         <DialogContent>
           <Button aria-controls="simple-menu" aria-haspopup="true" onClick={handleMenuClick}>
-            <Typography>{telegramReminderTiming}</Typography>
+            <Typography>
+              {telegramReminderTiming === "0600"
+                ? "06:00 AM"
+                : telegramReminderTiming === "0800"
+                ? "08:00 AM"
+                : "10:00 AM"}
+            </Typography>
           </Button>
           <Menu anchorEl={anchorEl} keepMounted open={Boolean(anchorEl)} onClose={handleMenuClose}>
             <MenuItem onClick={setTimingToSix}>06:00 AM</MenuItem>

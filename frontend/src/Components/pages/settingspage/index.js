@@ -40,11 +40,11 @@ const getSettings = (
 const SettingsPage = () => {
   const user = firebaseAuth.currentUser;
   const [displayName, setDisplayName] = useState(user.displayName);
-  const [username, setUsername] = useState();
-  const [verified, setVerified] = useState(false);
-  const [telegramHandle, setTelegramHandle] = useState();
-  const [telegramSendReminders, setTelegramSendReminders] = useState(false);
-  const [telegramReminderTiming, setTelegramReminderTiming] = useState();
+  const [username, setUsername] = useState("Loading");
+  const [verified, setVerified] = useState("Loading");
+  const [telegramHandle, setTelegramHandle] = useState("Loading");
+  const [telegramSendReminders, setTelegramSendReminders] = useState("Loading");
+  const [telegramReminderTiming, setTelegramReminderTiming] = useState("Loading");
   const [email, setEmail] = useState(user.email);
   const [photoUrl, setPhotoUrl] = useState(user.photoURL);
   const emailVerified = user.emailVerified;
@@ -105,6 +105,10 @@ const SettingsPage = () => {
             telegramHandle={telegramHandle}
             telegramSendReminders={telegramSendReminders}
             telegramReminderTiming={telegramReminderTiming}
+            setUsername={setUsername}
+            setTelegramHandle={setTelegramHandle}
+            setTelegramSendReminders={setTelegramSendReminders}
+            setTelegramReminderTiming={setTelegramReminderTiming}
           />
         </Grid>
         <Grid item xs={12} sm={6}>

@@ -44,7 +44,10 @@ const DisplaySettings = (props) => {
         <Button className={classes.button}>
           <Typography>Telegram reminders: {props.telegramSendReminders ? "On" : "Off"}</Typography>
         </Button>
-        <ChangeTelegramReminderTimingForm telegramReminderTiming={props.telegramReminderTiming} />
+        <ChangeTelegramReminderTimingForm
+          telegramReminderTiming={props.telegramReminderTiming}
+          setTelegramReminderTiming={props.setTelegramReminderTiming}
+        />
       </ButtonGroup>
     </>
   );
@@ -56,6 +59,10 @@ DisplaySettings.propTypes = {
   telegramHandle: PropTypes.string,
   telegramSendReminders: PropTypes.bool,
   telegramReminderTiming: PropTypes.string,
+  setUsername: PropTypes.func,
+  setTelegramHandle: PropTypes.func,
+  setTelegramSendReminders: PropTypes.func,
+  setTelegramReminderTiming: PropTypes.func,
 };
 
 export default DisplaySettings;
