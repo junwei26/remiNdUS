@@ -43,7 +43,7 @@ const ChangeUsernameButton = (props) => {
     };
     axios
       .post(
-        "http://localhost:5001/remindus-76402/asia-southeast2/backendAPI/api/user/updateusername",
+        "http://localhost:5001/remindus-76402/asia-southeast2/backendAPI/api/user/updateUsername",
         timing
       )
       .then(() => {

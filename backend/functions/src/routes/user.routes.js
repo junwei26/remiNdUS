@@ -5,7 +5,10 @@ module.exports = (app) => {
 
   router.post("/create", user.create);
   router.post("/update", user.update);
-  router.post("/updateTiming", user.updateTiming);
+  router.post("/updateUsername", user.updateUsername);
+  router.post("/updateTelegramHandle", user.updateTelegramHandle);
+  router.post("/updateTelegramSendReminders", user.updateTelegramSendReminders);
+  router.post("/updateTelegramReminderTiming", user.updateTelegramReminderTiming);
 
   router.get("/", user.get);
 

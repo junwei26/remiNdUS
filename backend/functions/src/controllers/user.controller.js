@@ -82,18 +82,8 @@ exports.update = (req, res) => {
     });
 };
 
-exports.updateTiming = (req, res) => {
-  if (!req.body.uid) {
-    return res.status(400).send({ message: "You must be logged in to make this operation!" });
-  }
-  if (!req.body.telegramReminderTiming) {
-    return res.status(400).send({ message: "Error! Missing data." });
-  }
-
-  const updatedSettings = {
-    telegramReminderTiming: req.body.telegramReminderTiming,
-  };
-
+// helper function for updating individual fields of user settings
+const updateSettings = (req, res, updatedSettings, settingNameText) => {
   db.collection("users")
     .where("uid", "==", req.body.uid)
     .limit(1)
@@ -107,16 +97,76 @@ exports.updateTiming = (req, res) => {
           .doc(doc.id)
           .update(updatedSettings)
           .then(() => {
-            return res.status(200).send({ message: "Successfully updated reminder timing!" });
+            return res.status(200).send({ message: `Successfully updated ${settingNameText}!` });
           })
           .catch((error) => {
-            return res.status(404).send({ message: `Error updating reminder timing. ${error}` });
+            return res.status(404).send({ message: `Error updating ${settingNameText}. ${error}` });
           });
       });
     })
     .catch((error) => {
       return res.status(404).send({ message: `Cannot find user with given uid. ${error}` });
     });
+};
+
+exports.updateUsername = (req, res) => {
+  if (!req.body.uid) {
+    return res.status(400).send({ message: "You must be logged in to make this operation!" });
+  }
+  if (!req.body.username) {
+    return res.status(400).send({ message: "Error! Missing data." });
+  }
+
+  const updatedSettings = {
+    username: req.body.username,
+  };
+
+  return updateSettings(req, res, updatedSettings, "username");
+};
+
+exports.updateTelegramHandle = (req, res) => {
+  if (!req.body.uid) {
+    return res.status(400).send({ message: "You must be logged in to make this operation!" });
+  }
+  if (!req.body.telegramHandle) {
+    return res.status(400).send({ message: "Error! Missing data." });
+  }
+
+  const updatedSettings = {
+    telegramHandle: req.body.telegramHandle,
+  };
+
+  return updateSettings(req, res, updatedSettings, "telegram handle");
+};
+
+exports.updateTelegramSendReminders = (req, res) => {
+  if (!req.body.uid) {
+    return res.status(400).send({ message: "You must be logged in to make this operation!" });
+  }
+  if (!req.body.telegramSendReminders) {
+    return res.status(400).send({ message: "Error! Missing data." });
+  }
+
+  const updatedSettings = {
+    telegramSendReminders: req.body.telegramSendReminders,
+  };
+
+  return updateSettings(req, res, updatedSettings, "send telegram reminders");
+};
+
+exports.updateTelegramReminderTiming = (req, res) => {
+  if (!req.body.uid) {
+    return res.status(400).send({ message: "You must be logged in to make this operation!" });
+  }
+  if (!req.body.telegramReminderTiming) {
+    return res.status(400).send({ message: "Error! Missing data." });
+  }
+
+  const updatedSettings = {
+    telegramReminderTiming: req.body.telegramReminderTiming,
+  };
+
+  return updateSettings(req, res, updatedSettings, "telegram reminder timing");
 };
 
 exports.get = (req, res) => {
