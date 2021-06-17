@@ -41,14 +41,14 @@ const ChangeTelegramReminderTimingButton = (props) => {
   };
 
   const closeDialogSave = () => {
-    const timing = {
+    const updatedSettings = {
       uid: firebaseAuth.currentUser.uid,
       telegramReminderTiming: telegramReminderTiming,
     };
     axios
       .post(
         "http://localhost:5001/remindus-76402/asia-southeast2/backendAPI/api/user/updateTelegramReminderTiming",
-        timing
+        updatedSettings
       )
       .then(() => {
         alert("Succesfully updated reminder timing");

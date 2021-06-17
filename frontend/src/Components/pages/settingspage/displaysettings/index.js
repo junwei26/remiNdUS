@@ -3,7 +3,9 @@ import { makeStyles } from "@material-ui/core/styles";
 import { ButtonGroup, Button, Typography } from "@material-ui/core";
 import PropTypes from "prop-types";
 import ChangeUsernameButton from "./changeusernamebutton";
-import ChangeTelegramReminderTimingForm from "./changetelegramremindertimingbutton";
+import ChangeTelegramHandleButton from "./changetelegramhandlebutton";
+import ChangeTelegramSendReminderButton from "./changetelegramsendremindersbutton";
+import ChangeTelegramReminderTimingButton from "./changetelegramremindertimingbutton";
 
 const useStyles = makeStyles(() => ({
   buttonGroup: {
@@ -35,15 +37,15 @@ const DisplaySettings = (props) => {
             Tutor verification: {props.verified ? "Verified" : "Not verified"}
           </Typography>
         </Button>
-        <Button className={classes.button}>
-          <Typography>
-            Telegram Handle: {props.telegramHandle ? props.telegramHandle : "NIL"}
-          </Typography>
-        </Button>
-        <Button className={classes.button}>
-          <Typography>Telegram reminders: {props.telegramSendReminders ? "On" : "Off"}</Typography>
-        </Button>
-        <ChangeTelegramReminderTimingForm
+        <ChangeTelegramHandleButton
+          telegramHandle={props.telegramHandle}
+          setTelegramHandle={props.setTelegramHandle}
+        />
+        <ChangeTelegramSendReminderButton
+          telegramSendReminders={props.telegramSendReminders}
+          setTelegramSendReminders={props.setTelegramSendReminders}
+        />
+        <ChangeTelegramReminderTimingButton
           telegramReminderTiming={props.telegramReminderTiming}
           setTelegramReminderTiming={props.setTelegramReminderTiming}
         />

@@ -143,7 +143,7 @@ exports.updateTelegramSendReminders = (req, res) => {
   if (!req.body.uid) {
     return res.status(400).send({ message: "You must be logged in to make this operation!" });
   }
-  if (!req.body.telegramSendReminders) {
+  if (!(req.body.telegramSendReminders || req.body.telegramSendReminders === false)) {
     return res.status(400).send({ message: "Error! Missing data." });
   }
 

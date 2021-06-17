@@ -37,14 +37,14 @@ const ChangeUsernameButton = (props) => {
   };
 
   const closeDialogSave = () => {
-    const timing = {
+    const updatedSettings = {
       uid: firebaseAuth.currentUser.uid,
       username: username,
     };
     axios
       .post(
         "http://localhost:5001/remindus-76402/asia-southeast2/backendAPI/api/user/updateUsername",
-        timing
+        updatedSettings
       )
       .then(() => {
         alert("Succesfully updated username");
