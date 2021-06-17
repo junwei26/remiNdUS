@@ -22,7 +22,7 @@ const useStyles = makeStyles(() => ({
   },
 }));
 
-const ChangeTelegramReminderTimingForm = (props) => {
+const ChangeTelegramReminderTimingButton = (props) => {
   const classes = useStyles();
   const [anchorEl, setAnchorEl] = useState(null);
   const [telegramReminderTiming, setTelegramReminderTiming] = useState(
@@ -52,7 +52,6 @@ const ChangeTelegramReminderTimingForm = (props) => {
       )
       .then(() => {
         alert("Succesfully updated reminder timing");
-        // alert(props.setTelegramReminderTiming);
         props.setTelegramReminderTiming(telegramReminderTiming);
       })
       .catch((error) => {
@@ -125,9 +124,9 @@ const ChangeTelegramReminderTimingForm = (props) => {
   );
 };
 
-ChangeTelegramReminderTimingForm.propTypes = {
+ChangeTelegramReminderTimingButton.propTypes = {
   telegramReminderTiming: PropTypes.string,
   setTelegramReminderTiming: PropTypes.func,
 };
 
-export default ChangeTelegramReminderTimingForm;
+export default ChangeTelegramReminderTimingButton;

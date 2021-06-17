@@ -2,7 +2,8 @@ import React from "react";
 import { makeStyles } from "@material-ui/core/styles";
 import { ButtonGroup, Button, Typography } from "@material-ui/core";
 import PropTypes from "prop-types";
-import ChangeTelegramReminderTimingForm from "./changetelegramremindertimingform";
+import ChangeUsernameButton from "./changeusernamebutton";
+import ChangeTelegramReminderTimingForm from "./changetelegramremindertimingbutton";
 
 const useStyles = makeStyles(() => ({
   buttonGroup: {
@@ -28,9 +29,7 @@ const DisplaySettings = (props) => {
         color="primary"
         aria-label="vertical contained primary button group"
       >
-        <Button className={classes.button}>
-          <Typography>Username: {props.username ? props.username : "Not set-up"}</Typography>
-        </Button>
+        <ChangeUsernameButton username={props.username} setUsername={props.setUsername} />
         <Button className={classes.button} disabled>
           <Typography>
             Tutor verification: {props.verified ? "Verified" : "Not verified"}
