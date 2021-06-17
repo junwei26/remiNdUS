@@ -3,6 +3,7 @@
 // ensuring sample correctness offline.
 import { firebaseAuth } from "../firebase";
 import axios from "axios";
+import { updateProfile } from "./userSettings";
 
 const { REACT_APP_URL } = process.env;
 
@@ -45,6 +46,7 @@ export function signUpWithEmailPassword(email, password) {
           userDetails
         )
         .then(() => {
+          updateProfile(userDetails.username, null);
           alert(`Signed up as user ${user.uid}. Please check your email for email verification.`);
           window.location.replace(REACT_APP_URL + "/dashboard");
         })

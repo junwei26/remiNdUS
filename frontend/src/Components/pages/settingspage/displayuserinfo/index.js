@@ -1,17 +1,48 @@
 import React from "react";
-import { Grid } from "@material-ui/core";
+import { makeStyles } from "@material-ui/core/styles";
+import { ButtonGroup, Button, Typography } from "@material-ui/core";
 import PropTypes from "prop-types";
 
+const useStyles = makeStyles(() => ({
+  buttonGroup: {
+    flexGrow: 1,
+    width: "100%",
+  },
+  button: {
+    justifyContent: "flex-start",
+    paddingTop: "5%",
+    paddingBottom: "5%",
+  },
+}));
+
 const DisplayUserInfo = (props) => {
+  const classes = useStyles();
+
   return (
     <>
-      <Grid container direction="column" justify="center" alignItems="flex-start" spacing={2}>
-        <Grid item>Name: {props.name}</Grid>
-        <Grid item>Email: {props.email}</Grid>
-        <Grid item>Photo URL: {props.photoUrl}</Grid>
-        <Grid item>Email Verification: {props.emailVerified}</Grid>
-        <Grid item>uid: {props.uid}</Grid>
-      </Grid>
+      <ButtonGroup
+        className={classes.buttonGroup}
+        variant="outlined"
+        orientation="vertical"
+        color="primary"
+        aria-label="vertical contained primary button group"
+      >
+        <Button className={classes.button}>
+          <Typography>Name: {props.name ? props.name : "NIL"}</Typography>
+        </Button>
+        <Button className={classes.button}>
+          <Typography>Email: {props.email}</Typography>
+        </Button>
+        <Button className={classes.button}>
+          <Typography>Photo URL: {props.photoUrl ? props.photoUrl : "NIL"}</Typography>
+        </Button>
+        <Button className={classes.button} disabled>
+          <Typography>Email Verification: {props.emailVerified ? "Yes" : "No"}</Typography>
+        </Button>
+        <Button className={classes.button} disabled>
+          <Typography>uid: {props.uid}</Typography>
+        </Button>
+      </ButtonGroup>
     </>
   );
 };
