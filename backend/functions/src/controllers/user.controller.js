@@ -83,7 +83,7 @@ exports.update = (req, res) => {
 };
 
 // helper function for updating individual fields of user settings
-const updateSettings = (req, res, updatedSettings, settingNameText) => {
+const updateSetting = (req, res, updatedSetting, settingNameText) => {
   db.collection("users")
     .where("uid", "==", req.body.uid)
     .limit(1)
@@ -95,7 +95,7 @@ const updateSettings = (req, res, updatedSettings, settingNameText) => {
       data.forEach((doc) => {
         db.collection("users")
           .doc(doc.id)
-          .update(updatedSettings)
+          .update(updatedSetting)
           .then(() => {
             return res.status(200).send({ message: `Successfully updated ${settingNameText}!` });
           })
@@ -109,6 +109,21 @@ const updateSettings = (req, res, updatedSettings, settingNameText) => {
     });
 };
 
+exports.updateTest = (req, res) => {
+  if (!req.body.uid) {
+    return res.status(400).send({ message: "You must be logged in to make this operation!" });
+  }
+  if (!req.body.test) {
+    return res.status(400).send({ message: "Error! Missing data." });
+  }
+
+  const updatedSetting = {
+    test: req.body.test,
+  };
+
+  return updateSetting(req, res, updatedSetting, "test");
+};
+
 exports.updateUsername = (req, res) => {
   if (!req.body.uid) {
     return res.status(400).send({ message: "You must be logged in to make this operation!" });
@@ -117,11 +132,11 @@ exports.updateUsername = (req, res) => {
     return res.status(400).send({ message: "Error! Missing data." });
   }
 
-  const updatedSettings = {
+  const updatedSetting = {
     username: req.body.username,
   };
 
-  return updateSettings(req, res, updatedSettings, "username");
+  return updateSetting(req, res, updatedSetting, "username");
 };
 
 exports.updateTelegramHandle = (req, res) => {
@@ -132,11 +147,11 @@ exports.updateTelegramHandle = (req, res) => {
     return res.status(400).send({ message: "Error! Missing data." });
   }
 
-  const updatedSettings = {
+  const updatedSetting = {
     telegramHandle: req.body.telegramHandle,
   };
 
-  return updateSettings(req, res, updatedSettings, "telegram handle");
+  return updateSetting(req, res, updatedSetting, "telegram handle");
 };
 
 exports.updateTelegramSendReminders = (req, res) => {
@@ -147,11 +162,11 @@ exports.updateTelegramSendReminders = (req, res) => {
     return res.status(400).send({ message: "Error! Missing data." });
   }
 
-  const updatedSettings = {
-    telegramSendReminders: req.body.telegramSendReminders,
+  const updatedSetting = {
+    telegramSendReminder: req.body.telegramSendReminders,
   };
 
-  return updateSettings(req, res, updatedSettings, "send telegram reminders");
+  return updateSetting(req, res, updatedSetting, "send telegram reminders");
 };
 
 exports.updateTelegramReminderTiming = (req, res) => {
@@ -162,11 +177,11 @@ exports.updateTelegramReminderTiming = (req, res) => {
     return res.status(400).send({ message: "Error! Missing data." });
   }
 
-  const updatedSettings = {
+  const updatedSetting = {
     telegramReminderTiming: req.body.telegramReminderTiming,
   };
 
-  return updateSettings(req, res, updatedSettings, "telegram reminder timing");
+  return updateSetting(req, res, updatedSetting, "telegram reminder timing");
 };
 
 exports.get = (req, res) => {
@@ -193,5 +208,25 @@ exports.get = (req, res) => {
             }
           });
       });
+    });
+};
+
+exports.getTelegramReminderUsers = (req, res) => {
+  let telegramHandles = [];
+
+  db.collection("users")
+    .where("telegramSendReminders", "==", true)
+    .get()
+    .then((data) => {
+      if (data.empty) {
+        res.send({});
+        return res.status(400).send({ message: "Is empty" });
+      } else {
+        data.forEach((doc) => {
+          telegramHandles.push(doc.get("telegramHandle"));
+        });
+      }
+      res.send(telegramHandles);
+      return res.status(200).send();
     });
 };

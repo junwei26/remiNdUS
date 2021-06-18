@@ -17,6 +17,7 @@
     "axios": "^0.21.1",
     "firebase-admin": "^9.2.0",
     "firebase-functions": "^3.11.0",
+    "node-cron": "^3.0.0",
     "telegraf": "^4.3.0"
   },
   "devDependencies": {
