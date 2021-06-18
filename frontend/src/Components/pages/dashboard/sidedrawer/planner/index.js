@@ -3,7 +3,8 @@ import Paper from "@material-ui/core/Paper";
 import LinearProgress from "@material-ui/core/LinearProgress";
 import { withStyles } from "@material-ui/core/styles";
 import PropTypes from "prop-types";
-import { ViewState, EditingState } from "@devexpress/dx-react-scheduler";
+import { ViewState, EditingState, IntegratedEditing } from "@devexpress/dx-react-scheduler";
+import { purple, red } from "@material-ui/core/colors";
 import {
   Scheduler,
   WeekView,
@@ -16,7 +17,8 @@ import {
   AppointmentTooltip,
   TodayButton,
   MonthView,
-  EditRecurrenceMenu,
+  Resources,
+  CurrentTimeIndicator,
 } from "@devexpress/dx-react-scheduler-material-ui";
 import activityService from "../../../services/activityService";
 
@@ -31,6 +33,16 @@ const getData = (setData, setLoading) => {
     }
   });
 };
+let resources = [
+  {
+    fieldName: "eventType",
+    title: "",
+    instances: [
+      { id: 1, text: "activity", color: purple },
+      { id: 2, text: "reminder", color: red },
+    ],
+  },
+];
 
 const styles = {
   toolbarRoot: {
@@ -73,6 +85,7 @@ const mapAppointmentData = (appointment) => {
     endDate: parseTime(appointment.endDateTime),
     title: appointment.name,
     description: appointment.description,
+    eventType: 1,
   };
 };
 
@@ -90,24 +103,40 @@ const BooleanEditor = (props) => {
   return <AppointmentForm.BooleanEditor {...props} />;
 };
 
+const LabelEditor = (props) => {
+  if (props.text == "eventType") {
+    return null;
+  }
+  return <AppointmentForm.Label {...props} />;
+};
+
+const ResourceEditor = () => {
+  return null;
+};
+
 const BasicLayout = ({ onFieldChange, appointmentData, ...restProps }) => {
   const onDescriptionFieldChange = (nextValue) => {
     onFieldChange({ description: nextValue });
   };
-
   return (
-    <AppointmentForm.BasicLayout
-      appointmentData={appointmentData}
-      onFieldChange={onFieldChange}
-      {...restProps}
-    >
-      <AppointmentForm.Label text="Description" type="title" />
-      <AppointmentForm.TextEditor
-        value={appointmentData.description}
-        onValueChange={onDescriptionFieldChange}
-        placeholder="Add a description"
+    <Paper>
+      <AppointmentForm.Label
+        text={appointmentData.eventType == 1 ? "Activity" : "Reminder"}
+        type="title"
       />
-    </AppointmentForm.BasicLayout>
+      <AppointmentForm.BasicLayout
+        appointmentData={appointmentData}
+        onFieldChange={onFieldChange}
+        {...restProps}
+      >
+        <AppointmentForm.Label text="Description" type="title" />
+        <AppointmentForm.TextEditor
+          value={appointmentData.description}
+          onValueChange={onDescriptionFieldChange}
+          placeholder="Add a description"
+        />
+      </AppointmentForm.BasicLayout>
+    </Paper>
   );
 };
 
@@ -131,7 +160,6 @@ const initialState = {
 };
 
 const messages = {
-  detailsLabel: "Activity",
   moreInformationLabel: "",
   allDayLabel: "",
   repeatLabel: "",
@@ -208,7 +236,6 @@ const Planner = () => {
       data.map((activity) => {
         if (changed[activity.id]) {
           const updatedActivity = { ...activity, ...changed[activity.id] };
-
           activityService
             .updateActivity(
               updatedActivity.startDate,
@@ -236,30 +263,36 @@ const Planner = () => {
   };
   return (
     <Paper>
-      <Scheduler data={data} height={660}>
+      <Scheduler data={data}>
         <ViewState
           currentDate={currentDate}
           currentViewName={currentViewName}
           onCurrentViewNameChange={setCurrentViewName}
           onCurrentDateChange={setCurrentDate}
         />
+
+        <EditingState onCommitChanges={handleChange} />
+        <IntegratedEditing />
         <WeekView startDayHour={7.5} endDayHour={17.5} />
         <MonthView startDayHour={7.5} endDayHour={17.5} />
         <Appointments />
-        <Toolbar {...(loading ? { rootComponent: ToolbarWithLoading } : null)} />
-        <EditingState onCommitChanges={handleChange} />
-        <EditRecurrenceMenu />
-        <DateNavigator />
-        <TodayButton />
-        <ViewSwitcher />
-        <DragDropProvider allowDrag={() => true} allowResize={() => true} />
+        <Resources data={resources} mainResourceName="eventType" />
+
         <AppointmentTooltip showOpenButton showCloseButton showDeleteButton />
         <AppointmentForm
           basicLayoutComponent={BasicLayout}
           textEditorComponent={TextEditor}
           booleanEditorComponent={BooleanEditor}
+          resourceEditorComponent={ResourceEditor}
+          labelComponent={LabelEditor}
           messages={messages}
         />
+        <DragDropProvider />
+        <Toolbar {...(loading ? { rootComponent: ToolbarWithLoading } : null)} />
+        <DateNavigator />
+        <TodayButton />
+        <ViewSwitcher />
+        <CurrentTimeIndicator />
       </Scheduler>
     </Paper>
   );
@@ -276,4 +309,9 @@ TextEditor.propTypes = {
 BooleanEditor.propTypes = {
   label: PropTypes.string,
 };
+
+LabelEditor.propTypes = {
+  text: PropTypes.string,
+};
+
 export default Planner;
