@@ -1,5 +1,6 @@
 const functions = require("firebase-functions");
 const { Telegraf } = require("telegraf");
+const cron = require("node-cron");
 const axios = require("axios");
 
 const bot = new Telegraf(functions.config().telegram.token, {
@@ -38,4 +39,20 @@ exports.remiNdUSBot = functions.region("asia-southeast2").https.onRequest((reque
       return !rv && response.sendStatus(200);
     })
     .catch((err) => console.log(err));
+});
+
+cron.schedule("* 0,1,2,3,4,5,6,7,8,9,10,11,12,13,14,15,16,17,18,19,20,21,22,23 * * *", () => {
+  const updatedSetting = {
+    test: new Date(),
+  };
+  axios
+    .post(
+      // "https://asia-southeast2-remindus-76402.cloudfunctions.net/backendAPI/api/user/updateTest",
+      "http://localhost:5001/remindus-76402/asia-southeast2/backendAPI/api/user/updateTest",
+      updatedSetting
+    )
+    .then(() => {
+      bot.telegram.sendMessage();
+    })
+    .catch((error) => {});
 });
