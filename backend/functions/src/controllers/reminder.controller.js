@@ -19,6 +19,7 @@ exports.create = (req, res) => {
     name: req.body.name,
     description: req.body.description,
     dateTime: req.body.dateTime,
+    eventType: "2",
   };
   db.collection("users")
     .where("uid", "==", req.body.uid)
@@ -60,6 +61,7 @@ exports.update = (req, res) => {
     name: req.body.name,
     description: req.body.description,
     dateTime: req.body.dateTime,
+    eventType: "2",
   };
 
   db.collection("users")
