@@ -4,7 +4,6 @@ import LinearProgress from "@material-ui/core/LinearProgress";
 import { withStyles } from "@material-ui/core/styles";
 import PropTypes from "prop-types";
 import { ViewState, EditingState, IntegratedEditing } from "@devexpress/dx-react-scheduler";
-import { purple, red } from "@material-ui/core/colors";
 import {
   Scheduler,
   WeekView,
@@ -21,16 +20,15 @@ import {
   CurrentTimeIndicator,
 } from "@devexpress/dx-react-scheduler-material-ui";
 import activityService from "../../../services/activityService";
+import reminderService from "../../../services/reminderService";
 
 const getData = (setData, setLoading) => {
   setLoading(true);
-  return activityService.getAllActivities().then((response) => {
-    if (response.data) {
-      setData(response.data);
+  return activityService.getAllActivities().then((response1) => {
+    reminderService.getAllReminder().then((response2) => {
+      setData([...response1.data, ...response2.data]);
       setLoading(false);
-    } else {
-      alert("No data!");
-    }
+    });
   });
 };
 let resources = [
@@ -38,8 +36,8 @@ let resources = [
     fieldName: "eventType",
     title: "",
     instances: [
-      { id: 1, text: "activity", color: purple },
-      { id: 2, text: "reminder", color: red },
+      { id: "1", text: "activity", color: "#673ab7" },
+      { id: "2", text: "reminder", color: "#d50000" },
     ],
   },
 ];
@@ -79,14 +77,24 @@ const parseTime = (dateTime) => {
 };
 
 const mapAppointmentData = (appointment) => {
-  return {
-    id: appointment.activityId,
-    startDate: parseTime(appointment.startDateTime),
-    endDate: parseTime(appointment.endDateTime),
-    title: appointment.name,
-    description: appointment.description,
-    eventType: 1,
-  };
+  if (appointment.eventType === "1") {
+    return {
+      id: appointment.activityId,
+      startDate: parseTime(appointment.startDateTime),
+      endDate: parseTime(appointment.endDateTime),
+      title: appointment.name,
+      description: appointment.description,
+      eventType: appointment.eventType,
+    };
+  } else {
+    return {
+      id: appointment.reminderId,
+      startDate: parseTime(appointment.dateTime),
+      title: appointment.name,
+      description: appointment.description,
+      eventType: appointment.eventType,
+    };
+  }
 };
 
 const TextEditor = (props) => {
@@ -121,7 +129,7 @@ const BasicLayout = ({ onFieldChange, appointmentData, ...restProps }) => {
   return (
     <Paper>
       <AppointmentForm.Label
-        text={appointmentData.eventType == 1 ? "Activity" : "Reminder"}
+        text={appointmentData.eventType == 2 ? "Reminder" : "Activity"}
         type="title"
       />
       <AppointmentForm.BasicLayout
@@ -233,31 +241,59 @@ const Planner = () => {
         });
     }
     if (changed) {
-      data.map((activity) => {
-        if (changed[activity.id]) {
-          const updatedActivity = { ...activity, ...changed[activity.id] };
-          activityService
-            .updateActivity(
-              updatedActivity.startDate,
-              updatedActivity.endDate,
-              updatedActivity.title,
-              updatedActivity.description,
-              activity.id
-            )
-            .then(() => {
-              getData(setData, setLoading);
-              alert("Activity updated!");
-            })
-            .catch((e) => {
-              alert(e.response.data.message);
-            });
+      data.map((event) => {
+        if (changed[event.id]) {
+          const updatedEvent = { ...event, ...changed[event.id] };
+          if (event.eventType === "1") {
+            activityService
+              .updateActivity(
+                updatedEvent.startDate,
+                updatedEvent.endDate,
+                updatedEvent.title,
+                updatedEvent.description,
+                event.id
+              )
+              .then(() => {
+                getData(setData, setLoading);
+                alert("Activity updated!");
+              })
+              .catch((e) => {
+                alert(e.response.data.message);
+              });
+          } else {
+            reminderService
+              .updateReminder(
+                updatedEvent.startDate,
+                updatedEvent.title,
+                updatedEvent.description,
+                event.id
+              )
+              .then(() => {
+                getData(setData, setLoading);
+                alert("Reminder updated!");
+              })
+              .catch((e) => {
+                alert(e.response.data.message);
+              });
+          }
         }
       });
     }
     if (deleted !== null) {
-      activityService.deleteActivity(deleted).then(() => {
-        getData(setData, setLoading);
-        alert("Successfully deleted.");
+      data.map((event) => {
+        if (deleted === event.id) {
+          if (event.eventType == "1") {
+            activityService.deleteActivity(deleted).then(() => {
+              getData(setData, setLoading);
+              alert("Activity successfully deleted.");
+            });
+          } else {
+            reminderService.deleteReminder(deleted).then(() => {
+              getData(setData, setLoading);
+              alert("Reminder successfully deleted.");
+            });
+          }
+        }
       });
     }
   };
@@ -287,7 +323,7 @@ const Planner = () => {
           labelComponent={LabelEditor}
           messages={messages}
         />
-        <DragDropProvider />
+        <DragDropProvider allowResize={() => false} />
         <Toolbar {...(loading ? { rootComponent: ToolbarWithLoading } : null)} />
         <DateNavigator />
         <TodayButton />
