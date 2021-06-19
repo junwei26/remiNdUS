@@ -42,17 +42,29 @@ exports.remiNdUSBot = functions.region("asia-southeast2").https.onRequest((reque
 });
 
 cron.schedule("* 0,1,2,3,4,5,6,7,8,9,10,11,12,13,14,15,16,17,18,19,20,21,22,23 * * *", () => {
-  const updatedSetting = {
-    test: new Date(),
-  };
+  const getTelegramReminderUsersUrl =
+    "http://localhost:5001/remindus-76402/asia-southeast2/backendAPI/api/user/getTelegramReminderUsers";
+
+  let telegramHandles = [];
+
   axios
-    .post(
-      // "https://asia-southeast2-remindus-76402.cloudfunctions.net/backendAPI/api/user/updateTest",
-      "http://localhost:5001/remindus-76402/asia-southeast2/backendAPI/api/user/updateTest",
-      updatedSetting
-    )
-    .then(() => {
-      bot.telegram.sendMessage();
+    .get(getTelegramReminderUsersUrl)
+    .then((response) => {
+      telegramHandles = response.data;
     })
-    .catch((error) => {});
+    .catch(() => {});
+
+  const updateURL =
+    "http://localhost:5001/remindus-76402/asia-southeast2/backendAPI/api/user/updateTest";
+
+  for (let i = 0; i < telegramHandles.length; ++i) {
+    const updatedTest = {
+      telegramHandle: telegramHandles[i],
+      test: new Date(),
+    };
+    axios
+      .post(updateURL, updatedTest)
+      .then(() => {})
+      .catch(() => {});
+  }
 });
