@@ -10,8 +10,8 @@ exports.create = (req, res) => {
 
   const settings = {
     uid: req.body.uid,
-    Username: req.body.username,
-    Verified: false,
+    username: req.body.username,
+    verified: false,
     telegramHandle: req.body.telegramHandle,
     telegramSendReminders: false,
     telegramReminderTiming: "0800",
@@ -31,7 +31,10 @@ exports.create = (req, res) => {
           .doc(settings.uid)
           .set(settings)
           .then(() => {
-            return res.status(200).send({ message: "User settings successfully created" });
+            return res.status(200).send({ message: "User database successfully created" });
+          })
+          .catch((error) => {
+            return res.status(400).send({ message: `Error creating user database. ${error}` });
           });
       }
     });
@@ -51,7 +54,7 @@ exports.update = (req, res) => {
   }
 
   const updatedSettings = {
-    Username: req.body.username,
+    username: req.body.username,
     telegramHandle: req.body.telegramHandle,
     telegramSendReminders: req.body.telegramSendReminders,
     telegramReminderTiming: req.body.telegramReminderTiming,
@@ -77,6 +80,93 @@ exports.update = (req, res) => {
           });
       });
     });
+};
+
+// helper function for updating individual fields of user settings
+const updateSettings = (req, res, updatedSettings, settingNameText) => {
+  db.collection("users")
+    .where("uid", "==", req.body.uid)
+    .limit(1)
+    .get()
+    .then((data) => {
+      if (data.empty) {
+        return res.status(404).send({ message: "No user found. Please contact the administrator" });
+      }
+      data.forEach((doc) => {
+        db.collection("users")
+          .doc(doc.id)
+          .update(updatedSettings)
+          .then(() => {
+            return res.status(200).send({ message: `Successfully updated ${settingNameText}!` });
+          })
+          .catch((error) => {
+            return res.status(404).send({ message: `Error updating ${settingNameText}. ${error}` });
+          });
+      });
+    })
+    .catch((error) => {
+      return res.status(404).send({ message: `Cannot find user with given uid. ${error}` });
+    });
+};
+
+exports.updateUsername = (req, res) => {
+  if (!req.body.uid) {
+    return res.status(400).send({ message: "You must be logged in to make this operation!" });
+  }
+  if (!req.body.username) {
+    return res.status(400).send({ message: "Error! Missing data." });
+  }
+
+  const updatedSettings = {
+    username: req.body.username,
+  };
+
+  return updateSettings(req, res, updatedSettings, "username");
+};
+
+exports.updateTelegramHandle = (req, res) => {
+  if (!req.body.uid) {
+    return res.status(400).send({ message: "You must be logged in to make this operation!" });
+  }
+  if (!req.body.telegramHandle) {
+    return res.status(400).send({ message: "Error! Missing data." });
+  }
+
+  const updatedSettings = {
+    telegramHandle: req.body.telegramHandle,
+  };
+
+  return updateSettings(req, res, updatedSettings, "telegram handle");
+};
+
+exports.updateTelegramSendReminders = (req, res) => {
+  if (!req.body.uid) {
+    return res.status(400).send({ message: "You must be logged in to make this operation!" });
+  }
+  if (!(req.body.telegramSendReminders || req.body.telegramSendReminders === false)) {
+    return res.status(400).send({ message: "Error! Missing data." });
+  }
+
+  const updatedSettings = {
+    telegramSendReminders: req.body.telegramSendReminders,
+  };
+
+  return updateSettings(req, res, updatedSettings, "send telegram reminders");
+};
+
+exports.updateTelegramReminderTiming = (req, res) => {
+  if (!req.body.uid) {
+    return res.status(400).send({ message: "You must be logged in to make this operation!" });
+  }
+  if (!req.body.telegramReminderTiming) {
+    return res.status(400).send({ message: "Error! Missing data." });
+  }
+
+  const updatedSettings = {
+    telegramReminderTiming: req.body.telegramReminderTiming,
+  };
+
+  return updateSettings(req, res, updatedSettings, "telegram reminder timing");
 };
 
 exports.get = (req, res) => {
