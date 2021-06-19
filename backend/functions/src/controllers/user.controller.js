@@ -163,7 +163,7 @@ exports.updateTelegramSendReminders = (req, res) => {
   }
 
   const updatedSetting = {
-    telegramSendReminder: req.body.telegramSendReminders,
+    telegramSendReminders: req.body.telegramSendReminders,
   };
 
   return updateSetting(req, res, updatedSetting, "send telegram reminders");
