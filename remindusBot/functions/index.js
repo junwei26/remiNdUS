@@ -18,7 +18,7 @@ bot.catch((err, ctx) => {
 // initialize the commands
 bot.command("/start", async (ctx) => {
   const user = await bot.telegram.getChat(ctx.chat.id);
-  ctx.reply(`Hello ${user.username}! Welcome to the remiNdUS telegram bot!`);
+  ctx.reply(`Hello ${user.username}! Welcome to the remiNdUS telegram bot! Local dev version`);
 });
 
 // Proof of concept, will interact with firebase backend later on through APIs
@@ -41,30 +41,52 @@ exports.remiNdUSBot = functions.region("asia-southeast2").https.onRequest((reque
     .catch((err) => console.log(err));
 });
 
-cron.schedule("* 0,1,2,3,4,5,6,7,8,9,10,11,12,13,14,15,16,17,18,19,20,21,22,23 * * *", () => {
-  const getTelegramReminderUsersUrl =
-    "http://localhost:5001/remindus-76402/asia-southeast2/backendAPI/api/user/getTelegramReminderUsers";
+const task = (ctx) => {
+  return cron.schedule(
+    "* 0,1,2,3,4,5,6,7,8,9,10,11,12,13,14,15,16,17,18,19,20,21,22,23 * * *",
+    () => {
+      const getTelegramReminderUsersUrl =
+        "https://asia-southeast2-remindus-76402.cloudfunctions.net/backendAPI/api/user/getTelegramReminderUsers";
 
-  let telegramHandles = [];
+      let telegramHandles = [];
 
-  axios
-    .get(getTelegramReminderUsersUrl)
-    .then((response) => {
-      telegramHandles = response.data;
-    })
-    .catch(() => {});
+      axios
+        .get(getTelegramReminderUsersUrl)
+        .then((response) => {
+          telegramHandles = response.data;
+        })
+        .catch(() => {});
 
-  const updateURL =
-    "http://localhost:5001/remindus-76402/asia-southeast2/backendAPI/api/user/updateTest";
+      const updateURL =
+        "https://asia-southeast2-remindus-76402.cloudfunctions.net/backendAPI/api/user/updateTest";
 
-  for (let i = 0; i < telegramHandles.length; ++i) {
-    const updatedTest = {
-      telegramHandle: telegramHandles[i],
-      test: new Date(),
-    };
-    axios
-      .post(updateURL, updatedTest)
-      .then(() => {})
-      .catch(() => {});
-  }
+      for (let i = 0; i < telegramHandles.length; ++i) {
+        const updatedTest = {
+          telegramHandle: telegramHandles[i],
+          test: new Date(),
+        };
+        axios
+          .post(updateURL, updatedTest)
+          .then(() => {
+            ctx.reply("Updated test to current date on firestore");
+          })
+          .catch((error) => {
+            ctx.reply(
+              `Error encountered updating test. Error status code: ${error.response.status}. ${error.response.data.message}`
+            );
+          });
+      }
+    }
+  );
+};
+
+let activeScheduled = null;
+
+bot.command("/testReminder", (ctx) => {
+  activeScheduled = task(ctx);
+  activeScheduled.start();
+});
+
+bot.command("/stopTestReminder", () => {
+  activeScheduled.destroy();
 });
