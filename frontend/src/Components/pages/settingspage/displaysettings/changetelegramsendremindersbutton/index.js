@@ -44,7 +44,7 @@ const ChangeTelegramSendReminderButton = (props) => {
     };
     axios
       .post(
-        "http://localhost:5001/remindus-76402/asia-southeast2/backendAPI/api/user/updateTelegramSendReminders",
+        "https://asia-southeast2-remindus-76402.cloudfunctions.net/backendAPI/api/user/updateTelegramSendReminders",
         updatedSettings
       )
       .then(() => {
