@@ -4,7 +4,7 @@ import { makeStyles } from "@material-ui/core/styles";
 import { Button, Grid, TextField, Card, Typography } from "@material-ui/core";
 import DateFnsUtils from "@date-io/date-fns";
 import { MuiPickersUtilsProvider, DateTimePicker } from "@material-ui/pickers";
-import activityService from "../../../services/activityService";
+import reminderService from "../../../services/reminderService";
 
 const useStyles = makeStyles(() => ({
   topbar: {
@@ -23,7 +23,7 @@ const useStyles = makeStyles(() => ({
   },
 }));
 
-const AddActivityPopup = (props) => {
+const AddReminderPopup = (props) => {
   const classes = useStyles();
 
   const roundUpTime = (date) => {
@@ -32,40 +32,34 @@ const AddActivityPopup = (props) => {
   };
 
   const [startDateTime, setStartDateTime] = useState(roundUpTime(new Date()));
-  const [endDateTime, setEndDateTime] = useState(roundUpTime(new Date()));
 
   const handleStartDateChange = (date) => {
     setStartDateTime(roundUpTime(date));
   };
 
-  const handleEndDateChange = (date) => {
-    setEndDateTime(roundUpTime(date));
-  };
-
-  const handleSubmitAddActivity = (e) => {
+  const handleSubmitAddReminder = (e) => {
     e.preventDefault();
 
-    if (e.target.activityName.value === "") {
-      alert("Please input an activity name");
+    if (e.target.reminderName.value === "") {
+      alert("Please input a reminder name");
       return;
     } else if (e.target.description.value === "") {
-      alert("Please input an activity description");
+      alert("Please input a reminder description");
       return;
     }
 
-    activityService
-      .addActivity(
+    reminderService
+      .addReminder(
         e.target.startDateTime.value,
-        e.target.endDateTime.value,
-        e.target.activityName.value,
+        e.target.reminderName.value,
         e.target.description.value
       )
       .then(() => {
-        alert("Succesfully created activity");
+        alert("Succesfully created reminder");
       })
       .catch((error) => {
         alert(
-          `Issue creating activity. Error status code: ${error.response.status}. ${error.response.data.message}`
+          `Issue creating reminder. Error status code: ${error.response.status}. ${error.response.data.message}`
         );
       });
   };
@@ -91,7 +85,7 @@ const AddActivityPopup = (props) => {
               alignItems="center"
             >
               <Grid item className={classes.title}>
-                <Typography>Add Activity</Typography>
+                <Typography>Add Reminder</Typography>
               </Grid>
               <Grid item className={classes.close}>
                 <Button onClick={props.close}>X</Button>
@@ -99,15 +93,15 @@ const AddActivityPopup = (props) => {
             </Grid>
           </Grid>
           <Grid item style={{ width: "100%" }}>
-            <form noValidate autoComplete="off" onSubmit={handleSubmitAddActivity}>
+            <form noValidate autoComplete="off" onSubmit={handleSubmitAddReminder}>
               <Grid container direction="column" spacing={2}>
                 <Grid item style={{ width: "80%" }}>
                   <TextField
                     variant="outlined"
                     required
                     fullWidth
-                    name="activityName"
-                    label="Activity Name"
+                    name="reminderName"
+                    label="Reminder Name"
                     color="primary"
                     autofocus
                   />
@@ -126,7 +120,7 @@ const AddActivityPopup = (props) => {
                 <Grid item style={{ width: "80%" }}>
                   <DateTimePicker
                     variant="dialog"
-                    label="Start Date and Time"
+                    label="Deadline"
                     name="startDateTime"
                     disablePast
                     showTodayButton
@@ -135,20 +129,6 @@ const AddActivityPopup = (props) => {
                     value={startDateTime}
                     format="yyyy/MM/dd HH:mm"
                     onChange={handleStartDateChange}
-                  />
-                </Grid>
-                <Grid item style={{ width: "80%" }}>
-                  <DateTimePicker
-                    variant="dialog"
-                    label="End Date and Time"
-                    name="endDateTime"
-                    disablePast
-                    showTodayButton
-                    minutesStep={15}
-                    todayLabel={"Now"}
-                    value={endDateTime}
-                    format="yyyy/MM/dd HH:mm"
-                    onChange={handleEndDateChange}
                   />
                 </Grid>
                 <Grid item style={{ width: "80%" }}>
@@ -165,7 +145,7 @@ const AddActivityPopup = (props) => {
   );
 };
 
-AddActivityPopup.propTypes = {
+AddReminderPopup.propTypes = {
   close: PropTypes.func,
 };
-export default AddActivityPopup;
+export default AddReminderPopup;
