@@ -4,7 +4,7 @@ const express = require("express");
 const cors = require("cors");
 const bodyParser = require("body-parser");
 
-var serviceAccount = require("./remindus-76402-firebase-adminsdk-e2ndz-64ec78156c.json");
+var serviceAccount = require("./remindus-76402-firebase-adminsdk-e2ndz-c0942575bb.json");
 
 admin.initializeApp({
   credential: admin.credential.cert(serviceAccount),

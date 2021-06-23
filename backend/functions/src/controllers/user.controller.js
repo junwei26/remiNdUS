@@ -34,7 +34,7 @@ exports.create = (req, res) => {
             return res.status(200).send({ message: "User database successfully created" });
           })
           .catch((error) => {
-            return res.status(400).send({ message: `Error creating user database. ${error}` });
+            return res.status(404).send({ message: `Error creating user database. ${error}` });
           });
       }
     });
@@ -83,9 +83,9 @@ exports.update = (req, res) => {
 };
 
 // helper function for updating individual fields of user settings
-const updateSetting = (req, res, updatedSetting, settingNameText) => {
+const updateSetting = (uid, res, updatedSetting, settingNameText) => {
   db.collection("users")
-    .where("uid", "==", req.body.uid)
+    .where("uid", "==", uid)
     .limit(1)
     .get()
     .then((data) => {
@@ -110,18 +110,42 @@ const updateSetting = (req, res, updatedSetting, settingNameText) => {
 };
 
 exports.updateTest = (req, res) => {
-  if (!req.body.uid) {
-    return res.status(400).send({ message: "You must be logged in to make this operation!" });
+  if (!req.body.telegramHandle) {
+    return res
+      .status(400)
+      .send({ message: "You must use have a telegram handle to make this request!" });
   }
   if (!req.body.test) {
     return res.status(400).send({ message: "Error! Missing data." });
   }
 
-  const updatedSetting = {
-    test: req.body.test,
+  let uid = null;
+
+  const queryDB = () => {
+    db.collection("users")
+      .where("telegramHandle", "==", req.body.telegramHandle)
+      .limit(1)
+      .get()
+      .then((data) => {
+        if (data.empty) {
+          return res
+            .status(404)
+            .send({ message: "Cannot find user with associated telegram handle" });
+        }
+        data.forEach((doc) => {
+          uid = doc.get("uid");
+          const updatedSetting = {
+            test: req.body.test,
+          };
+          return updateSetting(uid, res, updatedSetting, "test");
+        });
+      })
+      .catch((error) => {
+        return res.status(404).send({ message: `Error updating test. ${error}` });
+      });
   };
 
-  return updateSetting(req, res, updatedSetting, "test");
+  return queryDB();
 };
 
 exports.updateUsername = (req, res) => {
@@ -136,7 +160,7 @@ exports.updateUsername = (req, res) => {
     username: req.body.username,
   };
 
-  return updateSetting(req, res, updatedSetting, "username");
+  return updateSetting(req.body.uid, res, updatedSetting, "username");
 };
 
 exports.updateTelegramHandle = (req, res) => {
@@ -151,7 +175,7 @@ exports.updateTelegramHandle = (req, res) => {
     telegramHandle: req.body.telegramHandle,
   };
 
-  return updateSetting(req, res, updatedSetting, "telegram handle");
+  return updateSetting(req.body.uid, res, updatedSetting, "telegram handle");
 };
 
 exports.updateTelegramSendReminders = (req, res) => {
@@ -166,7 +190,7 @@ exports.updateTelegramSendReminders = (req, res) => {
     telegramSendReminders: req.body.telegramSendReminders,
   };
 
-  return updateSetting(req, res, updatedSetting, "send telegram reminders");
+  return updateSetting(req.body.uid, res, updatedSetting, "send telegram reminders");
 };
 
 exports.updateTelegramReminderTiming = (req, res) => {
@@ -181,7 +205,7 @@ exports.updateTelegramReminderTiming = (req, res) => {
     telegramReminderTiming: req.body.telegramReminderTiming,
   };
 
-  return updateSetting(req, res, updatedSetting, "telegram reminder timing");
+  return updateSetting(req.body.uid, res, updatedSetting, "telegram reminder timing");
 };
 
 exports.get = (req, res) => {
