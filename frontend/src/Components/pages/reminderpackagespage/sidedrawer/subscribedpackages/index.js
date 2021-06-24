@@ -1,8 +1,9 @@
-import React, { useState } from "react";
+import React, { useEffect, useState } from "react";
 import { makeStyles } from "@material-ui/core/styles";
 import { Grid, Typography, TextField, Paper } from "@material-ui/core";
 // import { Paper, Grid, TextField, Typography } from "@material-ui/core";
 import { DataGrid } from "@material-ui/data-grid";
+import getReminderPackages from "../../../services/reminderPackagesService";
 
 const useStyles = makeStyles(() => ({
   root: {
@@ -16,18 +17,25 @@ const SubscribedPackages = () => {
   const classes = useStyles();
 
   const [searchText, setSearchText] = useState("");
-  //   //   const [packageList, setPackageList] = useState({});
-
+  const [packageList, setPackageList] = useState([
+    {
+      id: 1,
+      name: "Loading...",
+      description: "Loading...",
+      numberOfReminders: "Loading...",
+      lastModified: "Loading...",
+    },
+  ]);
   const packageColumns = [
     {
       field: "name",
       headerName: "Name",
-      flex: 0.5,
+      flex: 0.7,
     },
     {
       field: "description",
       headerName: "Description",
-      flex: 1,
+      flex: 1.2,
     },
     {
       field: "numberOfReminders",
@@ -41,9 +49,26 @@ const SubscribedPackages = () => {
     },
   ];
 
+  useEffect(() => {
+    let tempPackageList = [];
+    getReminderPackages()
+      .then((response) => {
+        tempPackageList = response.data;
+
+        for (let i = 0; i < tempPackageList.length; ++i) {
+          tempPackageList[i].id = i + 1;
+        }
+        setPackageList(tempPackageList);
+      })
+      .catch((error) => {
+        alert(
+          `Issue getting reminder packages. Error status code: ${error.response.status}. ${error.response.data.message}`
+        );
+      });
+  }, []);
+
   const updateSearchText = (e) => {
     setSearchText(e.target.value);
-    //   update the packages being displayed
   };
 
   return (
@@ -71,29 +96,7 @@ const SubscribedPackages = () => {
         </Grid>
         <Grid item style={{ width: "90%", height: "545px" }}>
           <DataGrid
-            rows={[
-              {
-                id: 1,
-                name: "test1",
-                description: "A description",
-                lastModified: "24 June 2021",
-                numberOfReminders: "0",
-              },
-              {
-                id: 2,
-                name: "thetest2",
-                description: "A second description",
-                lastModified: "26 June 2021",
-                numberOfReminders: "0",
-              },
-              {
-                id: 3,
-                name: "mytest3",
-                description: "A third description",
-                lastModified: "25 June 2021",
-                numberOfReminders: "0",
-              },
-            ]}
+            rows={packageList}
             columns={packageColumns}
             pageSize={8}
             checkboxSelection

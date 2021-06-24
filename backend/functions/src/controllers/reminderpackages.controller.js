@@ -69,6 +69,7 @@ exports.get = (req, res) => {
           .get()
           .then((data) => {
             if (data.empty) {
+              res.send([]);
               return res.status(200).send({ message: "No Reminder Packages found." });
             }
 
