@@ -22,17 +22,22 @@ const SubscribedPackages = () => {
     {
       field: "name",
       headerName: "Name",
-      width: 150,
+      flex: 0.5,
     },
     {
       field: "description",
       headerName: "Description",
-      width: 200,
+      flex: 1,
+    },
+    {
+      field: "numberOfReminders",
+      headerName: "No. of Reminders",
+      flex: 1,
     },
     {
       field: "lastModified",
       headerName: "Last Modified",
-      width: 250,
+      flex: 1,
     },
   ];
 
@@ -62,23 +67,31 @@ const SubscribedPackages = () => {
         </Grid>
         <Grid item></Grid>
         <Grid item style={{ width: "90%" }}>
-          <Typography>List of subscribed packages</Typography>
+          <Typography>List of subscribed reminder packages</Typography>
         </Grid>
         <Grid item style={{ width: "90%", height: "545px" }}>
           <DataGrid
             rows={[
-              { id: 1, name: "test1", description: "A description", lastModified: "24 June 2021" },
+              {
+                id: 1,
+                name: "test1",
+                description: "A description",
+                lastModified: "24 June 2021",
+                numberOfReminders: "0",
+              },
               {
                 id: 2,
                 name: "thetest2",
                 description: "A second description",
                 lastModified: "26 June 2021",
+                numberOfReminders: "0",
               },
               {
                 id: 3,
                 name: "mytest3",
                 description: "A third description",
                 lastModified: "25 June 2021",
+                numberOfReminders: "0",
               },
             ]}
             columns={packageColumns}
