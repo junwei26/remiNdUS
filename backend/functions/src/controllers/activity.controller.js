@@ -217,3 +217,27 @@ exports.delete = (req, res) => {
       return res.status(400).send({ message: `Error deleting activity ${error}` });
     });
 };
+
+exports.range = (req, res) => {
+  if (!req.query.uid) {
+    return res.status(400).send({ message: "You must be logged in to make this operation!" });
+  }
+  if (!req.query.currentDateTime) {
+    return res.status(400).send({ message: "You must have a valid date time!" });
+  }
+  const activities = [];
+
+  db.collection("users")
+    .doc(req.query.uid)
+    .collection("activities")
+    .where("startDateTime", ">=", req.query.currentDateTime)
+    .where("startDateTime", "<=", req.query.endDateTime)
+    .get()
+    .then((querySnapshot) => {
+      querySnapshot.forEach((activity) => {
+        activities.push({ activityId: activity.id, ...activity.data() });
+      });
+      res.send(activities);
+      return res.status(200).send();
+    });
+};
