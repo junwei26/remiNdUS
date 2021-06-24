@@ -8,9 +8,17 @@ import { makeStyles } from "@material-ui/core/styles";
 import reminderService from "../../services/reminderService";
 
 const useStyles = makeStyles(() => ({
-  root: { height: 500, width: 250, overflow: "auto" },
+  root: { height: 400, width: 250, overflow: "auto" },
   buttongroup: { height: 50, width: 250 },
 }));
+
+const parseTime = (dateString) => {
+  return (
+    [dateString.slice(6, 8), dateString.slice(4, 6), dateString.slice(0, 4)].join("/") +
+    "  " +
+    [dateString.slice(8, 10), dateString.slice(10, 12)].join(":")
+  );
+};
 
 const ReminderList = () => {
   const [reminders, setReminders] = useState([]);
@@ -39,7 +47,6 @@ const ReminderList = () => {
           <Button
             onClick={() => {
               setNextNumberOfDays(7);
-              alert(7);
             }}
           >
             Next 7 days
@@ -47,7 +54,6 @@ const ReminderList = () => {
           <Button
             onClick={() => {
               setNextNumberOfDays(30);
-              alert(30);
             }}
           >
             Next 30 days
@@ -58,9 +64,9 @@ const ReminderList = () => {
         <Paper fullWidth className={classes.root}>
           <List>
             {reminders.map((reminder) => {
-              const reminderDisplayText = reminder.dateTime + "  " + reminder.name;
+              const reminderDisplayText = parseTime(reminder.dateTime) + "  " + reminder.name;
               return (
-                <ListItem key={reminder.reminderId}>
+                <ListItem key={reminder.reminderId} divider={true}>
                   <ListItemText primary={reminderDisplayText} />
                 </ListItem>
               );

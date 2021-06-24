@@ -46,4 +46,15 @@ const addActivity = (startDateTime, endDateTime, name, description) => {
     description,
   });
 };
-export default { getAllActivities, updateActivity, deleteActivity, addActivity };
+
+const getRangeActivity = (currentDateTime, endDateTime) => {
+  return axios.get(ACTIVITY_API_URL + "/getRange", {
+    params: {
+      uid: firebaseAuth.currentUser.uid,
+      currentDateTime: convertLocaleDateString(currentDateTime),
+      endDateTime: convertLocaleDateString(endDateTime),
+    },
+  });
+};
+
+export default { getAllActivities, updateActivity, deleteActivity, addActivity, getRangeActivity };
