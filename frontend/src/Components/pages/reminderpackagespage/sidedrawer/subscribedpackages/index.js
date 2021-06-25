@@ -30,6 +30,7 @@ const SubscribedPackages = () => {
       description: "Loading...",
       numberOfReminders: "Loading...",
       lastModified: "Loading...",
+      packageTag: "Loading...",
     },
   ]);
   const packageColumns = [
@@ -52,6 +53,11 @@ const SubscribedPackages = () => {
       field: "lastModified",
       headerName: "Last Modified",
       flex: 1,
+    },
+    {
+      field: "packageTag",
+      headerName: "Package Tag",
+      flex: 0.8,
     },
   ];
 

@@ -21,6 +21,7 @@ exports.create = (req, res) => {
     lastModified: new Date().getTime(),
     numberOfReminders: req.body.reminderIds.length,
     reminderIds: req.body.reminderIds,
+    packageTag: req.body.packageTag,
   };
 
   db.collection("users")
