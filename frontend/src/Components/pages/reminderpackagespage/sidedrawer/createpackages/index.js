@@ -3,6 +3,7 @@ import { makeStyles } from "@material-ui/core/styles";
 import { Grid, Typography, TextField, Paper, Button } from "@material-ui/core";
 import { DataGrid } from "@material-ui/data-grid";
 import reminderService from "../../../services/reminderService";
+import reminderPackageService from "../../../services/reminderPackageService";
 
 const useStyles = makeStyles(() => ({
   root: {
@@ -25,7 +26,9 @@ const SubscribedPackages = () => {
   const [packageName, setPackageName] = useState("");
   const [description, setDescription] = useState("");
   const [packageTag, setPackageTag] = useState("");
+  const [selectedRows, setSelectedRows] = useState([]);
   const [searchRemindersText, setSearchRemindersText] = useState("");
+  const [selectionModel, setSelectionModel] = useState([]);
   const [reminderList, setReminderList] = useState([
     {
       id: 1,
@@ -69,16 +72,41 @@ const SubscribedPackages = () => {
     setSearchRemindersText(e.target.value);
   };
 
+  const clearSelectionModel = () => {
+    setSelectionModel([]);
+  };
+
   const clearAllFields = () => {
     setPackageName("");
     setDescription("");
     setPackageTag("");
     setSearchRemindersText("");
+    clearSelectionModel();
   };
 
   const handleSubmitCreatePackage = (e) => {
     e.preventDefault();
-    alert("Reminder Package Created");
+    const reminderIds = [];
+    for (let i = 0; i < selectedRows.length; ++i) {
+      reminderIds.push(selectedRows[i].reminderId);
+    }
+
+    reminderPackageService
+      .addReminderPackage(packageName, description, packageTag, reminderIds)
+      .then(() => {
+        alert("Successfully created reminder package!");
+        clearAllFields();
+      })
+      .catch((error) => {
+        alert(
+          `Issue creating new reminder package. Error status code: ${error.response.status}. ${error.response.data.message}`
+        );
+      });
+  };
+
+  const handleDataGridSelectionChange = (e) => {
+    const selectedIDs = new Set(e.selectionModel);
+    setSelectedRows(reminderList.filter((row) => selectedIDs.has(row.id)));
   };
 
   useEffect(() => {
@@ -189,6 +217,8 @@ const SubscribedPackages = () => {
                     { columnField: "name", operatorValue: "contains", value: searchRemindersText },
                   ],
                 }}
+                onSelectionModelChange={handleDataGridSelectionChange}
+                selectionModel={selectionModel}
               />
             </Grid>
             <Grid

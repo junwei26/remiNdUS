@@ -5,7 +5,7 @@ module.exports = (app) => {
 
   router.post("/create", user.create);
 
-  router.get("/", user.get);
+  router.get("/", user.getAll);
 
   app.use("/api/reminderpackages", router);
 };

@@ -2,7 +2,7 @@ import React, { useEffect, useState } from "react";
 import { makeStyles } from "@material-ui/core/styles";
 import { Grid, Typography, TextField, Paper } from "@material-ui/core";
 import { DataGrid } from "@material-ui/data-grid";
-import getReminderPackages from "../../../services/reminderPackagesService";
+import reminderPackageService from "../../../services/reminderPackageService";
 
 const useStyles = makeStyles(() => ({
   root: {
@@ -63,7 +63,8 @@ const SubscribedPackages = () => {
 
   useEffect(() => {
     let tempPackageList = [];
-    getReminderPackages()
+    reminderPackageService
+      .getReminderPackages()
       .then((response) => {
         tempPackageList = response.data;
 

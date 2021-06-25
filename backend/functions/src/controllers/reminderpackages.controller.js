@@ -47,7 +47,7 @@ exports.create = (req, res) => {
     });
 };
 
-exports.get = (req, res) => {
+exports.getAll = (req, res) => {
   if (!req.query.uid) {
     return res.status(400).send({ message: "You must be logged in to make this operation!" });
   }
@@ -74,8 +74,9 @@ exports.get = (req, res) => {
               return res.status(200).send({ message: "No Reminder Packages found." });
             }
 
+            // For each reminder package, send its uid as well
             data.forEach((doc) => {
-              packageList.push(doc.data());
+              packageList.push({ ...doc.data(), reminderPackageId: doc.id });
             });
 
             res.send(packageList);
