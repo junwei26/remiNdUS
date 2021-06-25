@@ -6,7 +6,7 @@ import Dashboard from "./Components/pages/dashboard";
 import SettingsPage from "./Components/pages/settingspage";
 import NavigationBar from "./Components/navigationbar";
 import { Grid } from "@material-ui/core";
-import TimeTracker from "./Components/pages/dashboard/timetracker";
+import ReminderPackagesPage from "./Components/pages/reminderpackagespage";
 const App = () => {
   return (
     <Grid container direction="column" justify="space-between" alignItems="stretch" spacing={2}>
@@ -16,9 +16,9 @@ const App = () => {
       <Grid item>
         <Switch>
           <Route path="/" exact component={LandingPage} />
-          <ProtectedRoute path="/test" exact component={TimeTracker} />
           <ProtectedRoute path="/dashboard" exact component={Dashboard} />
           <ProtectedRoute path="/settings" exact component={SettingsPage} />
+          <ProtectedRoute path="/reminderpackages" exact component={ReminderPackagesPage} />
         </Switch>
       </Grid>
     </Grid>

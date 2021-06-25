@@ -4,7 +4,7 @@ const express = require("express");
 const cors = require("cors");
 const bodyParser = require("body-parser");
 
-var serviceAccount = require("./remindus-76402-firebase-adminsdk-e2ndz-64ec78156c.json");
+var serviceAccount = require("./remindus-76402-firebase-adminsdk-e2ndz-c0942575bb.json");
 
 admin.initializeApp({
   credential: admin.credential.cert(serviceAccount),
@@ -24,5 +24,6 @@ app.use(bodyParser.urlencoded({ extended: true }));
 require("./src/routes/reminder.routes")(app);
 require("./src/routes/activity.routes")(app);
 require("./src/routes/user.routes")(app);
+require("./src/routes/reminderpackages.routes")(app);
 
 exports.backendAPI = functions.region("asia-southeast2").https.onRequest(app);

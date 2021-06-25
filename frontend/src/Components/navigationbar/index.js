@@ -2,7 +2,7 @@ import React, { useState } from "react";
 import { firebaseAuth } from "../../firebase";
 import * as userSettings from "../../firebaseAuth/userSettings";
 import { makeStyles } from "@material-ui/core/styles";
-import { AppBar, Toolbar, Typography, Grid, IconButton } from "@material-ui/core";
+import { AppBar, Toolbar, Typography, Grid, IconButton, Button } from "@material-ui/core";
 import AccountButton from "./accountbutton";
 import SignupButton from "./signupbutton";
 import LoginButton from "./loginbutton";
@@ -38,6 +38,10 @@ const NavigationBar = () => {
     window.location.replace(REACT_APP_URL + "/dashboard");
   };
 
+  const handleClickReminderPackages = () => {
+    window.location.replace(REACT_APP_URL + "/reminderpackages");
+  };
+
   return (
     <AppBar position="static" className={classes.appbar}>
       <Toolbar>
@@ -60,7 +64,16 @@ const NavigationBar = () => {
 
         {isLoggedIn ? (
           <div>
-            <AccountButton />
+            <Grid container direction="row" justify="center" alignItems="center">
+              <Grid item>
+                <Button color="inherit" onClick={handleClickReminderPackages}>
+                  Reminder Packages
+                </Button>
+              </Grid>
+              <Grid item>
+                <AccountButton />
+              </Grid>
+            </Grid>
           </div>
         ) : (
           <div>
