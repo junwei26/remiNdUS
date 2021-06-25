@@ -13,5 +13,7 @@ module.exports = (app) => {
 
   router.delete("/", activities.delete);
 
+  router.get("/getRange", activities.range);
+
   app.use("/api/activity", router);
 };

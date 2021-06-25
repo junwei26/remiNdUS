@@ -6,7 +6,7 @@ import { AppBar, Toolbar, Typography, Grid, IconButton } from "@material-ui/core
 import AccountButton from "./accountbutton";
 import SignupButton from "./signupbutton";
 import LoginButton from "./loginbutton";
-// import HomeIcon from "@material-ui/icons/Home";
+import HomeIcon from "@material-ui/icons/Home";
 
 const { REACT_APP_URL } = process.env;
 
@@ -48,12 +48,14 @@ const NavigationBar = () => {
             color="inherit"
             aria-label="home"
             onClick={handleClickHome}
-          ></IconButton>
+          >
+            <HomeIcon />
+          </IconButton>
         ) : (
           <div></div>
         )}
         <Typography className={classes.title} variant="h6">
-          Navigation Bar
+          remiNdUS
         </Typography>
 
         {isLoggedIn ? (

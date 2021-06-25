@@ -31,6 +31,16 @@ const updateReminder = (dateTime, name, description, reminderId) => {
   });
 };
 
+const getRangeReminder = (currentDateTime, endDateTime) => {
+  return axios.get(REMINDER_API_URL + "/getRange", {
+    params: {
+      uid: firebaseAuth.currentUser.uid,
+      currentDateTime: convertLocaleDateString(currentDateTime),
+      endDateTime: convertLocaleDateString(endDateTime),
+    },
+  });
+};
+
 const deleteReminder = (reminderId) => {
   return axios.delete(REMINDER_API_URL + "/", {
     params: { uid: firebaseAuth.currentUser.uid, reminderId },
@@ -46,4 +56,4 @@ const addReminder = (dateTime, name, description) => {
   });
 };
 
-export default { getAllReminder, updateReminder, deleteReminder, addReminder };
+export default { getAllReminder, updateReminder, deleteReminder, addReminder, getRangeReminder };

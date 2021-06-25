@@ -11,5 +11,6 @@ module.exports = (app) => {
   router.post("/create", reminders.create);
   router.post("/update", reminders.update);
   router.delete("/", reminders.delete);
+  router.get("/getRange", reminders.range);
   app.use("/api/reminder", router);
 };
