@@ -5,7 +5,7 @@ const LandingPage = () => {
   return (
     <Grid container alignItems="center" justify="center" direction="column" spacing={2}>
       <Grid item xs>
-        <div style={{ textAlign: "center", fontSize: 50 }}>Welcome to remiNdUs!</div>
+        <div style={{ textAlign: "center", fontSize: 50 }}>Welcome to remiNdUS!</div>
       </Grid>
       <Grid item xs>
         <div style={{ textAlign: "center", fontSize: 20 }}>
