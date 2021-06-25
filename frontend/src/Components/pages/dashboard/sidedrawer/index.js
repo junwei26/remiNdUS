@@ -106,7 +106,6 @@ const Sidedrawer = () => {
         </List>
       </Drawer>
       <main className={classes.content}>
-        <div className={classes.toolbar} />
         <ActiveView />
       </main>
     </div>

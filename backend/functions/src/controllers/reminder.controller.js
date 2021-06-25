@@ -177,3 +177,27 @@ exports.delete = (req, res) => {
       });
     });
 };
+
+exports.range = (req, res) => {
+  if (!req.query.uid) {
+    return res.status(400).send({ message: "You must be logged in to make this operation!" });
+  }
+  if (!req.query.currentDateTime) {
+    return res.status(400).send({ message: "You must have a valid date time!" });
+  }
+  const reminders = [];
+
+  db.collection("users")
+    .doc(req.query.uid)
+    .collection("reminders")
+    .where("dateTime", ">=", req.query.currentDateTime)
+    .where("dateTime", "<=", req.query.endDateTime)
+    .get()
+    .then((querySnapshot) => {
+      querySnapshot.forEach((reminder) => {
+        reminders.push({ reminderId: reminder.id, ...reminder.data() });
+      });
+      res.send(reminders);
+      return res.status(200).send();
+    });
+};
