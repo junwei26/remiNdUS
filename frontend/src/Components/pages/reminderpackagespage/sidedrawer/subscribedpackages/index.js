@@ -101,7 +101,7 @@ const SubscribedPackages = () => {
               type="search"
               value={searchText}
               onChange={updateSearchText}
-              style={{ width: "100%" }}
+              fullWidth
             />
           </Grid>
           <Grid item className={classes.gridItem} />
