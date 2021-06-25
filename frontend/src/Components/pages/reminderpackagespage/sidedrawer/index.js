@@ -4,6 +4,7 @@ import Drawer from "@material-ui/core/Drawer";
 import CssBaseline from "@material-ui/core/CssBaseline";
 import { List, Divider, ListItem, ListItemText } from "@material-ui/core";
 import SubscribedPackages from "./subscribedpackages";
+import CreatePackages from "./createpackages";
 const drawerWidth = 240;
 
 const useStyles = makeStyles((theme) => ({
@@ -32,10 +33,6 @@ const useStyles = makeStyles((theme) => ({
 
 const SearchPackages = () => {
   return <div> Search Packages </div>;
-};
-
-const CreatePackages = () => {
-  return <div> Create Packages </div>;
 };
 
 const Sidedrawer = () => {
