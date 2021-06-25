@@ -43,7 +43,7 @@ const ChangeTelegramHandleButton = (props) => {
     };
     axios
       .post(
-        "http://localhost:5001/remindus-76402/asia-southeast2/backendAPI/api/user/updateTelegramHandle",
+        "https://asia-southeast2-remindus-76402.cloudfunctions.net/backendAPI/api/user/updateTelegramHandle",
         updatedSettings
       )
       .then(() => {

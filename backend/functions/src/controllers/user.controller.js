@@ -34,7 +34,7 @@ exports.create = (req, res) => {
             return res.status(200).send({ message: "User database successfully created" });
           })
           .catch((error) => {
-            return res.status(400).send({ message: `Error creating user database. ${error}` });
+            return res.status(404).send({ message: `Error creating user database. ${error}` });
           });
       }
     });
@@ -83,9 +83,9 @@ exports.update = (req, res) => {
 };
 
 // helper function for updating individual fields of user settings
-const updateSettings = (req, res, updatedSettings, settingNameText) => {
+const updateSetting = (uid, res, updatedSetting, settingNameText) => {
   db.collection("users")
-    .where("uid", "==", req.body.uid)
+    .where("uid", "==", uid)
     .limit(1)
     .get()
     .then((data) => {
@@ -95,7 +95,7 @@ const updateSettings = (req, res, updatedSettings, settingNameText) => {
       data.forEach((doc) => {
         db.collection("users")
           .doc(doc.id)
-          .update(updatedSettings)
+          .update(updatedSetting)
           .then(() => {
             return res.status(200).send({ message: `Successfully updated ${settingNameText}!` });
           })
@@ -109,6 +109,45 @@ const updateSettings = (req, res, updatedSettings, settingNameText) => {
     });
 };
 
+exports.updateTest = (req, res) => {
+  if (!req.body.telegramHandle) {
+    return res
+      .status(400)
+      .send({ message: "You must use have a telegram handle to make this request!" });
+  }
+  if (!req.body.test) {
+    return res.status(400).send({ message: "Error! Missing data." });
+  }
+
+  let uid = null;
+
+  const queryDB = () => {
+    db.collection("users")
+      .where("telegramHandle", "==", req.body.telegramHandle)
+      .limit(1)
+      .get()
+      .then((data) => {
+        if (data.empty) {
+          return res
+            .status(404)
+            .send({ message: "Cannot find user with associated telegram handle" });
+        }
+        data.forEach((doc) => {
+          uid = doc.get("uid");
+          const updatedSetting = {
+            test: req.body.test,
+          };
+          return updateSetting(uid, res, updatedSetting, "test");
+        });
+      })
+      .catch((error) => {
+        return res.status(404).send({ message: `Error updating test. ${error}` });
+      });
+  };
+
+  return queryDB();
+};
+
 exports.updateUsername = (req, res) => {
   if (!req.body.uid) {
     return res.status(400).send({ message: "You must be logged in to make this operation!" });
@@ -117,11 +156,11 @@ exports.updateUsername = (req, res) => {
     return res.status(400).send({ message: "Error! Missing data." });
   }
 
-  const updatedSettings = {
+  const updatedSetting = {
     username: req.body.username,
   };
 
-  return updateSettings(req, res, updatedSettings, "username");
+  return updateSetting(req.body.uid, res, updatedSetting, "username");
 };
 
 exports.updateTelegramHandle = (req, res) => {
@@ -132,11 +171,11 @@ exports.updateTelegramHandle = (req, res) => {
     return res.status(400).send({ message: "Error! Missing data." });
   }
 
-  const updatedSettings = {
+  const updatedSetting = {
     telegramHandle: req.body.telegramHandle,
   };
 
-  return updateSettings(req, res, updatedSettings, "telegram handle");
+  return updateSetting(req.body.uid, res, updatedSetting, "telegram handle");
 };
 
 exports.updateTelegramSendReminders = (req, res) => {
@@ -147,11 +186,11 @@ exports.updateTelegramSendReminders = (req, res) => {
     return res.status(400).send({ message: "Error! Missing data." });
   }
 
-  const updatedSettings = {
+  const updatedSetting = {
     telegramSendReminders: req.body.telegramSendReminders,
   };
 
-  return updateSettings(req, res, updatedSettings, "send telegram reminders");
+  return updateSetting(req.body.uid, res, updatedSetting, "send telegram reminders");
 };
 
 exports.updateTelegramReminderTiming = (req, res) => {
@@ -162,11 +201,11 @@ exports.updateTelegramReminderTiming = (req, res) => {
     return res.status(400).send({ message: "Error! Missing data." });
   }
 
-  const updatedSettings = {
+  const updatedSetting = {
     telegramReminderTiming: req.body.telegramReminderTiming,
   };
 
-  return updateSettings(req, res, updatedSettings, "telegram reminder timing");
+  return updateSetting(req.body.uid, res, updatedSetting, "telegram reminder timing");
 };
 
 exports.get = (req, res) => {
@@ -193,5 +232,25 @@ exports.get = (req, res) => {
             }
           });
       });
+    });
+};
+
+exports.getTelegramReminderUsers = (req, res) => {
+  let telegramHandles = [];
+
+  db.collection("users")
+    .where("telegramSendReminders", "==", true)
+    .get()
+    .then((data) => {
+      if (data.empty) {
+        res.send({});
+        return res.status(400).send({ message: "Is empty" });
+      } else {
+        data.forEach((doc) => {
+          telegramHandles.push(doc.get("telegramHandle"));
+        });
+      }
+      res.send(telegramHandles);
+      return res.status(200).send();
     });
 };
