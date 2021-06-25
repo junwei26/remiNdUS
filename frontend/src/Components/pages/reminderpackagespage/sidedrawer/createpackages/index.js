@@ -1,7 +1,8 @@
-import React, { useState } from "react";
+import React, { useState, useEffect } from "react";
 import { makeStyles } from "@material-ui/core/styles";
 import { Grid, Typography, TextField, Paper, Button } from "@material-ui/core";
 import { DataGrid } from "@material-ui/data-grid";
+import reminderService from "../../../services/reminderService";
 
 const useStyles = makeStyles(() => ({
   root: {
@@ -25,14 +26,14 @@ const SubscribedPackages = () => {
   const [description, setDescription] = useState("");
   const [packageTag, setPackageTag] = useState("");
   const [searchRemindersText, setSearchRemindersText] = useState("");
-  const reminderList = [
+  const [reminderList, setReminderList] = useState([
     {
       id: 1,
       name: "Loading...",
       description: "Loading...",
       dateTime: "Loading...",
     },
-  ];
+  ]);
 
   const reminderColumns = [
     {
@@ -77,7 +78,27 @@ const SubscribedPackages = () => {
 
   const handleSubmitCreatePackage = (e) => {
     e.preventDefault();
+    alert("Reminder Package Created");
   };
+
+  useEffect(() => {
+    let tempReminderList = [];
+    reminderService
+      .getAllReminder()
+      .then((response) => {
+        tempReminderList = response.data;
+
+        for (let i = 0; i < tempReminderList.length; ++i) {
+          tempReminderList[i].id = i + 1;
+        }
+        setReminderList(tempReminderList);
+      })
+      .catch((error) => {
+        alert(
+          `Issue getting reminder packages. Error status code: ${error.response.status}. ${error.response.data.message}`
+        );
+      });
+  }, []);
 
   return (
     <>
