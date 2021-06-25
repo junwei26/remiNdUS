@@ -59,7 +59,7 @@ const NavigationBar = () => {
           <div></div>
         )}
         <Typography className={classes.title} variant="h6">
-          Navigation Bar
+          remiNdUS
         </Typography>
 
         {isLoggedIn ? (

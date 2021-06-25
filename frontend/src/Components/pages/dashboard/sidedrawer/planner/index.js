@@ -309,8 +309,8 @@ const Planner = () => {
 
         <EditingState onCommitChanges={handleChange} />
         <IntegratedEditing />
-        <WeekView startDayHour={7.5} endDayHour={17.5} />
-        <MonthView startDayHour={7.5} endDayHour={17.5} />
+        <WeekView startDayHour={8} endDayHour={24} />
+        <MonthView startDayHour={8} endDayHour={24} />
         <Appointments />
         <Resources data={resources} mainResourceName="eventType" />
 
