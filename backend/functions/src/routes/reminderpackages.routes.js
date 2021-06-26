@@ -1,11 +1,13 @@
 module.exports = (app) => {
-  const user = require("../controllers/reminderpackages.controller.js");
+  const reminderPackages = require("../controllers/reminderpackages.controller.js");
 
   var router = require("express").Router();
 
-  router.post("/create", user.create);
+  router.post("/create", reminderPackages.create);
 
-  router.get("/", user.getAll);
+  router.get("/", reminderPackages.getAll);
+
+  router.delete("/delete", reminderPackages.delete);
 
   app.use("/api/reminderpackages", router);
 };

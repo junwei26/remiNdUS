@@ -108,13 +108,13 @@ const SubscribedPackages = () => {
   };
 
   const deleteReminderPackages = () => {
-    const packageIds = [];
+    const reminderPackageIds = [];
     for (let i = 0; i < selectedRows.length; ++i) {
-      packageIds.push(selectedRows[i].packageId);
+      reminderPackageIds.push(selectedRows[i].reminderPackageId);
     }
 
     reminderPackageService
-      .deleteReminderPackages(packageIds)
+      .deleteReminderPackages(reminderPackageIds)
       .then(() => {
         alert("Successfully deleted reminder packages!");
         clearAllFields();

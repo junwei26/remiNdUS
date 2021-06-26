@@ -97,3 +97,35 @@ exports.getAll = (req, res) => {
       });
     });
 };
+
+exports.delete = (req, res) => {
+  if (!req.query.uid) {
+    return res.status(400).send({ message: "You must be logged in to make this operation!" });
+  }
+  if (!req.query.reminderPackageId) {
+    return res.status(400).send({ message: "Reminder must have a reminder ID!" });
+  }
+
+  db.collection("users")
+    .where("uid", "==", req.query.uid)
+    .limit(1)
+    .get()
+    .then((data) => {
+      if (data.empty) {
+        return res.status(404).send({ message: "No reminders found." });
+      }
+      // Note that in the case that the reminder package indicated by the given id does not exist, it still "successfully deletes the reminder package"
+      data.forEach((doc) => {
+        doc.ref
+          .collection("reminderPackages")
+          .doc(req.query.reminderPackageId)
+          .delete()
+          .then(() => {
+            return res.status(200).send({ message: "Successfully deleted reminder package!" });
+          })
+          .catch((error) => {
+            return res.status(404).send({ message: `Error deleting reminder package. ${error}` });
+          });
+      });
+    });
+};
