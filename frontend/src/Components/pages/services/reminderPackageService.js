@@ -21,10 +21,10 @@ const addReminderPackage = (packageName, description, packageTag, reminderIds) =
   });
 };
 
-const deleteReminderPackage = (reminderPackageId) => {
+const deleteReminderPackage = (reminderPackageIds) => {
   return axios.delete(REMINDERPACKAGES_API_URL + "/delete", {
     uid: firebaseAuth.currentUser.uid,
-    reminderPackageId: reminderPackageId,
+    reminderPackageIds: reminderPackageIds,
   });
 };
 
