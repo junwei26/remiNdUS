@@ -29,14 +29,15 @@ const SubscribedPackages = () => {
   const [selectedRows, setSelectedRows] = useState([]);
   const [searchRemindersText, setSearchRemindersText] = useState("");
   const [selectionModel, setSelectionModel] = useState([]);
-  const [reminderList, setReminderList] = useState([
+  const loadingReminderList = [
     {
       id: 1,
       name: "Loading...",
       description: "Loading...",
       dateTime: "Loading...",
     },
-  ]);
+  ];
+  const [reminderList, setReminderList] = useState(loadingReminderList);
 
   const reminderColumns = [
     {
@@ -84,6 +85,12 @@ const SubscribedPackages = () => {
     clearSelectionModel();
   };
 
+  const refreshPackages = () => {
+    clearAllFields();
+    setReminderList(loadingReminderList);
+    getReminderPackages();
+  };
+
   const handleSubmitCreatePackage = (e) => {
     e.preventDefault();
     const reminderIds = [];
@@ -109,7 +116,7 @@ const SubscribedPackages = () => {
     setSelectedRows(reminderList.filter((row) => selectedIDs.has(row.id)));
   };
 
-  useEffect(() => {
+  const getReminderPackages = () => {
     let tempReminderList = [];
     reminderService
       .getAllReminder()
@@ -126,6 +133,10 @@ const SubscribedPackages = () => {
           `Issue getting reminder packages. Error status code: ${error.response.status}. ${error.response.data.message}`
         );
       });
+  };
+
+  useEffect(() => {
+    getReminderPackages();
   }, []);
 
   return (
@@ -229,10 +240,25 @@ const SubscribedPackages = () => {
               justify="space-between"
               alignItems="center"
             >
-              <Grid item>
-                <Button onClick={clearAllFields} variant="contained" color="primary">
-                  Clear
-                </Button>
+              <Grid
+                container
+                item
+                direction="row"
+                justify="center"
+                alignItems="center"
+                style={{ width: "auto", height: "100%" }}
+                spacing={2}
+              >
+                <Grid item>
+                  <Button onClick={clearAllFields} variant="contained" color="primary">
+                    Clear
+                  </Button>
+                </Grid>
+                <Grid item>
+                  <Button onClick={refreshPackages} variant="contained" color="primary">
+                    Refresh
+                  </Button>
+                </Grid>
               </Grid>
               <Grid item>
                 <Button type="submit" variant="contained" color="primary">
