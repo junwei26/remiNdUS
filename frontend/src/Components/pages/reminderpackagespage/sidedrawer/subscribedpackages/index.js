@@ -117,7 +117,7 @@ const SubscribedPackages = () => {
       .deleteReminderPackages(reminderPackageIds)
       .then(() => {
         alert("Successfully deleted reminder packages!");
-        clearAllFields();
+        refreshPackages();
       })
       .catch((error) => {
         alert(
