@@ -1,6 +1,6 @@
 import React, { useEffect, useState } from "react";
 import { makeStyles } from "@material-ui/core/styles";
-import { Grid, Typography, TextField, Paper } from "@material-ui/core";
+import { Grid, Typography, TextField, Paper, Button } from "@material-ui/core";
 import { DataGrid } from "@material-ui/data-grid";
 import reminderPackageService from "../../../services/reminderPackageService";
 
@@ -23,7 +23,9 @@ const SubscribedPackages = () => {
   const classes = useStyles();
 
   const [searchText, setSearchText] = useState("");
-  const [packageList, setPackageList] = useState([
+  const [selectionModel, setSelectionModel] = useState([]);
+  const [selectedRows, setSelectedRows] = useState([]);
+  const loadingPackageList = [
     {
       id: 1,
       name: "Loading...",
@@ -32,7 +34,8 @@ const SubscribedPackages = () => {
       lastModified: "Loading...",
       packageTag: "Loading...",
     },
-  ]);
+  ];
+  const [packageList, setPackageList] = useState(loadingPackageList);
   const packageColumns = [
     {
       field: "name",
@@ -61,7 +64,25 @@ const SubscribedPackages = () => {
     },
   ];
 
-  useEffect(() => {
+  const handleDataGridSelectionChange = (e) => {
+    const selectedIDs = new Set(e.selectionModel);
+    setSelectedRows(packageList.filter((row) => selectedIDs.has(row.id)));
+  };
+
+  const clearSelectionModel = () => {
+    setSelectionModel([]);
+  };
+
+  const clearAllFields = () => {
+    setSearchText("");
+    clearSelectionModel();
+  };
+
+  const updateSearchText = (e) => {
+    setSearchText(e.target.value);
+  };
+
+  const getReminderPackages = () => {
     let tempPackageList = [];
     reminderPackageService
       .getReminderPackages()
@@ -78,49 +99,123 @@ const SubscribedPackages = () => {
           `Issue getting reminder packages. Error status code: ${error.response.status}. ${error.response.data.message}`
         );
       });
-  }, []);
-
-  const updateSearchText = (e) => {
-    setSearchText(e.target.value);
   };
+
+  const refreshPackages = () => {
+    clearAllFields();
+    setPackageList(loadingPackageList);
+    getReminderPackages();
+  };
+
+  const deleteReminderPackages = () => {
+    const packageIds = [];
+    for (let i = 0; i < selectedRows.length; ++i) {
+      packageIds.push(selectedRows[i].packageId);
+    }
+
+    reminderPackageService
+      .deleteReminderPackages(packageIds)
+      .then(() => {
+        alert("Successfully deleted reminder packages!");
+        clearAllFields();
+      })
+      .catch((error) => {
+        alert(
+          `Issue deleting reminder package. Error status code: ${error.response.status}. ${error.response.data.message}`
+        );
+      });
+  };
+
+  const handleSubmitDeletePackage = (e) => {
+    e.preventDefault();
+    deleteReminderPackages();
+  };
+
+  useEffect(() => {
+    // get reminder packages on load up
+    getReminderPackages();
+  }, []);
 
   return (
     <>
       <Typography>Your Subscribed Packages</Typography>
       <Paper elevation={2} variant="outlined" style={{ height: "780px" }}>
-        <Grid
-          container
-          className={classes.root}
-          direction="column"
-          justify="flex-start"
-          alignItems="center"
-          spacing={2}
+        <form
+          noValidate
+          autoComplete="off"
+          onSubmit={handleSubmitDeletePackage}
+          style={{ width: "100%", height: "100%" }}
         >
-          <Grid item className={classes.gridItem}>
-            <TextField
-              label="Search Packages (by name)"
-              type="search"
-              value={searchText}
-              onChange={updateSearchText}
-              fullWidth
-            />
+          <Grid
+            container
+            className={classes.root}
+            direction="column"
+            justify="flex-start"
+            alignItems="center"
+            spacing={2}
+          >
+            <Grid item className={classes.gridItem}>
+              <TextField
+                label="Search Packages (by name)"
+                type="search"
+                value={searchText}
+                onChange={updateSearchText}
+                fullWidth
+              />
+            </Grid>
+            <Grid item className={classes.gridItem} />
+            <Grid item className={classes.gridItem}>
+              <Typography>List of subscribed reminder packages</Typography>
+            </Grid>
+            <Grid item className={classes.dataGrid}>
+              <DataGrid
+                rows={packageList}
+                columns={packageColumns}
+                pageSize={8}
+                checkboxSelection
+                filterModel={{
+                  items: [{ columnField: "name", operatorValue: "contains", value: searchText }],
+                }}
+                onSelectionModelChange={handleDataGridSelectionChange}
+                selectionModel={selectionModel}
+              />
+            </Grid>
+            <Grid
+              container
+              item
+              className={classes.gridItem}
+              direction="row"
+              justify="space-between"
+              alignItems="center"
+            >
+              <Grid
+                container
+                item
+                direction="row"
+                justify="center"
+                alignItems="center"
+                style={{ width: "auto", height: "100%" }}
+                spacing={2}
+              >
+                <Grid item>
+                  <Button onClick={clearAllFields} variant="contained" color="primary">
+                    Clear
+                  </Button>
+                </Grid>
+                <Grid item>
+                  <Button onClick={refreshPackages} variant="contained" color="primary">
+                    Refresh
+                  </Button>
+                </Grid>
+              </Grid>
+              <Grid item>
+                <Button type="submit" variant="contained" color="primary">
+                  Delete
+                </Button>
+              </Grid>
+            </Grid>
           </Grid>
-          <Grid item className={classes.gridItem} />
-          <Grid item className={classes.gridItem}>
-            <Typography>List of subscribed reminder packages</Typography>
-          </Grid>
-          <Grid item className={classes.dataGrid}>
-            <DataGrid
-              rows={packageList}
-              columns={packageColumns}
-              pageSize={8}
-              checkboxSelection
-              filterModel={{
-                items: [{ columnField: "name", operatorValue: "contains", value: searchText }],
-              }}
-            />
-          </Grid>
-        </Grid>
+        </form>
       </Paper>
     </>
   );

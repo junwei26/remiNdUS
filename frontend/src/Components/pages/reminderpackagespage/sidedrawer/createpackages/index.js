@@ -88,7 +88,7 @@ const SubscribedPackages = () => {
   const refreshPackages = () => {
     clearAllFields();
     setReminderList(loadingReminderList);
-    getReminderPackages();
+    getReminders();
   };
 
   const handleSubmitCreatePackage = (e) => {
@@ -116,7 +116,7 @@ const SubscribedPackages = () => {
     setSelectedRows(reminderList.filter((row) => selectedIDs.has(row.id)));
   };
 
-  const getReminderPackages = () => {
+  const getReminders = () => {
     let tempReminderList = [];
     reminderService
       .getAllReminder()
@@ -136,7 +136,7 @@ const SubscribedPackages = () => {
   };
 
   useEffect(() => {
-    getReminderPackages();
+    getReminders();
   }, []);
 
   return (
