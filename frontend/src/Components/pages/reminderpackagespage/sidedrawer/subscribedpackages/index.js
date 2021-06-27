@@ -156,6 +156,30 @@ const SubscribedPackages = () => {
     deleteReminderPackages();
   };
 
+  const shareReminderPackages = () => {
+    const reminderPackageIds = [];
+    for (let i = 0; i < selectedRows.length; ++i) {
+      reminderPackageIds.push(selectedRows[i].reminderPackageId);
+    }
+
+    reminderPackageService
+      .shareReminderPackages(reminderPackageIds, true)
+      .then(() => {
+        alert("Successfully shared reminder packages!");
+        refreshPackages();
+      })
+      .catch((error) => {
+        alert(
+          `Issue sharing reminder package. Error status code: ${error.response.status}. ${error.response.data.message}`
+        );
+      });
+  };
+
+  const handleSubmitSharePackages = (e) => {
+    e.preventDefault();
+    shareReminderPackages();
+  };
+
   useEffect(() => {
     // get reminder packages on load up
     getReminderPackages();
@@ -235,10 +259,26 @@ const SubscribedPackages = () => {
                   </Button>
                 </Grid>
               </Grid>
-              <Grid item>
-                <Button type="submit" variant="contained" color="primary">
-                  Delete
-                </Button>
+
+              <Grid
+                container
+                item
+                direction="row"
+                justify="center"
+                alignItems="center"
+                style={{ width: "auto", height: "100%" }}
+                spacing={2}
+              >
+                <Grid item>
+                  <Button onClick={handleSubmitSharePackages} variant="contained" color="primary">
+                    Share
+                  </Button>
+                </Grid>
+                <Grid item>
+                  <Button type="submit" variant="contained" color="primary">
+                    Delete
+                  </Button>
+                </Grid>
               </Grid>
             </Grid>
           </Grid>

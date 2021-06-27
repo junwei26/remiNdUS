@@ -29,6 +29,14 @@ const addReminderPackage = (packageName, description, packageTag, reminderIds) =
   });
 };
 
+const shareReminderPackages = (reminderPackageIds, share) => {
+  return axios.post(REMINDERPACKAGES_API_URL + "/share", {
+    uid: firebaseAuth.currentUser.uid,
+    reminderPackageIds: reminderPackageIds,
+    share: share,
+  });
+};
+
 const deleteReminderPackages = (reminderPackageIds) => {
   return axios.delete(REMINDERPACKAGES_API_URL + "/delete", {
     data: {
@@ -41,7 +49,8 @@ const deleteReminderPackages = (reminderPackageIds) => {
 export default {
   getReminderPackages,
   getPublicReminderPackages,
-  addReminderPackage,
-  deleteReminderPackages,
   subscribeReminderPackages,
+  addReminderPackage,
+  shareReminderPackages,
+  deleteReminderPackages,
 };

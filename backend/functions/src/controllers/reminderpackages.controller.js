@@ -147,6 +147,43 @@ exports.create = (req, res) => {
     });
 };
 
+exports.share = (req, res) => {
+  if (!req.body.uid) {
+    return res.status(400).send({ message: "You must be logged in to make this operation!" });
+  }
+  if (!req.body.reminderPackageIds) {
+    return res.status(400).send({ message: "Reminder must have a reminder ID!" });
+  }
+
+  db.collection("users")
+    .where("uid", "==", req.body.uid)
+    .limit(1)
+    .get()
+    .then((querySnapshot) => {
+      querySnapshot.forEach((queryDocumentSnapshot) => {
+        let batch = db.batch();
+        let collection = queryDocumentSnapshot.ref.collection("reminderPackages");
+
+        for (let i = 0; i < req.body.reminderPackageIds.length; ++i) {
+          batch.update(collection.doc(req.body.reminderPackageIds[i]), { public: req.body.share });
+        }
+
+        batch
+          .commit()
+          .then(() => {
+            return req.body.share
+              ? res.status(200).send({ message: "Successfully shared reminder package(s)!" })
+              : res.status(200).send({ message: "Successfully unshared reminder package(s)!" });
+          })
+          .catch((error) => {
+            return req.body.share
+              ? res.status(404).send({ message: `Error sharing reminder package. ${error}` })
+              : res.status(404).send({ message: `Error unsharing reminder package. ${error}` });
+          });
+      });
+    });
+};
+
 exports.delete = (req, res) => {
   if (!req.body.uid) {
     return res.status(400).send({ message: "You must be logged in to make this operation!" });

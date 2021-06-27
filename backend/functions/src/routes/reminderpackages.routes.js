@@ -7,6 +7,7 @@ module.exports = (app) => {
   router.get("/getpublic", reminderPackages.getPublicPackages);
 
   router.post("/create", reminderPackages.create);
+  router.post("/share", reminderPackages.share);
 
   router.delete("/delete", reminderPackages.delete);
 
