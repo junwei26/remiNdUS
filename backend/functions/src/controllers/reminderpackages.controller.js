@@ -1,6 +1,93 @@
 const admin = require("firebase-admin");
 const db = admin.firestore();
 
+exports.getAll = (req, res) => {
+  if (!req.query.uid) {
+    return res.status(400).send({ message: "You must be logged in to make this operation!" });
+  }
+
+  db.collection("users")
+    .where("uid", "==", req.query.uid)
+    .limit(1)
+    .get()
+    .then((data) => {
+      if (data.empty) {
+        return res.status(404).send({ message: "No user found. Please contact the administrator" });
+      }
+
+      let packageList = [];
+
+      // Actually only one doc (one user)
+      data.forEach((doc) => {
+        doc.ref
+          .collection("reminderPackages")
+          .get()
+          .then((data) => {
+            if (data.empty) {
+              res.send([]);
+              return res.status(200).send({ message: "No Reminder Packages found." });
+            }
+
+            // For each reminder package, send its uid as well
+            data.forEach((doc) => {
+              packageList.push({ ...doc.data(), reminderPackageId: doc.id });
+            });
+
+            res.send(packageList);
+            return res.status(200).send({
+              message: "Reminder packages successfully retrieved!",
+            });
+          })
+          .catch((error) => {
+            return res.status(400).send({
+              message: `Error retrieving reminder packages. ${error}`,
+            });
+          });
+      });
+    })
+    .catch((error) => {
+      return res.status(400).send({
+        message: `Error retrieving user details. ${error}`,
+      });
+    });
+};
+
+exports.getPublicPackages = (req, res) => {
+  let publicPackages = [];
+  let promises = [];
+  db.collection("users")
+    .get()
+    .then((querySnapshot) => {
+      let userQueryDocSnapshotArr = querySnapshot.docs;
+      for (let i = 0; i < userQueryDocSnapshotArr.length; ++i) {
+        promises.push(
+          userQueryDocSnapshotArr[i].ref
+            .collection("reminderPackages")
+            .where("public", "==", true)
+            .get()
+            .then((querySnapshot) => {
+              Promise.all(
+                querySnapshot.docs.map((queryDocumentSnapshot) =>
+                  publicPackages.push(queryDocumentSnapshot.data())
+                )
+              );
+            })
+            .catch((error) => {
+              return res.status(400).send({ message: `Error retrieving user details. ${error}` });
+            })
+        );
+      }
+
+      Promise.all(promises).then(() => {
+        res.send(publicPackages);
+        return res.status(200).send({ message: "Public reminder packages successfully retrieved" });
+      });
+    })
+    .catch((error) => {
+      return res.status(400).send({ message: `Error retrieving user details. ${error}` });
+    });
+};
+
 exports.create = (req, res) => {
   if (!req.body.uid) {
     return res.status(400).send({ message: "You must be logged in to make this operation!" });
@@ -56,57 +143,6 @@ exports.create = (req, res) => {
     .catch((error) => {
       return res.status(400).send({
         message: `Error retrieving user database. ${error}`,
-      });
-    });
-};
-
-exports.getAll = (req, res) => {
-  if (!req.query.uid) {
-    return res.status(400).send({ message: "You must be logged in to make this operation!" });
-  }
-
-  db.collection("users")
-    .where("uid", "==", req.query.uid)
-    .limit(1)
-    .get()
-    .then((data) => {
-      if (data.empty) {
-        return res.status(404).send({ message: "No user found. Please contact the administrator" });
-      }
-
-      let packageList = [];
-
-      // Actually only one doc (one user)
-      data.forEach((doc) => {
-        doc.ref
-          .collection("reminderPackages")
-          .get()
-          .then((data) => {
-            if (data.empty) {
-              res.send([]);
-              return res.status(200).send({ message: "No Reminder Packages found." });
-            }
-
-            // For each reminder package, send its uid as well
-            data.forEach((doc) => {
-              packageList.push({ ...doc.data(), reminderPackageId: doc.id });
-            });
-
-            res.send(packageList);
-            return res.status(200).send({
-              message: "Reminder packages successfully retrieved!",
-            });
-          })
-          .catch((error) => {
-            return res.status(400).send({
-              message: `Error retrieving reminder packages. ${error}`,
-            });
-          });
-      });
-    })
-    .catch((error) => {
-      return res.status(400).send({
-        message: `Error retrieving user details. ${error}`,
       });
     });
 };

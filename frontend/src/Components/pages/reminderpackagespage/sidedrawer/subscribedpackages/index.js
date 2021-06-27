@@ -47,7 +47,6 @@ const SubscribedPackages = () => {
       headerName: "Description",
       flex: 1.2,
     },
-
     {
       field: "packageTag",
       headerName: "Tag",

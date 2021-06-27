@@ -4,6 +4,7 @@ module.exports = (app) => {
   var router = require("express").Router();
 
   router.get("/", reminderPackages.getAll);
+  router.get("/getpublic", reminderPackages.getPublicPackages);
 
   router.post("/create", reminderPackages.create);
 
