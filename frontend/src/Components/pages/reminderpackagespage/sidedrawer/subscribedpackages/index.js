@@ -1,7 +1,7 @@
 import React, { useEffect, useState } from "react";
 import { makeStyles } from "@material-ui/core/styles";
 import { Grid, Typography, TextField, Paper, Button } from "@material-ui/core";
-import { DataGrid } from "@material-ui/data-grid";
+import { DataGrid, GridToolbar } from "@material-ui/data-grid";
 import reminderPackageService from "../../../services/reminderPackageService";
 
 const useStyles = makeStyles(() => ({
@@ -15,7 +15,7 @@ const useStyles = makeStyles(() => ({
   },
   dataGrid: {
     width: "90%",
-    height: "545px",
+    height: "500px",
   },
 }));
 
@@ -47,20 +47,43 @@ const SubscribedPackages = () => {
       headerName: "Description",
       flex: 1.2,
     },
+
     {
-      field: "numberOfReminders",
-      headerName: "No. of Reminders",
+      field: "packageTag",
+      headerName: "Tag",
+      flex: 0.7,
+    },
+    {
+      field: "ownerName",
+      headerName: "Owner",
       flex: 1,
+      hide: true,
+    },
+    {
+      field: "public",
+      headerName: "Public",
+      flex: 0.8,
+      hide: true,
+    },
+    {
+      field: "verified",
+      headerName: "Verified",
+      flex: 1,
+      hide: true,
     },
     {
       field: "lastModified",
       headerName: "Last Modified",
       flex: 1,
+      valueFormatter: (datetime) => {
+        return `${new Date(datetime.value).toLocaleDateString()}`;
+      },
     },
     {
-      field: "packageTag",
-      headerName: "Package Tag",
+      field: "numberOfReminders",
+      headerName: "Reminders",
       flex: 0.8,
+      hide: true,
     },
   ];
 
@@ -138,7 +161,7 @@ const SubscribedPackages = () => {
 
   return (
     <>
-      <Typography>Your Subscribed Packages</Typography>
+      <Typography>Your Reminder Packages</Typography>
       <Paper elevation={2} variant="outlined" style={{ height: "780px" }}>
         <form
           noValidate
@@ -165,19 +188,21 @@ const SubscribedPackages = () => {
             </Grid>
             <Grid item className={classes.gridItem} />
             <Grid item className={classes.gridItem}>
-              <Typography>List of subscribed reminder packages</Typography>
+              <Typography>List of reminder packages</Typography>
             </Grid>
             <Grid item className={classes.dataGrid}>
               <DataGrid
                 rows={packageList}
                 columns={packageColumns}
-                pageSize={8}
+                autoPageSize
                 checkboxSelection
                 filterModel={{
                   items: [{ columnField: "name", operatorValue: "contains", value: searchText }],
                 }}
                 onSelectionModelChange={handleDataGridSelectionChange}
                 selectionModel={selectionModel}
+                style={{ overflowX: "auto" }}
+                components={{ Toolbar: GridToolbar }}
               />
             </Grid>
             <Grid

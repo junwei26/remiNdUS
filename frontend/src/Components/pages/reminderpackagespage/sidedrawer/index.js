@@ -32,7 +32,7 @@ const useStyles = makeStyles((theme) => ({
 }));
 
 const SearchPackages = () => {
-  return <div> Search Packages </div>;
+  return <div> Search for public reminder packages that have been shared with others</div>;
 };
 
 const Sidedrawer = () => {
