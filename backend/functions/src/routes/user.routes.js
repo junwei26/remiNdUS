@@ -9,8 +9,10 @@ module.exports = (app) => {
   router.post("/updateTelegramHandle", user.updateTelegramHandle);
   router.post("/updateTelegramSendReminders", user.updateTelegramSendReminders);
   router.post("/updateTelegramReminderTiming", user.updateTelegramReminderTiming);
+  router.post("/updateTest", user.updateTest);
 
   router.get("/", user.get);
+  router.get("/getTelegramReminderUsers", user.getTelegramReminderUsers);
 
   app.use("/api/user", router);
 };
