@@ -15,10 +15,6 @@ const getPublicReminderPackages = () => {
   return axios.get(REMINDERPACKAGES_API_URL + "/getpublic");
 };
 
-const subscribeReminderPackages = () => {
-  return true; // to be linked to backend
-};
-
 const addReminderPackage = (packageName, description, packageTag, reminderIds) => {
   return axios.post(REMINDERPACKAGES_API_URL + "/create", {
     uid: firebaseAuth.currentUser.uid,
@@ -34,6 +30,14 @@ const shareReminderPackages = (reminderPackageIds, share) => {
     uid: firebaseAuth.currentUser.uid,
     reminderPackageIds: reminderPackageIds,
     share: share,
+  });
+};
+
+const subscribeReminderPackages = (userUids, reminderPackageIds) => {
+  return axios.post(REMINDERPACKAGES_API_URL + "/subscribe", {
+    uid: firebaseAuth.currentUser.uid,
+    userUids: userUids,
+    reminderPackageIds: reminderPackageIds,
   });
 };
 

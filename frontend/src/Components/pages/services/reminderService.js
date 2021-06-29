@@ -21,6 +21,10 @@ const getAllReminder = () => {
   return axios.get(REMINDER_API_URL + "/", { params: { uid: firebaseAuth.currentUser.uid } });
 };
 
+const getReminders = (reminderIds, uid = firebaseAuth.currentUser.uid) => {
+  return axios.get(REMINDER_API_URL + "/get", { params: { uid, reminderIds } });
+};
+
 const updateReminder = (dateTime, name, description, reminderId) => {
   return axios.post(REMINDER_API_URL + "/update", {
     uid: firebaseAuth.currentUser.uid,
@@ -56,4 +60,11 @@ const addReminder = (dateTime, name, description) => {
   });
 };
 
-export default { getAllReminder, updateReminder, deleteReminder, addReminder, getRangeReminder };
+export default {
+  getAllReminder,
+  getReminders,
+  updateReminder,
+  deleteReminder,
+  addReminder,
+  getRangeReminder,
+};

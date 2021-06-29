@@ -179,7 +179,7 @@ const SubscribedPackages = () => {
 
             <Grid item className={classes.gridItem}>
               <TextField
-                label="Package Tag"
+                label="Package Tag (Optional)"
                 value={packageTag}
                 onChange={updatePackageTag}
                 fullWidth
@@ -221,7 +221,7 @@ const SubscribedPackages = () => {
               <DataGrid
                 rows={reminderList}
                 columns={reminderColumns}
-                pageSize={8}
+                autoPageSize
                 checkboxSelection
                 filterModel={{
                   items: [

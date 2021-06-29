@@ -181,6 +181,81 @@ exports.share = (req, res) => {
               : res.status(404).send({ message: `Error unsharing reminder package. ${error}` });
           });
       });
+    })
+    .catch((error) => {
+      return res.status(400).send({
+        message: `Error retrieving user database. ${error}`,
+      });
+    });
+};
+
+exports.subscribe = (req, res) => {
+  if (!req.body.uid) {
+    return res.status(400).send({ message: "You must be logged in to make this operation!" });
+  }
+  if (!req.body.userUids || req.body.userUids.length === 0) {
+    return res.status(400).send({ message: "Reminder packages must have accompanying user IDs!" });
+  }
+  if (!req.body.reminderPackageIds || req.body.reminderPackageIds.length === 0) {
+    return res.status(400).send({ message: "Reminder packages must have reminder package IDs!" });
+  }
+  if (req.body.userUids.length != req.body.reminderPackageIds.length) {
+    return res.status(400).send({
+      message: "Unequal number of user IDs and reminder package IDs!",
+    });
+  }
+
+  db.collection("users")
+    .where("uid", "==", req.body.uid)
+    .limit(1)
+    .get()
+    .then((querySnapshot) => {
+      querySnapshot.forEach((queryDocumentSnapshot) => {
+        let promises = [];
+
+        let collection = queryDocumentSnapshot.ref.collection("subscribedPackages");
+        for (let i = 0; i < req.body.userUids.length; ++i) {
+          promises.push(
+            collection
+              .where("userUid", "==", req.body.userUids[i])
+              .where("reminderPackageId", "==", req.body.reminderPackageIds[i])
+              .get()
+              .then((querySnapshot) => {
+                // If a document with exactly the same uid and reminderpackageId already exists (i.e. already subscribed)
+                querySnapshot.size > 0
+                  ? Promise.resolve(0)
+                  : Promise.all(
+                      collection.add({
+                        userUid: req.body.userUids[i],
+                        reminderPackageId: req.body.reminderPackageIds[i],
+                      })
+                    );
+              })
+              .catch((error) => {
+                return res
+                  .status(404)
+                  .send({ message: `Error querying subscribed packages. ${error}` });
+              })
+          );
+        }
+
+        Promise.all(promises)
+          .then(() => {
+            return res
+              .status(200)
+              .send({ message: `Successfully subscribed to reminder packages.` });
+          })
+          .catch((error) => {
+            return res.status(404).send({
+              message: `Error subscribing to packages. ${error}`,
+            });
+          });
+      });
+    })
+    .catch((error) => {
+      return res.status(404).send({
+        message: `Error retrieving user database. ${error}`,
+      });
     });
 };
 
@@ -189,7 +264,7 @@ exports.delete = (req, res) => {
     return res.status(400).send({ message: "You must be logged in to make this operation!" });
   }
   if (!req.body.reminderPackageIds) {
-    return res.status(400).send({ message: "Reminder must have a reminder ID!" });
+    return res.status(400).send({ message: "Reminder packages must have reminder package IDs!" });
   }
 
   db.collection("users")
@@ -219,6 +294,11 @@ exports.delete = (req, res) => {
           .catch((error) => {
             return res.status(404).send({ message: `Error deleting reminder package. ${error}` });
           });
+      });
+    })
+    .catch((error) => {
+      return res.status(404).send({
+        message: `Error retrieving user database. ${error}`,
       });
     });
 };
