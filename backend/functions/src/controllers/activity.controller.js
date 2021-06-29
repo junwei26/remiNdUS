@@ -140,7 +140,7 @@ exports.get = (req, res) => {
           .doc(req.query.activityId)
           .get()
           .then((doc) => {
-            res.send(doc.data());
+            res.send({ ...doc.data(), activityId: doc.id });
             return res.status(200).send({ message: "Successfully retrieved activity!" });
           })
           .catch((error) => {

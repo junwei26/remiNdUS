@@ -5,6 +5,7 @@ import CssBaseline from "@material-ui/core/CssBaseline";
 import { List, Divider, ListItem, ListItemText } from "@material-ui/core";
 import SubscribedPackages from "./subscribedpackages";
 import CreatePackages from "./createpackages";
+import SearchPackages from "./searchpackages";
 const drawerWidth = 240;
 
 const useStyles = makeStyles((theme) => ({
@@ -30,10 +31,6 @@ const useStyles = makeStyles((theme) => ({
     padding: theme.spacing(3),
   },
 }));
-
-const SearchPackages = () => {
-  return <div> Search Packages </div>;
-};
 
 const Sidedrawer = () => {
   const [active, setActive] = useState(1);

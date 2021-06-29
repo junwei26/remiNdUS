@@ -54,8 +54,8 @@ const SettingsPage = () => {
 
   const [loading, setLoading] = useState("False");
 
-  // const dataUrl = "https://asia-southeast2-remindus-76402.cloudfunctions.net/backendAPI/api/user/";
-  const dataUrl = "http://localhost:5001/remindus-76402/asia-southeast2/backendAPI/api/user/";
+  const dataUrl = "https://asia-southeast2-remindus-76402.cloudfunctions.net/backendAPI/api/user/";
+  // const dataUrl = "http://localhost:5001/remindus-76402/asia-southeast2/backendAPI/api/user/";
 
   useEffect(() => {
     getSettings(

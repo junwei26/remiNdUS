@@ -19,7 +19,7 @@ const useStyles = makeStyles(() => ({
   },
 }));
 
-const SubscribedPackages = () => {
+const SearchPackages = () => {
   const classes = useStyles();
 
   const [searchText, setSearchText] = useState("");
@@ -110,7 +110,7 @@ const SubscribedPackages = () => {
   const getReminderPackages = () => {
     let tempPackageList = [];
     reminderPackageService
-      .getReminderPackages()
+      .getPublicReminderPackages()
       .then((response) => {
         tempPackageList = response.data;
 
@@ -121,7 +121,7 @@ const SubscribedPackages = () => {
       })
       .catch((error) => {
         alert(
-          `Issue getting reminder packages. Error status code: ${error.response.status}. ${error.response.data.message}`
+          `Issue getting public reminder packages. Error status code: ${error.response.status}. ${error.response.data.message}`
         );
       });
   };
@@ -132,67 +132,39 @@ const SubscribedPackages = () => {
     getReminderPackages();
   };
 
-  const deleteReminderPackages = () => {
+  const handlePackageSubscription = (e) => {
+    e.preventDefault();
+    const userUids = [];
     const reminderPackageIds = [];
     for (let i = 0; i < selectedRows.length; ++i) {
+      userUids.push(selectedRows[i].uid);
       reminderPackageIds.push(selectedRows[i].reminderPackageId);
     }
 
     reminderPackageService
-      .deleteReminderPackages(reminderPackageIds)
+      .subscribeReminderPackages(userUids, reminderPackageIds)
       .then(() => {
-        alert("Successfully deleted reminder packages!");
-        refreshPackages();
+        alert("Successfully subscribed to reminder packages");
       })
       .catch((error) => {
         alert(
-          `Issue deleting reminder package. Error status code: ${error.response.status}. ${error.response.data.message}`
+          `Issue subscribing to reminder packages. Error status code: ${error.response.status}. ${error.response.data.message}`
         );
       });
-  };
-
-  const handleSubmitDeletePackage = (e) => {
-    e.preventDefault();
-    deleteReminderPackages();
-  };
-
-  const shareReminderPackages = () => {
-    const reminderPackageIds = [];
-    for (let i = 0; i < selectedRows.length; ++i) {
-      reminderPackageIds.push(selectedRows[i].reminderPackageId);
-    }
-
-    reminderPackageService
-      .shareReminderPackages(reminderPackageIds, true)
-      .then(() => {
-        alert("Successfully shared reminder packages!");
-        refreshPackages();
-      })
-      .catch((error) => {
-        alert(
-          `Issue sharing reminder package. Error status code: ${error.response.status}. ${error.response.data.message}`
-        );
-      });
-  };
-
-  const handleSubmitSharePackages = (e) => {
-    e.preventDefault();
-    shareReminderPackages();
   };
 
   useEffect(() => {
     // get reminder packages on load up
     getReminderPackages();
   }, []);
-
   return (
     <>
-      <Typography>Your Reminder Packages</Typography>
+      <Typography>Search Public Packages</Typography>
       <Paper elevation={2} variant="outlined" style={{ height: "780px" }}>
         <form
           noValidate
           autoComplete="off"
-          onSubmit={handleSubmitDeletePackage}
+          onSubmit={handlePackageSubscription}
           style={{ width: "100%", height: "100%" }}
         >
           <Grid
@@ -259,26 +231,10 @@ const SubscribedPackages = () => {
                   </Button>
                 </Grid>
               </Grid>
-
-              <Grid
-                container
-                item
-                direction="row"
-                justify="center"
-                alignItems="center"
-                style={{ width: "auto", height: "100%" }}
-                spacing={2}
-              >
-                <Grid item>
-                  <Button onClick={handleSubmitSharePackages} variant="contained" color="primary">
-                    Share
-                  </Button>
-                </Grid>
-                <Grid item>
-                  <Button type="submit" variant="contained" color="primary">
-                    Delete
-                  </Button>
-                </Grid>
+              <Grid item>
+                <Button type="submit" variant="contained" color="primary">
+                  Subscribe
+                </Button>
               </Grid>
             </Grid>
           </Grid>
@@ -288,4 +244,4 @@ const SubscribedPackages = () => {
   );
 };
 
-export default SubscribedPackages;
+export default SearchPackages;

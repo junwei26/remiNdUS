@@ -3,6 +3,7 @@ import { makeStyles } from "@material-ui/core/styles";
 import { Grid, Typography, TextField, Paper, Button } from "@material-ui/core";
 import { DataGrid } from "@material-ui/data-grid";
 import reminderService from "../../../services/reminderService";
+import reminderPackageService from "../../../services/reminderPackageService";
 
 const useStyles = makeStyles(() => ({
   root: {
@@ -25,15 +26,18 @@ const SubscribedPackages = () => {
   const [packageName, setPackageName] = useState("");
   const [description, setDescription] = useState("");
   const [packageTag, setPackageTag] = useState("");
+  const [selectedRows, setSelectedRows] = useState([]);
   const [searchRemindersText, setSearchRemindersText] = useState("");
-  const [reminderList, setReminderList] = useState([
+  const [selectionModel, setSelectionModel] = useState([]);
+  const loadingReminderList = [
     {
       id: 1,
       name: "Loading...",
       description: "Loading...",
       dateTime: "Loading...",
     },
-  ]);
+  ];
+  const [reminderList, setReminderList] = useState(loadingReminderList);
 
   const reminderColumns = [
     {
@@ -69,19 +73,50 @@ const SubscribedPackages = () => {
     setSearchRemindersText(e.target.value);
   };
 
+  const clearSelectionModel = () => {
+    setSelectionModel([]);
+  };
+
   const clearAllFields = () => {
     setPackageName("");
     setDescription("");
     setPackageTag("");
     setSearchRemindersText("");
+    clearSelectionModel();
+  };
+
+  const refreshPackages = () => {
+    clearAllFields();
+    setReminderList(loadingReminderList);
+    getReminders();
   };
 
   const handleSubmitCreatePackage = (e) => {
     e.preventDefault();
-    alert("Reminder Package Created");
+    const reminderIds = [];
+    for (let i = 0; i < selectedRows.length; ++i) {
+      reminderIds.push(selectedRows[i].reminderId);
+    }
+
+    reminderPackageService
+      .addReminderPackage(packageName, description, packageTag, reminderIds)
+      .then(() => {
+        alert("Successfully created reminder package!");
+        clearAllFields();
+      })
+      .catch((error) => {
+        alert(
+          `Issue creating new reminder package. Error status code: ${error.response.status}. ${error.response.data.message}`
+        );
+      });
   };
 
-  useEffect(() => {
+  const handleDataGridSelectionChange = (e) => {
+    const selectedIDs = new Set(e.selectionModel);
+    setSelectedRows(reminderList.filter((row) => selectedIDs.has(row.id)));
+  };
+
+  const getReminders = () => {
     let tempReminderList = [];
     reminderService
       .getAllReminder()
@@ -98,6 +133,10 @@ const SubscribedPackages = () => {
           `Issue getting reminder packages. Error status code: ${error.response.status}. ${error.response.data.message}`
         );
       });
+  };
+
+  useEffect(() => {
+    getReminders();
   }, []);
 
   return (
@@ -189,6 +228,8 @@ const SubscribedPackages = () => {
                     { columnField: "name", operatorValue: "contains", value: searchRemindersText },
                   ],
                 }}
+                onSelectionModelChange={handleDataGridSelectionChange}
+                selectionModel={selectionModel}
               />
             </Grid>
             <Grid
@@ -199,10 +240,25 @@ const SubscribedPackages = () => {
               justify="space-between"
               alignItems="center"
             >
-              <Grid item>
-                <Button onClick={clearAllFields} variant="contained" color="primary">
-                  Clear
-                </Button>
+              <Grid
+                container
+                item
+                direction="row"
+                justify="center"
+                alignItems="center"
+                style={{ width: "auto", height: "100%" }}
+                spacing={2}
+              >
+                <Grid item>
+                  <Button onClick={clearAllFields} variant="contained" color="primary">
+                    Clear
+                  </Button>
+                </Grid>
+                <Grid item>
+                  <Button onClick={refreshPackages} variant="contained" color="primary">
+                    Refresh
+                  </Button>
+                </Grid>
               </Grid>
               <Grid item>
                 <Button type="submit" variant="contained" color="primary">

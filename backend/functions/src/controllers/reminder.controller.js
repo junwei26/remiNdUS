@@ -109,7 +109,7 @@ exports.get = (req, res) => {
           .doc(req.query.reminderId)
           .get()
           .then((doc) => {
-            res.send(doc.data());
+            res.send({ ...doc.data(), reminderId: doc.id });
             return res.status(200).send({ message: "Successfully retrieved reminder!" });
           })
           .catch((error) => {
@@ -137,7 +137,7 @@ exports.getAll = (req, res) => {
           .get()
           .then((querySnapshot) => {
             querySnapshot.forEach((reminder) => {
-              reminders.push({ reminderId: reminder.id, ...reminder.data() });
+              reminders.push({ ...reminder.data(), reminderId: reminder.id });
             });
             res.send(reminders);
             return res.status(200).send();
