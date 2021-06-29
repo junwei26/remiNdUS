@@ -21,12 +21,44 @@ bot.command("/start", async (ctx) => {
   ctx.reply(`Hello ${user.username}! Welcome to the remiNdUS telegram bot! Local dev version`);
 });
 
-// Proof of concept, will interact with firebase backend later on through APIs
-bot.command("/testAPI", (ctx) =>
+bot.command("/retrieve", async (ctx) => {
+  const convertLocaleDateString = (dateStr) => {
+    const padZero = (num) => (num < 10 ? "0" + num.toString() : num.toString());
+
+    const date = new Date(dateStr);
+    const year = date.getFullYear().toString();
+    const month = padZero(date.getMonth() + 1);
+    const day = padZero(date.getDate());
+    const hour = padZero(date.getHours());
+    const min = padZero(date.getMinutes());
+    return year + month + day + hour + min;
+  };
+  const backendURL =
+    "https://asia-southeast2-remindus-76402.cloudfunctions.net/backendAPI/api/activity/getByTelegram";
+
+  const user = await bot.telegram.getChat(ctx.chat.id);
+  const currentDate = new Date();
+  const endDate = new Date();
+  endDate.setDate(currentDate.getDate() + 1);
   axios
-    .get("http://api.nusmods.com/v2/2020-2021/modules/CS1101S.json")
-    .then((res) => ctx.reply(res.data.description))
-);
+    .get(backendURL, {
+      params: {
+        telegramHandle: user.username,
+        currentDateTime: convertLocaleDateString(currentDate.toLocaleString()),
+        endDateTime: convertLocaleDateString(endDate.toLocaleString()),
+      },
+    })
+    .then((response) => {
+      const activityArr = response.data.map(
+        (activity) =>
+          ` ${activity.name}  (${activity.startDateTime.slice(
+            8,
+            12
+          )} - ${activity.endDateTime.slice(8, 12)})`
+      );
+      ctx.reply("Here are today's activities." + activityArr.join("."));
+    });
+});
 
 bot.command("/sendAll", async (ctx) => {
   () => {
@@ -87,13 +119,6 @@ bot.command("/testReminder", async (ctx) => {
       );
     });
 });
-
-// bot.command("/stopTestReminder", () => {
-//   activeScheduled.destroy();
-// });
-
-// copy every message and send to the user
-bot.on("message", (ctx) => ctx.telegram.sendCopy(ctx.chat.id, ctx.message));
 
 // handle all telegram updates with HTTPs trigger
 exports.remiNdUSBot = functions.region("asia-southeast2").https.onRequest((request, response) => {

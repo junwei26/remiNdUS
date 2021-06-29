@@ -7,6 +7,8 @@ module.exports = (app) => {
 
   router.get("/get", activities.get);
 
+  router.get("/getByTelegram", activities.getByTelegram);
+
   router.post("/create", activities.create);
 
   router.post("/update", activities.update);

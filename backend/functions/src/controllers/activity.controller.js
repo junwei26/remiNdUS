@@ -241,3 +241,35 @@ exports.range = (req, res) => {
       return res.status(200).send();
     });
 };
+
+exports.getByTelegram = (req, res) => {
+  if (!req.query.telegramHandle) {
+    return res.status(400).send({ message: "You must be logged in to make this operation!" });
+  }
+
+  var activities = [];
+  db.collection("users")
+    .where("telegramHandle", "==", req.query.telegramHandle)
+    .limit(1)
+    .get()
+    .then((data) => {
+      if (data.empty) {
+        return res.status(404).send({ message: "No activities found." });
+      }
+      data.forEach((doc) => {
+        doc.ref
+          .collection("activities")
+          .get()
+          .then((querySnapshot) => {
+            querySnapshot.forEach((activity) => {
+              activities.push({ activityId: activity.id, ...activity.data() });
+            });
+            res.send(activities);
+            return res.status(200).send();
+          });
+      });
+    })
+    .catch((error) => {
+      return res.status(400).send({ message: `Error deleting activity ${error}` });
+    });
+};
