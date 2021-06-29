@@ -3,6 +3,7 @@ import { Paper, Typography, Grid, Button } from "@material-ui/core";
 import { makeStyles } from "@material-ui/core/styles";
 import Popup from "reactjs-popup";
 import ActivitySelectorPopup from "./activityselectorpopup";
+import activityService from "../../services/activityService";
 
 const useStyles = makeStyles((theme) => ({
   root: { height: 250, width: 250 },
@@ -14,11 +15,24 @@ const useStyles = makeStyles((theme) => ({
   },
 }));
 
+const parseTime = (dateTime) => {
+  if (dateTime) {
+    return new Date(
+      dateTime.slice(0, 4),
+      dateTime.slice(4, 6) - 1,
+      dateTime.slice(6, 8),
+      dateTime.slice(8, 10),
+      dateTime.slice(10, 12)
+    ).toLocaleString("en-US");
+  }
+  return "";
+};
+
 const TimeTracker = () => {
   const [timer, setTimer] = useState(0);
   const [isActive, setIsActive] = useState(false);
   const [isPaused, setIsPaused] = useState(false);
-  const [currentActivity, setCurrentActivity] = useState({ name: "", activityId: "" });
+  const [currentActivity, setCurrentActivity] = useState({});
   const increment = useRef(null);
 
   const classes = useStyles();
@@ -48,8 +62,19 @@ const TimeTracker = () => {
     setIsActive(false);
     setIsPaused(false);
     //send tracking data to backend here
-    setTimer(0);
-    setCurrentActivity({ name: "", activityId: "" });
+    activityService
+      .updateActivity(
+        parseTime(currentActivity.startDateTime).toLocaleString(),
+        parseTime(currentActivity.endDateTime).toLocaleString(),
+        currentActivity.name,
+        currentActivity.description + `  (Time spent on activity : ${formatTime()})`,
+        currentActivity.activityId
+      )
+      .then(() => {
+        setTimer(0);
+        setCurrentActivity({});
+        alert("Time spent on activity successfully recorded!");
+      });
   };
 
   const formatTime = () => {
@@ -63,7 +88,7 @@ const TimeTracker = () => {
 
   const DisplayCurrentActivity = () => {
     if (currentActivity.name) {
-      return <Typography>Currently tracking {currentActivity.name}</Typography>;
+      return <Typography>Currently tracking {currentActivity.startDateTime}</Typography>;
     } else {
       return <Typography>Start tracking an activity now!</Typography>;
     }
