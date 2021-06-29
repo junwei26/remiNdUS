@@ -8,6 +8,7 @@ module.exports = (app) => {
 
   router.post("/create", reminderPackages.create);
   router.post("/share", reminderPackages.share);
+  router.post("/subscribe", reminderPackages.subscribe);
 
   router.delete("/delete", reminderPackages.delete);
 

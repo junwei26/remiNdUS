@@ -137,7 +137,7 @@ const SearchPackages = () => {
     const userUids = [];
     const reminderPackageIds = [];
     for (let i = 0; i < selectedRows.length; ++i) {
-      userUids.push(selectedRows[i].uid);
+      userUids.push(selectedRows[i].ownerUid);
       reminderPackageIds.push(selectedRows[i].reminderPackageId);
     }
 
