@@ -1,5 +1,6 @@
 import React, { useEffect, useCallback, useReducer } from "react";
 import Paper from "@material-ui/core/Paper";
+import { Grid, Typography } from "@material-ui/core";
 import LinearProgress from "@material-ui/core/LinearProgress";
 import { withStyles } from "@material-ui/core/styles";
 import PropTypes from "prop-types";
@@ -97,57 +98,105 @@ const mapAppointmentData = (appointment) => {
   }
 };
 
-const TextEditor = (props) => {
-  if (props.type === "multilineTextEditor") {
-    return null;
-  }
-  return <AppointmentForm.TextEditor {...props} />;
-};
-
-const BooleanEditor = (props) => {
-  if (props.label === "") {
-    return null;
-  }
-  return <AppointmentForm.BooleanEditor {...props} />;
-};
-
-const LabelEditor = (props) => {
-  if (props.text == "eventType") {
-    return null;
-  }
-  return <AppointmentForm.Label {...props} />;
-};
-
-const ResourceEditor = () => {
-  return null;
-};
-
-const BasicLayout = ({ onFieldChange, appointmentData, ...restProps }) => {
+const BasicLayout = ({ onFieldChange, appointmentData }) => {
   const onDescriptionFieldChange = (nextValue) => {
     onFieldChange({ description: nextValue });
   };
-  return (
-    <Paper>
-      <AppointmentForm.Label
-        text={appointmentData.eventType == 2 ? "Reminder" : "Activity"}
-        type="title"
-      />
-      <AppointmentForm.BasicLayout
-        appointmentData={appointmentData}
-        onFieldChange={onFieldChange}
-        {...restProps}
-      >
+  const onNameFieldChange = (nextValue) => {
+    onFieldChange({ title: nextValue });
+  };
+
+  const onStartFieldChange = (nextValue) => {
+    onFieldChange({ startDate: nextValue });
+  };
+
+  const onEndFieldChange = (nextValue) => {
+    onFieldChange({ endDate: nextValue });
+  };
+
+  return appointmentData.eventType == 2 ? (
+    <Grid container direction="column" alignItems="left" alignContent="center">
+      <Grid item xs>
+        <AppointmentForm.Label text="Reminder" type="title" />
+      </Grid>
+      <Grid item xs>
+        <AppointmentForm.TextEditor
+          value={appointmentData.title}
+          onValueChange={onNameFieldChange}
+          placeholder="Add a name"
+        />
+      </Grid>
+      <Grid item xs style={{ width: "90%" }}>
+        <AppointmentForm.Label text="Deadline" type="title" />
+      </Grid>
+      <Grid item xs>
+        <AppointmentForm.DateEditor
+          value={appointmentData.startDate}
+          onValueChange={onStartFieldChange}
+        />
+      </Grid>
+      <Grid item xs style={{ width: "90%" }}>
         <AppointmentForm.Label text="Description" type="title" />
+      </Grid>
+      <Grid item xs>
         <AppointmentForm.TextEditor
           value={appointmentData.description}
           onValueChange={onDescriptionFieldChange}
           placeholder="Add a description"
         />
-      </AppointmentForm.BasicLayout>
-    </Paper>
+      </Grid>
+    </Grid>
+  ) : (
+    <Grid container direction="column" alignItems="left" alignContent="center">
+      <AppointmentForm.Label text="Activity" type="title" />
+      <Grid item xs>
+        <AppointmentForm.TextEditor
+          value={appointmentData.title}
+          onValueChange={onNameFieldChange}
+          placeholder="Add a name"
+        />
+      </Grid>
+      <AppointmentForm.Label text="Duration" type="title" />
+
+      <Grid item xs>
+        <Grid
+          container
+          direction="row"
+          alignItems="center"
+          alignContent="center"
+          justify="center"
+          spacing={3}
+        >
+          <Grid item xs>
+            <AppointmentForm.DateEditor
+              value={appointmentData.startDate}
+              onValueChange={onStartFieldChange}
+            />
+          </Grid>
+          <Grid item xs={1}>
+            <Typography> - </Typography>
+          </Grid>
+          <Grid item xs>
+            <AppointmentForm.DateEditor
+              value={appointmentData.endDate}
+              onValueChange={onEndFieldChange}
+            />
+          </Grid>
+        </Grid>
+      </Grid>
+      <Grid item xs>
+        <AppointmentForm.Label text="Description" type="title" />
+      </Grid>
+      <Grid item xs>
+        <AppointmentForm.TextEditor
+          value={appointmentData.description}
+          onValueChange={onDescriptionFieldChange}
+          placeholder="Add a description"
+        />
+      </Grid>
+    </Grid>
   );
 };
-
 const currentDate = () => {
   var d = new Date(),
     month = "" + (d.getMonth() + 1),
@@ -165,12 +214,6 @@ const initialState = {
   loading: false,
   currentDate: currentDate(),
   currentViewName: "Week",
-};
-
-const messages = {
-  moreInformationLabel: "",
-  allDayLabel: "",
-  repeatLabel: "",
 };
 
 const reducer = (state, action) => {
@@ -315,14 +358,7 @@ const Planner = () => {
         <Resources data={resources} mainResourceName="eventType" />
 
         <AppointmentTooltip showOpenButton showCloseButton showDeleteButton />
-        <AppointmentForm
-          basicLayoutComponent={BasicLayout}
-          textEditorComponent={TextEditor}
-          booleanEditorComponent={BooleanEditor}
-          resourceEditorComponent={ResourceEditor}
-          labelComponent={LabelEditor}
-          messages={messages}
-        />
+        <AppointmentForm basicLayoutComponent={BasicLayout} />
         <DragDropProvider allowResize={() => false} />
         <Toolbar {...(loading ? { rootComponent: ToolbarWithLoading } : null)} />
         <DateNavigator />
@@ -336,18 +372,6 @@ const Planner = () => {
 BasicLayout.propTypes = {
   onFieldChange: PropTypes.any,
   appointmentData: PropTypes.any,
-};
-
-TextEditor.propTypes = {
-  type: PropTypes.string,
-};
-
-BooleanEditor.propTypes = {
-  label: PropTypes.string,
-};
-
-LabelEditor.propTypes = {
-  text: PropTypes.string,
 };
 
 export default Planner;
