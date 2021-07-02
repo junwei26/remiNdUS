@@ -117,16 +117,13 @@ const getRemindersByIds = (req, res, uid, reminderIds, terminal = true) => {
           );
         }
       });
-      console.log("test");
       return Promise.all(promises).then((values) => {
         reminders = [].concat.apply([], values);
-        console.log(reminders);
 
         if (terminal) {
           res.send(reminders);
           return res.status(200).send({ message: "Successfully retrieved reminder!" });
         } else {
-          console.log("test");
           return reminders;
         }
       });
