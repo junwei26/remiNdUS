@@ -29,6 +29,7 @@ exports.create = (req, res) => {
     startDateTime: req.body.startDateTime,
     endDateTime: req.body.endDateTime,
     eventType: "1",
+    tag: req.body.tag,
   };
   db.collection("users")
     .where("uid", "==", req.body.uid)
@@ -88,6 +89,7 @@ exports.update = (req, res) => {
     startDateTime: req.body.startDateTime,
     endDateTime: req.body.endDateTime,
     eventType: "1",
+    tag: req.body.tag,
   };
 
   db.collection("users")

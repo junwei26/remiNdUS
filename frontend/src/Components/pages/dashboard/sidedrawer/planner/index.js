@@ -1,4 +1,4 @@
-import React, { useEffect, useCallback, useReducer } from "react";
+import React, { useState, useEffect, useCallback, useReducer } from "react";
 import Paper from "@material-ui/core/Paper";
 import { Grid, Typography } from "@material-ui/core";
 import LinearProgress from "@material-ui/core/LinearProgress";
@@ -22,7 +22,48 @@ import {
 } from "@devexpress/dx-react-scheduler-material-ui";
 import activityService from "../../../services/activityService";
 import reminderService from "../../../services/reminderService";
+import userService from "../../../services/userService";
 
+const Appointment = ({ children, style, data, ...restProps }) => {
+  return data.eventType == "2" ? (
+    <Appointments.Appointment
+      {...restProps}
+      data={data}
+      style={{
+        ...style,
+        backgroundColor: "#d50000",
+        borderRadius: "8px",
+      }}
+    >
+      {children}
+    </Appointments.Appointment>
+  ) : (
+    <Appointments.Appointment
+      {...restProps}
+      data={data}
+      style={{
+        ...style,
+        borderRadius: "8px",
+      }}
+    >
+      {children}
+    </Appointments.Appointment>
+  );
+};
+
+//TODO: Figure out how to change color of lens for reminders(still blue somehow),
+// worst case make a custom tooltip
+const Content = ({ appointmentData, style, ...restProps }) => {
+  return appointmentData.eventType == "2" ? (
+    <AppointmentTooltip.Content
+      {...restProps}
+      appointmentData={appointmentData}
+      style={{ ...style, lens: { color: "#d50000" } }}
+    />
+  ) : (
+    <AppointmentTooltip.Content {...restProps} appointmentData={appointmentData} />
+  );
+};
 const getData = (setData, setLoading) => {
   setLoading(true);
   return activityService.getAllActivities().then((response1) => {
@@ -32,16 +73,6 @@ const getData = (setData, setLoading) => {
     });
   });
 };
-let resources = [
-  {
-    fieldName: "eventType",
-    title: "",
-    instances: [
-      { id: "1", text: "activity", color: "#673ab7" },
-      { id: "2", text: "reminder", color: "#d50000" },
-    ],
-  },
-];
 
 const styles = {
   toolbarRoot: {
@@ -86,6 +117,7 @@ const mapAppointmentData = (appointment) => {
       title: appointment.name,
       description: appointment.description,
       eventType: appointment.eventType,
+      tag: appointment.tag,
     };
   } else {
     return {
@@ -234,6 +266,29 @@ const reducer = (state, action) => {
 const Planner = () => {
   const [state, dispatch] = useReducer(reducer, initialState);
   const { data, loading, currentViewName, currentDate } = state;
+  const [resources, setResources] = useState([
+    {
+      fieldName: "tag",
+      title: "Tag",
+      instances: [],
+    },
+  ]);
+
+  useEffect(() => {
+    userService.getUserInfo().then((response) => {
+      const instances = response.data.tags.map((tag) => {
+        return { id: tag, text: tag };
+      });
+      setResources([
+        {
+          fieldName: "tag",
+          title: "Tag",
+          instances,
+        },
+      ]);
+    });
+  }, []);
+
   const setCurrentViewName = useCallback(
     (nextViewName) =>
       dispatch({
@@ -354,10 +409,15 @@ const Planner = () => {
         <IntegratedEditing />
         <WeekView startDayHour={8} endDayHour={24} />
         <MonthView startDayHour={8} endDayHour={24} />
-        <Appointments />
-        <Resources data={resources} mainResourceName="eventType" />
+        <Appointments appointmentComponent={Appointment} />
+        <Resources data={resources} mainResourceName="tag" />
 
-        <AppointmentTooltip showOpenButton showCloseButton showDeleteButton />
+        <AppointmentTooltip
+          showOpenButton
+          showCloseButton
+          showDeleteButton
+          contentComponent={Content}
+        />
         <AppointmentForm basicLayoutComponent={BasicLayout} />
         <DragDropProvider allowResize={() => false} />
         <Toolbar {...(loading ? { rootComponent: ToolbarWithLoading } : null)} />
@@ -372,6 +432,18 @@ const Planner = () => {
 BasicLayout.propTypes = {
   onFieldChange: PropTypes.any,
   appointmentData: PropTypes.any,
+};
+
+Appointment.propTypes = {
+  style: PropTypes.object,
+  children: PropTypes.any,
+  data: PropTypes.object,
+};
+
+Content.propTypes = {
+  style: PropTypes.object,
+  children: PropTypes.any,
+  appointmentData: PropTypes.object,
 };
 
 export default Planner;
