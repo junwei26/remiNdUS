@@ -251,44 +251,183 @@ exports.range = (req, res) => {
     });
 };
 
+// access the new document by using createTemplate(...).then((templateReminderDoc) => {...})
+const createTemplate = (uid, name, description) => {
+  return db
+    .collection("users")
+    .doc(uid)
+    .collection("templateReminders")
+    .add({ name, description, eventType: "2" });
+};
+
+// access the new document by using createPlannedReminder(...).then((plannedReminderDoc) => {...})
+const createPlannedReminder = (uid, templateReminderId, endDateTime, active) => {
+  return db
+    .collection("users")
+    .doc(uid)
+    .collection("plannedReminders")
+    .add({ templateReminderId, endDateTime, active });
+};
+
+// If frequency is weekly, take date as 1-7 (Mon, Tue, ..., Sun). If frequency is monthly, take date as 1-31
+const createRecurringReminder = (uid, templateReminderId, frequency, endTime, date, active) => {
+  return db
+    .collection("users")
+    .doc(uid)
+    .collection("recurringReminders")
+    .add({ templateReminderId, frequency, endTime, date, active });
+};
+
+/*
+uid: mandatory
+active: mandatory
+templateReminderId: required if not creating new templateReminder
+name: required if creating new templateReminder
+description: required if creating new templateReminder
+endDateTime: required if creating plannedReminder
+frequency: required if creating recurringReminder
+endTime: required if creating recurringReminder
+date: required if creating recurringReminder
+*/
 exports.create = (req, res) => {
   if (!req.body.uid) {
     return res.status(400).send({ message: "You must be logged in to make this operation!" });
   }
-  if (!req.body.name) {
-    return res.status(400).send({ message: "Reminders must have a name!" });
+  if (!req.body.active) {
+    return res.status(400).send({ message: "Reminder must have an active setting" });
   }
-  if (!req.body.description) {
-    return res.status(400).send({ message: "Reminders must have a description!" });
-  }
-  if (!req.body.dateTime) {
-    return res.status(400).send({ message: "Reminders must have a date!" });
-  }
+  // If no templateReminderId provided, assume creating a brand new reminder
+  if (!req.body.templateReminderId) {
+    if (!req.body.name) {
+      return res.status(400).send({ message: "Reminders must have a name!" });
+    }
+    if (!req.body.description) {
+      return res.status(400).send({ message: "Reminders must have a description!" });
+    }
 
-  const reminder = {
-    name: req.body.name,
-    description: req.body.description,
-    dateTime: req.body.dateTime,
-    eventType: "2",
-  };
-  db.collection("users")
-    .where("uid", "==", req.body.uid)
-    .limit(1)
-    .get()
-    .then((querySnapshot) =>
-      querySnapshot.forEach((doc) =>
-        db
-          .collection("users")
-          .doc(doc.id)
-          .collection("reminders")
-          .doc()
-          .set(reminder)
-          .then(() => {
-            return res.status(200).send({ message: "Reminder created successfully!" });
-          })
+    // If there is no frequency specified, it is a planned reminder, not recurring
+    if (!req.body.frequency) {
+      if (!req.body.endDateTime) {
+        return res.status(400).send({ message: "Planned reminder must have an end date and time" });
+      }
+      createTemplate(req.body.uid, req.body.name, req.body.description)
+        .then((templateReminderDoc) => {
+          createPlannedReminder(
+            req.body.uid,
+            templateReminderDoc.id,
+            req.body.endDateTime,
+            req.body.active
+          )
+            .then(() => {
+              return res.status(200).send({ message: "Planned reminder created successfully!" });
+            })
+            .catch((error) => {
+              return res.status(404).send({ message: `Error creating planned reminder. ${error}` });
+            });
+        })
+        .catch((error) => {
+          return res.status(404).send({ message: `Error creating template reminder. ${error}` });
+        });
+    } else {
+      if (!req.body.endTime) {
+        return res.status(400).send({ message: "Recurring reminder must have an active setting" });
+      }
+      if (!req.body.date) {
+        return res.status(400).send({ message: "Recurring reminder must have a date" });
+      }
+      createTemplate(req.body.uid, req.body.name, req.body.description)
+        .then((templateReminderDoc) => {
+          createRecurringReminder(
+            req.body.uid,
+            templateReminderDoc.id,
+            req.body.frequency,
+            req.body.endTime,
+            req.body.date,
+            req.body.active
+          )
+            .then(() => {
+              return res.status(200).send({ message: "Recurring reminder created successfully!" });
+            })
+            .catch((error) => {
+              return res
+                .status(404)
+                .send({ message: `Error creating recurring reminder. ${error}` });
+            });
+        })
+        .catch((error) => {
+          return res.status(404).send({ message: `Error creating template reminder. ${error}` });
+        });
+    }
+  } else {
+    // If there is no frequency specified, it is a planned reminder, not recurring
+    if (!req.body.frequency) {
+      if (!req.body.endDateTime) {
+        return res.status(400).send({ message: "Planned reminder must have an end date and time" });
+      }
+      createPlannedReminder(
+        req.body.uid,
+        req.body.templateReminderId,
+        req.body.endDateTime,
+        req.body.active
       )
-    );
+        .then(() => {
+          return res.status(200).send({ message: "Planned reminder created successfully!" });
+        })
+        .catch((error) => {
+          return res.status(404).send({ message: `Error creating planned reminder. ${error}` });
+        });
+    } else {
+      if (!req.body.endTime) {
+        return res.status(400).send({ message: "Recurring reminder must have an active setting" });
+      }
+      if (!req.body.date) {
+        return res.status(400).send({ message: "Recurring reminder must have a date" });
+      }
+      createRecurringReminder(
+        req.body.uid,
+        req.body.templateReminderId,
+        req.body.frequency,
+        req.body.endTime,
+        req.body.date,
+        req.body.active
+      )
+        .then(() => {
+          return res.status(200).send({ message: "Recurring reminder created successfully!" });
+        })
+        .catch((error) => {
+          return res.status(404).send({ message: `Error creating recurring reminder. ${error}` });
+        });
+    }
+  }
 };
+//   if (!req.body.dateTime) {
+//     return res.status(400).send({ message: "Reminders must have a date!" });
+//   }
+
+//   const reminder = {
+//     name: req.body.name,
+//     description: req.body.description,
+//     dateTime: req.body.dateTime,
+//     eventType: "2",
+//   };
+//   db.collection("users")
+//     .where("uid", "==", req.body.uid)
+//     .limit(1)
+//     .get()
+//     .then((querySnapshot) =>
+//       querySnapshot.forEach((doc) =>
+//         db
+//           .collection("users")
+//           .doc(doc.id)
+//           .collection("reminders")
+//           .doc()
+//           .set(reminder)
+//           .then(() => {
+//             return res.status(200).send({ message: "Reminder created successfully!" });
+//           })
+//       )
+//     );
+// };
 
 exports.update = (req, res) => {
   if (!req.body.uid) {
