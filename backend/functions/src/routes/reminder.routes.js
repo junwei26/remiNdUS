@@ -4,9 +4,9 @@ module.exports = (app) => {
   var router = require("express").Router();
 
   // Fetch all reminders of a specified user for a specified date
-  router.get("/", reminders.getAll);
   router.get("/get", reminders.get);
   router.get("/getSubscribed", reminders.getSubscribed);
+  router.get("/", reminders.getAll);
   router.get("/getRange", reminders.range);
 
   // Creates a new reminder for a specified user

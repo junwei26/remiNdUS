@@ -72,7 +72,12 @@ const getRemindersByIds = (uid, reminderIds) => {
     });
 };
 
-const getSubscribed = (uid) => {
+const getSubscribed = (
+  uid,
+  reminderFilter = () => {
+    return true;
+  }
+) => {
   return db
     .collection("users")
     .where("uid", "==", uid)
@@ -117,12 +122,48 @@ const getSubscribed = (uid) => {
             }
             return Promise.all(promises).then((values) => {
               allSubscribedReminders = [].concat.apply([], values);
+              allSubscribedReminders = allSubscribedReminders.filter(reminderFilter);
 
               return allSubscribedReminders;
             });
           });
       });
       return promise;
+    });
+};
+
+exports.get = (req, res) => {
+  if (!req.query.uid) {
+    return res.status(400).send({ message: "You must be logged in to make this operation!" });
+  }
+  if (!req.query.reminderIds || req.query.reminderIds.length === 0) {
+    return res.status(400).send({ message: "Reminders must have reminder IDs!" });
+  }
+
+  return getRemindersByIds(req.query.uid, req.query.reminderIds)
+    .then((reminders) => {
+      res.send(reminders);
+      return res.status(200).send();
+    })
+    .catch((error) => {
+      return res.status(404).send({ message: `Error getting reminders. ${error}` });
+    });
+};
+
+exports.getSubscribed = (req, res) => {
+  if (!req.query.uid) {
+    return res.status(400).send({ message: "You must be logged in to make this operation!" });
+  }
+
+  return getSubscribed(req.query.uid)
+    .then((allSubscribedReminders) => {
+      res.send(allSubscribedReminders);
+      return res.status(200).send({
+        message: "Successfully retrieved all reminders from subscribed reminder packages.",
+      });
+    })
+    .catch((error) => {
+      return res.status(404).send({ message: `Error retrieving subscribed reminders. ${error}` });
     });
 };
 
@@ -168,41 +209,6 @@ exports.getAll = (req, res) => {
     });
 };
 
-exports.get = (req, res) => {
-  if (!req.query.uid) {
-    return res.status(400).send({ message: "You must be logged in to make this operation!" });
-  }
-  if (!req.query.reminderIds || req.query.reminderIds.length === 0) {
-    return res.status(400).send({ message: "Reminders must have reminder IDs!" });
-  }
-
-  return getRemindersByIds(req.query.uid, req.query.reminderIds)
-    .then((reminders) => {
-      res.send(reminders);
-      return res.status(200).send();
-    })
-    .catch((error) => {
-      return res.status(404).send({ message: `Error getting reminders. ${error}` });
-    });
-};
-
-exports.getSubscribed = (req, res) => {
-  if (!req.query.uid) {
-    return res.status(400).send({ message: "You must be logged in to make this operation!" });
-  }
-
-  return getSubscribed(req.query.uid)
-    .then((allSubscribedReminders) => {
-      res.send(allSubscribedReminders);
-      return res.status(200).send({
-        message: "Successfully retrieved all reminders from subscribed reminder packages.",
-      });
-    })
-    .catch((error) => {
-      return res.status(404).send({ message: `Error retrieving subscribed reminders. ${error}` });
-    });
-};
-
 exports.range = (req, res) => {
   if (!req.query.uid) {
     return res.status(400).send({ message: "You must be logged in to make this operation!" });
@@ -220,10 +226,28 @@ exports.range = (req, res) => {
     .get()
     .then((querySnapshot) => {
       querySnapshot.forEach((reminder) => {
-        reminders.push({ reminderId: reminder.id, ...reminder.data() });
+        reminders.push({ ...reminder.data(), reminderId: reminder.id, subscribed: false });
       });
-      res.send(reminders);
-      return res.status(200).send();
+
+      getSubscribed(req.query.uid, (reminder) => {
+        return (
+          reminder.dateTime >= req.query.currentDateTime &&
+          reminder.dateTime <= req.query.endDateTime
+        );
+      })
+        .then((allSubscribedReminders) => {
+          const allReminders = reminders.concat(allSubscribedReminders);
+
+          res.send(allReminders);
+          return res
+            .status(200)
+            .send({ message: "Successfully retrieved all local and subscribed reminders" });
+        })
+        .catch((error) => {
+          return res
+            .status(404)
+            .send({ message: `Error retrieving subscribed reminders. ${error}` });
+        });
     });
 };
 
