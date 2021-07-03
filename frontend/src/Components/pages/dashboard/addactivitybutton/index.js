@@ -10,11 +10,17 @@ import {
   DialogActions,
   DialogContent,
   DialogTitle,
+  FormControlLabel,
+  Checkbox,
+  Typography,
+  InputLabel,
+  Select,
+  MenuItem,
 } from "@material-ui/core";
 import ListItem from "@material-ui/core/ListItem";
 import ListItemText from "@material-ui/core/ListItemText";
 import DateFnsUtils from "@date-io/date-fns";
-import { MuiPickersUtilsProvider, DateTimePicker } from "@material-ui/pickers";
+import { MuiPickersUtilsProvider, DateTimePicker, TimePicker } from "@material-ui/pickers";
 import activityService from "../../services/activityService";
 
 const useStyles = makeStyles(() => ({
@@ -26,21 +32,56 @@ const useStyles = makeStyles(() => ({
 const AddActivityButton = () => {
   const classes = useStyles();
 
-  const roundUpTime = (date) => {
-    const nearestTime = 1000 * 60 * 15; // round up to nearest 15 minutes
+  const nearestTime = 1000 * 60 * 15; // round up to nearest 15 minutes
+  // const nearestMinutes = nearestTime / 1000 / 60;
+
+  const roundUpDateTime = (date) => {
     return new Date(Math.ceil(date.getTime() / nearestTime) * nearestTime);
   };
 
-  const [startDateTime, setStartDateTime] = useState(roundUpTime(new Date()));
-  const [endDateTime, setEndDateTime] = useState(roundUpTime(new Date()));
+  const currentDateTime = roundUpDateTime(new Date());
+  const [startDateTime, setStartDateTime] = useState(currentDateTime);
+  const [date, setDate] = useState(currentDateTime.getDate());
+  const [endDateTime, setEndDateTime] = useState(currentDateTime);
+  const [recurring, setRecurring] = useState(false);
   const [dialogOpen, setDialogOpen] = useState(false);
 
+  const [frequency, setFrequency] = useState("weekly");
+
+  const handleSelectFrequencyChange = (e) => {
+    if (frequency === "monthly" && e.target.value === "weekly" && date > 7) {
+      setDate(1);
+    }
+    setFrequency(e.target.value);
+  };
+
   const handleStartDateChange = (date) => {
-    setStartDateTime(roundUpTime(date));
+    setStartDateTime(roundUpDateTime(date));
+    setDate(date.getDate());
+    // If new start date is greater (later) than end datetime, update end date
+    if (date.getTime() > endDateTime.getTime()) {
+      setEndDateTime(roundUpDateTime(date));
+    }
   };
 
   const handleEndDateChange = (date) => {
-    setEndDateTime(roundUpTime(date));
+    if (date.getTime() < startDateTime.getTime()) {
+      setStartDateTime(roundUpDateTime(date));
+      setDate(date.getDate());
+    }
+    setEndDateTime(roundUpDateTime(date));
+  };
+
+  const handleDateChange = (e) => {
+    setDate(e.target.value);
+  };
+
+  const handleSetRecurring = (e) => {
+    setRecurring(e.target.checked);
+    const currentDateTime = roundUpDateTime(new Date());
+    setStartDateTime(currentDateTime);
+    setDate(currentDateTime.getDate());
+    setEndDateTime(currentDateTime);
   };
 
   const handleDialogClickOpen = () => {
@@ -62,6 +103,8 @@ const AddActivityButton = () => {
       return;
     }
 
+    // add check for recurring
+
     activityService
       .addActivity(
         e.target.startDateTime.value,
@@ -80,6 +123,25 @@ const AddActivityButton = () => {
 
     handleDialogClose();
   };
+
+  const weeklyMenuItems = [
+    "Monday",
+    "Tuesday",
+    "Wednesday",
+    "Thursday",
+    "Friday",
+    "Saturday",
+    "Sunday",
+  ];
+
+  let monthlyMenuItems = [];
+  for (let i = 1; i < 32; ++i) {
+    monthlyMenuItems.push(
+      <MenuItem key={i} value={i}>
+        {i}
+      </MenuItem>
+    );
+  }
 
   return (
     <>
@@ -103,6 +165,7 @@ const AddActivityButton = () => {
               alignItems="center"
               spacing={2}
             >
+              Select from existing activity
               <Grid item style={{ width: "100%" }}>
                 <TextField
                   variant="outlined"
@@ -125,36 +188,106 @@ const AddActivityButton = () => {
                   autofocus
                 />
               </Grid>
-              <Grid container item direction="row" justify="space-between" alignItems="center">
-                <Grid item>
-                  <DateTimePicker
-                    variant="dialog"
-                    label="Start Date and Time"
-                    name="startDateTime"
-                    disablePast
-                    showTodayButton
-                    minutesStep={15}
-                    todayLabel={"Now"}
-                    value={startDateTime}
-                    format="yyyy/MM/dd HH:mm"
-                    onChange={handleStartDateChange}
-                  />
-                </Grid>
-                <Grid item>
-                  <DateTimePicker
-                    variant="dialog"
-                    label="End Date and Time"
-                    name="endDateTime"
-                    disablePast
-                    showTodayButton
-                    minutesStep={15}
-                    todayLabel={"Now"}
-                    value={endDateTime}
-                    format="yyyy/MM/dd HH:mm"
-                    onChange={handleEndDateChange}
-                  />
-                </Grid>
+              <Grid item style={{ width: "100%" }}>
+                <FormControlLabel
+                  control={
+                    <Checkbox
+                      checked={recurring}
+                      onChange={handleSetRecurring}
+                      name="recurring"
+                      color="primary"
+                    />
+                  }
+                  label="Recurring Activity"
+                />
               </Grid>
+              {recurring ? (
+                <>
+                  <Grid
+                    container
+                    item
+                    direction="row"
+                    justify="flex-start"
+                    alignItems="center"
+                    style={{ width: "100%" }}
+                  >
+                    <Grid item xs={2}>
+                      <Typography>Frequency:</Typography>
+                    </Grid>
+                    <Grid item>
+                      <Select
+                        value={frequency}
+                        onChange={handleSelectFrequencyChange}
+                        style={{ width: "auto" }}
+                      >
+                        <MenuItem value={"weekly"}>Weekly</MenuItem>
+                        <MenuItem value={"monthly"}>Monthly</MenuItem>
+                      </Select>
+                    </Grid>
+                  </Grid>
+                  <Grid container item direction="row" justify="space-between" alignItems="center">
+                    <Grid item xs={4}>
+                      <TimePicker
+                        label="Start Time"
+                        value={startDateTime}
+                        onChange={handleStartDateChange}
+                        minutesStep={15}
+                      />
+                    </Grid>
+                    <Grid item xs={4}>
+                      <TimePicker
+                        label="End Time"
+                        value={endDateTime}
+                        onChange={handleEndDateChange}
+                        minutesStep={15}
+                      />
+                    </Grid>
+                    <Grid item>
+                      <InputLabel>{frequency === "weekly" ? "Day" : "Date"}</InputLabel>
+                      <Select value={date} onChange={handleDateChange} style={{ width: "auto" }}>
+                        {frequency === "weekly"
+                          ? weeklyMenuItems.map((day, index) => (
+                              <MenuItem key={index} value={index + 1}>
+                                {day}
+                              </MenuItem>
+                            ))
+                          : monthlyMenuItems}
+                      </Select>
+                    </Grid>
+                  </Grid>
+                </>
+              ) : (
+                <Grid container item direction="row" justify="space-between" alignItems="center">
+                  <Grid item>
+                    <DateTimePicker
+                      variant="dialog"
+                      label="Start Date and Time"
+                      name="startDateTime"
+                      disablePast
+                      showTodayButton
+                      minutesStep={15}
+                      todayLabel={"Now"}
+                      value={startDateTime}
+                      format="yyyy/MM/dd HH:mm"
+                      onChange={handleStartDateChange}
+                    />
+                  </Grid>
+                  <Grid item>
+                    <DateTimePicker
+                      variant="dialog"
+                      label="End Date and Time"
+                      name="endDateTime"
+                      disablePast
+                      showTodayButton
+                      minutesStep={15}
+                      todayLabel={"Now"}
+                      value={endDateTime}
+                      format="yyyy/MM/dd HH:mm"
+                      onChange={handleEndDateChange}
+                    />
+                  </Grid>
+                </Grid>
+              )}
             </Grid>
           </MuiPickersUtilsProvider>
         </DialogContent>
