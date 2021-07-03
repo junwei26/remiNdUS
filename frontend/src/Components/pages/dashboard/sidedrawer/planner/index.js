@@ -130,105 +130,6 @@ const mapAppointmentData = (appointment) => {
   }
 };
 
-const BasicLayout = ({ onFieldChange, appointmentData }) => {
-  const onDescriptionFieldChange = (nextValue) => {
-    onFieldChange({ description: nextValue });
-  };
-  const onNameFieldChange = (nextValue) => {
-    onFieldChange({ title: nextValue });
-  };
-
-  const onStartFieldChange = (nextValue) => {
-    onFieldChange({ startDate: nextValue });
-  };
-
-  const onEndFieldChange = (nextValue) => {
-    onFieldChange({ endDate: nextValue });
-  };
-
-  return appointmentData.eventType == 2 ? (
-    <Grid container direction="column" alignItems="left" alignContent="center">
-      <Grid item xs>
-        <AppointmentForm.Label text="Reminder" type="title" />
-      </Grid>
-      <Grid item xs>
-        <AppointmentForm.TextEditor
-          value={appointmentData.title}
-          onValueChange={onNameFieldChange}
-          placeholder="Add a name"
-        />
-      </Grid>
-      <Grid item xs style={{ width: "90%" }}>
-        <AppointmentForm.Label text="Deadline" type="title" />
-      </Grid>
-      <Grid item xs>
-        <AppointmentForm.DateEditor
-          value={appointmentData.startDate}
-          onValueChange={onStartFieldChange}
-        />
-      </Grid>
-      <Grid item xs style={{ width: "90%" }}>
-        <AppointmentForm.Label text="Description" type="title" />
-      </Grid>
-      <Grid item xs>
-        <AppointmentForm.TextEditor
-          value={appointmentData.description}
-          onValueChange={onDescriptionFieldChange}
-          placeholder="Add a description"
-        />
-      </Grid>
-    </Grid>
-  ) : (
-    <Grid container direction="column" alignItems="left" alignContent="center">
-      <AppointmentForm.Label text="Activity" type="title" />
-      <Grid item xs>
-        <AppointmentForm.TextEditor
-          value={appointmentData.title}
-          onValueChange={onNameFieldChange}
-          placeholder="Add a name"
-        />
-      </Grid>
-      <AppointmentForm.Label text="Duration" type="title" />
-
-      <Grid item xs>
-        <Grid
-          container
-          direction="row"
-          alignItems="center"
-          alignContent="center"
-          justify="center"
-          spacing={3}
-        >
-          <Grid item xs>
-            <AppointmentForm.DateEditor
-              value={appointmentData.startDate}
-              onValueChange={onStartFieldChange}
-            />
-          </Grid>
-          <Grid item xs={1}>
-            <Typography> - </Typography>
-          </Grid>
-          <Grid item xs>
-            <AppointmentForm.DateEditor
-              value={appointmentData.endDate}
-              onValueChange={onEndFieldChange}
-            />
-          </Grid>
-        </Grid>
-      </Grid>
-      <Grid item xs>
-        <AppointmentForm.Label text="Description" type="title" />
-      </Grid>
-      <Grid item xs>
-        <AppointmentForm.TextEditor
-          value={appointmentData.description}
-          onValueChange={onDescriptionFieldChange}
-          placeholder="Add a description"
-        />
-      </Grid>
-    </Grid>
-  );
-};
 const currentDate = () => {
   var d = new Date(),
     month = "" + (d.getMonth() + 1),
@@ -277,7 +178,7 @@ const Planner = () => {
   useEffect(() => {
     userService.getUserInfo().then((response) => {
       const instances = response.data.tags.map((tag) => {
-        return { id: tag, text: tag };
+        return { id: tag, text: tag, fieldName: "tag" };
       });
       setResources([
         {
@@ -287,7 +188,7 @@ const Planner = () => {
         },
       ]);
     });
-  }, []);
+  }, [data]);
 
   const setCurrentViewName = useCallback(
     (nextViewName) =>
@@ -328,14 +229,28 @@ const Planner = () => {
 
   const handleChange = ({ added, changed, deleted }) => {
     if (added) {
-      activityService
-        .addActivity(added.startDate, added.endDate, added.title, added.description)
+      const addedActivityTag = added.newTag == undefined ? added.tag : added.newTag;
+      userService
+        .addTag(addedActivityTag)
         .then(() => {
-          getData(setData, setLoading);
-          alert("Activity added!");
+          activityService
+            .addActivity(
+              added.startDate,
+              added.endDate,
+              added.title,
+              added.description,
+              addedActivityTag
+            )
+            .then(() => {
+              getData(setData, setLoading);
+              alert("Activity added!");
+            })
+            .catch((e) => {
+              alert(e.response.data.message);
+            });
         })
-        .catch((e) => {
-          alert(e.response.data.message);
+        .catch(() => {
+          alert("Error creating new tag");
         });
     }
     if (changed) {
@@ -343,21 +258,48 @@ const Planner = () => {
         if (changed[event.id]) {
           const updatedEvent = { ...event, ...changed[event.id] };
           if (event.eventType === "1") {
-            activityService
-              .updateActivity(
-                updatedEvent.startDate,
-                updatedEvent.endDate,
-                updatedEvent.title,
-                updatedEvent.description,
-                event.id
-              )
-              .then(() => {
-                getData(setData, setLoading);
-                alert("Activity updated!");
-              })
-              .catch((e) => {
-                alert(e.response.data.message);
-              });
+            if (updatedEvent.newTag == undefined) {
+              activityService
+                .updateActivity(
+                  updatedEvent.startDate,
+                  updatedEvent.endDate,
+                  updatedEvent.title,
+                  updatedEvent.description,
+                  event.id,
+                  updatedEvent.tag
+                )
+                .then(() => {
+                  getData(setData, setLoading);
+                  alert("Activity updated!");
+                })
+                .catch((e) => {
+                  alert(e.response.data.message);
+                });
+            } else {
+              userService
+                .addTag(updatedEvent.newTag)
+                .then(() => {
+                  activityService
+                    .updateActivity(
+                      updatedEvent.startDate,
+                      updatedEvent.endDate,
+                      updatedEvent.title,
+                      updatedEvent.description,
+                      event.id,
+                      updatedEvent.newTag
+                    )
+                    .then(() => {
+                      getData(setData, setLoading);
+                      alert("Activity updated!");
+                    })
+                    .catch((e) => {
+                      alert(e.response.data.message);
+                    });
+                })
+                .catch(() => {
+                  alert("Error creating new tag");
+                });
+            }
           } else {
             reminderService
               .updateReminder(
@@ -395,6 +337,147 @@ const Planner = () => {
       });
     }
   };
+
+  const BasicLayout = ({ onFieldChange, appointmentData }) => {
+    const onDescriptionFieldChange = (nextValue) => {
+      onFieldChange({ description: nextValue });
+    };
+    const onNameFieldChange = (nextValue) => {
+      onFieldChange({ title: nextValue });
+    };
+
+    const onStartFieldChange = (nextValue) => {
+      onFieldChange({ startDate: nextValue });
+    };
+
+    const onEndFieldChange = (nextValue) => {
+      onFieldChange({ endDate: nextValue });
+    };
+
+    const onTagFieldChange = (nextValue) => {
+      onFieldChange({ tag: nextValue });
+    };
+
+    const onCreateTagFieldChange = (nextValue) => {
+      onFieldChange({ newTag: nextValue });
+    };
+
+    return appointmentData.eventType == 2 ? (
+      <Grid container direction="column" alignItems="left" alignContent="center">
+        <Grid item xs>
+          <AppointmentForm.Label text="Reminder" type="title" />
+        </Grid>
+        <Grid item xs>
+          <AppointmentForm.TextEditor
+            value={appointmentData.title}
+            onValueChange={onNameFieldChange}
+            placeholder="Add a name"
+          />
+        </Grid>
+        <Grid item xs style={{ width: "90%" }}>
+          <AppointmentForm.Label text="Deadline" type="title" />
+        </Grid>
+        <Grid item xs>
+          <AppointmentForm.DateEditor
+            value={appointmentData.startDate}
+            onValueChange={onStartFieldChange}
+          />
+        </Grid>
+        <Grid item xs style={{ width: "90%" }}>
+          <AppointmentForm.Label text="Description" type="title" />
+        </Grid>
+        <Grid item xs>
+          <AppointmentForm.TextEditor
+            value={appointmentData.description}
+            onValueChange={onDescriptionFieldChange}
+            placeholder="Add a description"
+          />
+        </Grid>
+      </Grid>
+    ) : (
+      <Grid container direction="column" alignItems="left" alignContent="center">
+        <AppointmentForm.Label text="Activity" type="title" />
+        <Grid item xs>
+          <AppointmentForm.TextEditor
+            value={appointmentData.title}
+            onValueChange={onNameFieldChange}
+            placeholder="Add a name"
+          />
+        </Grid>
+        <AppointmentForm.Label text="Duration" type="title" />
+
+        <Grid item xs>
+          <Grid
+            container
+            direction="row"
+            alignItems="center"
+            alignContent="center"
+            justify="center"
+            spacing={3}
+          >
+            <Grid item xs>
+              <AppointmentForm.DateEditor
+                value={appointmentData.startDate}
+                onValueChange={onStartFieldChange}
+              />
+            </Grid>
+            <Grid item xs={1}>
+              <Typography> - </Typography>
+            </Grid>
+            <Grid item xs>
+              <AppointmentForm.DateEditor
+                value={appointmentData.endDate}
+                onValueChange={onEndFieldChange}
+              />
+            </Grid>
+          </Grid>
+        </Grid>
+        <Grid item xs>
+          <AppointmentForm.Label text="Description" type="title" />
+        </Grid>
+        <Grid item xs>
+          <AppointmentForm.TextEditor
+            value={appointmentData.description}
+            onValueChange={onDescriptionFieldChange}
+            placeholder="Add a description"
+          />
+        </Grid>
+        <Grid item xs>
+          <AppointmentForm.Label text="Tag" type="title" />
+        </Grid>
+        <Grid item xs style={{ width: "90%" }}>
+          <AppointmentForm.Select
+            value={appointmentData.tag}
+            availableOptions={resources[0].instances.concat([
+              { id: "New Tag", text: "Add a new tag" },
+            ])}
+            onValueChange={onTagFieldChange}
+            placeholder="Add a Tag"
+          />
+        </Grid>
+        {appointmentData.tag == "New Tag" ? (
+          <>
+            <Grid item xs>
+              <AppointmentForm.Label text="Create a new Tag" type="title" />
+            </Grid>
+            <Grid item xs>
+              <AppointmentForm.TextEditor
+                value={appointmentData.newTag}
+                onValueChange={onCreateTagFieldChange}
+                placeholder="Create a new Tag"
+              />
+            </Grid>
+          </>
+        ) : null}
+      </Grid>
+    );
+  };
+
+  BasicLayout.propTypes = {
+    onFieldChange: PropTypes.any,
+    appointmentData: PropTypes.any,
+  };
+
   return (
     <Paper>
       <Scheduler data={data}>
@@ -428,10 +511,6 @@ const Planner = () => {
       </Scheduler>
     </Paper>
   );
-};
-BasicLayout.propTypes = {
-  onFieldChange: PropTypes.any,
-  appointmentData: PropTypes.any,
 };
 
 Appointment.propTypes = {
