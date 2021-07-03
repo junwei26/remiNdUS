@@ -1,6 +1,34 @@
 const admin = require("firebase-admin");
 const db = admin.firestore();
 
+// reminderCollection should be "plannedReminders" or "recurringReminders"
+const getReminder = (userDoc, reminderId, reminderCollection) => {
+  return userDoc
+    .collection(reminderCollection)
+    .doc(reminderId)
+    .get()
+    .then((documentSnapshot) => {
+      return userDoc
+        .collection("templateReminders")
+        .doc(documentSnapshot.get("templateReminderId"))
+        .get()
+        .then((templateDocumentSnapshot) => {
+          const reminderType = reminderCollection === "plannedReminders" ? "planned" : "recurring";
+          return {
+            ...documentSnapshot.data(),
+            ...templateDocumentSnapshot.date(),
+            reminderType,
+          };
+        })
+        .catch((error) => {
+          throw `Unable to retrieve template reminder. ${error}`;
+        });
+    })
+    .catch((error) => {
+      throw `Unable to retrieve ${reminderCollection}. ${error}`;
+    });
+};
+
 // Helper for getSubscribedPackages. Returns packageReminderIds for given user
 const getPackageReminderIds = (uid, reminderPackageId) => {
   return db
@@ -35,7 +63,7 @@ const getPackageReminderIds = (uid, reminderPackageId) => {
 };
 
 // Helper for getSubscribedPackages and get query
-const getRemindersByIds = (uid, reminderIds) => {
+const getRemindersByIds = (uid, reminderIds, reminderCollection) => {
   return db
     .collection("users")
     .where("uid", "==", uid)
@@ -52,13 +80,14 @@ const getRemindersByIds = (uid, reminderIds) => {
       querySnapshot.forEach((queryDocumentSnapshot) => {
         for (let i = 0; i < reminderIds.length; ++i) {
           promises.push(
-            queryDocumentSnapshot.ref
-              .collection("reminders")
-              .doc(reminderIds[i])
-              .get()
-              .then((doc) => {
-                return { ...doc.data(), reminderId: doc.id };
-              })
+            getReminder(queryDocumentSnapshot.ref, reminderIds[i], reminderCollection)
+            // queryDocumentSnapshot.ref
+            //   .collection("reminders")
+            //   .doc(reminderIds[i])
+            //   .get()
+            //   .then((doc) => {
+            //     return { ...doc.data(), reminderId: doc.id };
+            //   })
           );
         }
       });
@@ -252,12 +281,12 @@ exports.range = (req, res) => {
 };
 
 // access the new document by using createTemplate(...).then((templateReminderDoc) => {...})
-const createTemplate = (uid, name, description) => {
+const createTemplate = (uid, name, description, defaultLength) => {
   return db
     .collection("users")
     .doc(uid)
     .collection("templateReminders")
-    .add({ name, description, eventType: "2" });
+    .add({ name, description, defaultLength, eventType: "2" });
 };
 
 // access the new document by using createPlannedReminder(...).then((plannedReminderDoc) => {...})
@@ -304,13 +333,16 @@ exports.create = (req, res) => {
     if (!req.body.description) {
       return res.status(400).send({ message: "Reminders must have a description!" });
     }
+    if (!req.body.defaultLength) {
+      return res.status(400).send({ message: "Reminders must have a default length" });
+    }
 
     // If there is no frequency specified, it is a planned reminder, not recurring
     if (!req.body.frequency) {
       if (!req.body.endDateTime) {
         return res.status(400).send({ message: "Planned reminder must have an end date and time" });
       }
-      createTemplate(req.body.uid, req.body.name, req.body.description)
+      createTemplate(req.body.uid, req.body.name, req.body.description, req.body.defaultLength)
         .then((templateReminderDoc) => {
           createPlannedReminder(
             req.body.uid,
@@ -335,7 +367,7 @@ exports.create = (req, res) => {
       if (!req.body.date) {
         return res.status(400).send({ message: "Recurring reminder must have a date" });
       }
-      createTemplate(req.body.uid, req.body.name, req.body.description)
+      createTemplate(req.body.uid, req.body.name, req.body.description, req.body.defaultLength)
         .then((templateReminderDoc) => {
           createRecurringReminder(
             req.body.uid,
@@ -400,58 +432,69 @@ exports.create = (req, res) => {
     }
   }
 };
-//   if (!req.body.dateTime) {
-//     return res.status(400).send({ message: "Reminders must have a date!" });
-//   }
-
-//   const reminder = {
-//     name: req.body.name,
-//     description: req.body.description,
-//     dateTime: req.body.dateTime,
-//     eventType: "2",
-//   };
-//   db.collection("users")
-//     .where("uid", "==", req.body.uid)
-//     .limit(1)
-//     .get()
-//     .then((querySnapshot) =>
-//       querySnapshot.forEach((doc) =>
-//         db
-//           .collection("users")
-//           .doc(doc.id)
-//           .collection("reminders")
-//           .doc()
-//           .set(reminder)
-//           .then(() => {
-//             return res.status(200).send({ message: "Reminder created successfully!" });
-//           })
-//       )
-//     );
-// };
 
 exports.update = (req, res) => {
+  let updatedReminder = {};
+
   if (!req.body.uid) {
     return res.status(400).send({ message: "You must be logged in to make this operation!" });
   }
+  if (!req.body.active) {
+    return res.status(400).send({ message: "Reminder must have an active setting" });
+  }
   if (!req.body.reminderId) {
-    return res.status(400).send({ message: "Missing Reminder ID!" });
+    return res.status(400).send({ message: "Reminder must have an Id!" });
   }
-  if (!req.body.name) {
-    return res.status(400).send({ message: "Reminders must have a name!" });
+  if (!req.body.templateReminderId) {
+    return res.status(400).send({ message: "Base/template reminder not specified!" });
   }
-  if (!req.body.description) {
-    return res.status(400).send({ message: "Reminders must have a description!" });
-  }
-  if (!req.body.dateTime) {
-    return res.status(400).send({ message: "Reminders must have a date!" });
-  }
+  if (req.body.reminderCollection === "plannedReminders") {
+    if (!req.body.endDateTime) {
+      return res.status(400).send({ message: "Planned reminder must have an end date and time" });
+    }
+    updatedReminder = {
+      templateReminderId: req.body.templateReminderId,
+      endDateTime: req.body.endDateTime,
+      active: req.body.active,
+    };
+  } else if (req.body.reminderCollection === "recurringReminders") {
+    if (!req.body.frequency) {
+      return res.status(400).send({ message: "Recurring reminder must have a set frequency" });
+    }
+    if (!req.body.endTime) {
+      return res.status(400).send({ message: "Recurring reminder must have an active setting" });
+    }
+    if (!req.body.date) {
+      return res.status(400).send({ message: "Recurring reminder must have a date" });
+    }
 
-  const updatedReminder = {
-    name: req.body.name,
-    description: req.body.description,
-    dateTime: req.body.dateTime,
-    eventType: "2",
-  };
+    updatedReminder = {
+      templateReminderId: req.body.templateReminderId,
+      frequency: req.body.frequency,
+      endTime: req.body.endTime,
+      date: req.body.date,
+      active: req.body.active,
+    };
+  } else if (req.body.reminderCollection === "templateReminders") {
+    if (!req.body.name) {
+      return res.status(400).send({ message: "Template reminder must have a name!" });
+    }
+    if (!req.body.description) {
+      return res.status(400).send({ message: "Template reminder must have a description!" });
+    }
+    if (!req.body.defaultLength) {
+      return res
+        .status(400)
+        .send({ message: "Template reminder must have an associated default length!" });
+    }
+
+    updatedReminder = {
+      name: req.body.name,
+      description: req.body.description,
+      defaultLength: req.body.defaultLength,
+      eventType: "2",
+    };
+  }
 
   db.collection("users")
     .where("uid", "==", req.body.uid)
@@ -460,17 +503,17 @@ exports.update = (req, res) => {
     .then((querySnapshot) =>
       querySnapshot.forEach((queryDocumentSnapshot) =>
         queryDocumentSnapshot.ref
-          .collection("reminders")
+          .collection(req.body.reminderCollection)
           .doc(req.body.reminderId)
           .update(updatedReminder)
           .then(() => {
             return res.status(200).send({ message: "Successfully updated reminder!" });
           })
-          .catch((error) => {
-            return res.status(404).send({ message: `Error updating reminder. ${error}` });
-          })
       )
-    );
+    )
+    .catch((error) => {
+      return res.status(404).send({ message: `Error updating reminder. ${error}` });
+    });
 };
 
 exports.delete = (req, res) => {
