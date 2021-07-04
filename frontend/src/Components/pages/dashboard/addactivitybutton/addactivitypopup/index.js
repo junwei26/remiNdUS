@@ -1,10 +1,20 @@
-import React, { useState } from "react";
+import React, { useState, useEffect } from "react";
 import PropTypes from "prop-types";
 import { makeStyles } from "@material-ui/core/styles";
-import { Button, Grid, TextField, Card, Typography } from "@material-ui/core";
+import {
+  Button,
+  Grid,
+  TextField,
+  Card,
+  Typography,
+  Select,
+  MenuItem,
+  InputLabel,
+} from "@material-ui/core";
 import DateFnsUtils from "@date-io/date-fns";
 import { MuiPickersUtilsProvider, DateTimePicker } from "@material-ui/pickers";
 import activityService from "../../../services/activityService";
+import userService from "../../../services/userService";
 
 const useStyles = makeStyles(() => ({
   topbar: {
@@ -21,6 +31,9 @@ const useStyles = makeStyles(() => ({
     left: 20,
     top: -20,
   },
+  select: {
+    width: 300,
+  },
 }));
 
 const AddActivityPopup = (props) => {
@@ -33,6 +46,12 @@ const AddActivityPopup = (props) => {
 
   const [startDateTime, setStartDateTime] = useState(roundUpTime(new Date()));
   const [endDateTime, setEndDateTime] = useState(roundUpTime(new Date()));
+  const [tags, setTags] = useState([]);
+  const [tag, setTag] = useState("");
+
+  useEffect(() => {
+    userService.getUserInfo().then((response) => setTags(response.data.tags));
+  }, []);
 
   const handleStartDateChange = (date) => {
     setStartDateTime(roundUpTime(date));
@@ -42,9 +61,13 @@ const AddActivityPopup = (props) => {
     setEndDateTime(roundUpTime(date));
   };
 
+  const handleTagChange = (e) => {
+    setTag(e.target.value);
+  };
+
   const handleSubmitAddActivity = (e) => {
     e.preventDefault();
-
+    const activityTag = tag == "New Tag" ? e.target.newTag.value : tag;
     if (e.target.activityName.value === "") {
       alert("Please input an activity name");
       return;
@@ -52,21 +75,28 @@ const AddActivityPopup = (props) => {
       alert("Please input an activity description");
       return;
     }
-
-    activityService
-      .addActivity(
-        e.target.startDateTime.value,
-        e.target.endDateTime.value,
-        e.target.activityName.value,
-        e.target.description.value
-      )
+    userService
+      .addTag(activityTag)
       .then(() => {
-        alert("Succesfully created activity");
+        activityService
+          .addActivity(
+            e.target.startDateTime.value,
+            e.target.endDateTime.value,
+            e.target.activityName.value,
+            e.target.description.value,
+            activityTag
+          )
+          .then(() => {
+            alert("Succesfully created activity");
+          })
+          .catch((error) => {
+            alert(
+              `Issue creating activity. Error status code: ${error.response.status}. ${error.response.data.message}`
+            );
+          });
       })
-      .catch((error) => {
-        alert(
-          `Issue creating activity. Error status code: ${error.response.status}. ${error.response.data.message}`
-        );
+      .catch(() => {
+        alert("Error creating new tag");
       });
   };
 
@@ -123,6 +153,37 @@ const AddActivityPopup = (props) => {
                     autofocus
                   />
                 </Grid>
+                <Grid item style={{ width: "80%" }}>
+                  <InputLabel id="selectTag">Tag</InputLabel>
+                  <Select
+                    className={classes.select}
+                    value={tag}
+                    labelId="selectTag"
+                    onChange={handleTagChange}
+                  >
+                    {tags.map((tag) => (
+                      <MenuItem value={tag} key={tag}>
+                        {tag}
+                      </MenuItem>
+                    ))}
+                    <MenuItem value={"New Tag"}> Create a new Tag </MenuItem>
+                  </Select>
+                </Grid>
+                {tag == "New Tag" ? (
+                  <Grid item style={{ width: "80%" }}>
+                    <TextField
+                      variant="outlined"
+                      required
+                      fullWidth
+                      name="newTag"
+                      label="Create a new tag"
+                      color="primary"
+                      autofocus
+                    />
+                  </Grid>
+                ) : (
+                  <></>
+                )}
                 <Grid item style={{ width: "80%" }}>
                   <DateTimePicker
                     variant="dialog"

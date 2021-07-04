@@ -88,7 +88,7 @@ const TimeTracker = () => {
 
   const DisplayCurrentActivity = () => {
     if (currentActivity.name) {
-      return <Typography>Currently tracking {currentActivity.startDateTime}</Typography>;
+      return <Typography>Currently tracking {currentActivity.name}</Typography>;
     } else {
       return <Typography>Start tracking an activity now!</Typography>;
     }

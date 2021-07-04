@@ -15,6 +15,7 @@ exports.create = (req, res) => {
     telegramHandle: req.body.telegramHandle,
     telegramSendReminders: false,
     telegramReminderTiming: "0800",
+    tags: [],
   };
 
   db.collection("users")
@@ -253,4 +254,13 @@ exports.getTelegramReminderUsers = (req, res) => {
       res.send(telegramHandles);
       return res.status(200).send();
     });
+};
+
+exports.addTag = (req, res) => {
+  db.collection("users")
+    .doc(req.body.uid)
+    .update({
+      tags: admin.firestore.FieldValue.arrayUnion(req.body.tag),
+    })
+    .then(() => res.status(200).send({ message: "Tag added successfully" }));
 };
