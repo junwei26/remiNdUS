@@ -1,6 +1,8 @@
 import React, { useState, useEffect, useCallback, useReducer } from "react";
 import Paper from "@material-ui/core/Paper";
-import { Grid, Typography } from "@material-ui/core";
+import { Grid, Typography, Snackbar } from "@material-ui/core";
+import Alert from "@material-ui/lab/Alert";
+import AlertTitle from "@material-ui/lab/AlertTitle";
 import LinearProgress from "@material-ui/core/LinearProgress";
 import { withStyles } from "@material-ui/core/styles";
 import PropTypes from "prop-types";
@@ -24,46 +26,6 @@ import activityService from "../../../services/activityService";
 import reminderService from "../../../services/reminderService";
 import userService from "../../../services/userService";
 
-const Appointment = ({ children, style, data, ...restProps }) => {
-  return data.eventType == "2" ? (
-    <Appointments.Appointment
-      {...restProps}
-      data={data}
-      style={{
-        ...style,
-        backgroundColor: "#d50000",
-        borderRadius: "8px",
-      }}
-    >
-      {children}
-    </Appointments.Appointment>
-  ) : (
-    <Appointments.Appointment
-      {...restProps}
-      data={data}
-      style={{
-        ...style,
-        borderRadius: "8px",
-      }}
-    >
-      {children}
-    </Appointments.Appointment>
-  );
-};
-
-//TODO: Figure out how to change color of lens for reminders(still blue somehow),
-// worst case make a custom tooltip
-const Content = ({ appointmentData, style, ...restProps }) => {
-  return appointmentData.eventType == "2" ? (
-    <AppointmentTooltip.Content
-      {...restProps}
-      appointmentData={appointmentData}
-      style={{ ...style, lens: { color: "#d50000" } }}
-    />
-  ) : (
-    <AppointmentTooltip.Content {...restProps} appointmentData={appointmentData} />
-  );
-};
 const getData = (setData, setLoading) => {
   setLoading(true);
   return activityService.getAllActivities().then((response1) => {
@@ -126,6 +88,7 @@ const mapAppointmentData = (appointment) => {
       title: appointment.name,
       description: appointment.description,
       eventType: appointment.eventType,
+      tag: "Reminder",
     };
   }
 };
@@ -167,6 +130,7 @@ const reducer = (state, action) => {
 const Planner = () => {
   const [state, dispatch] = useReducer(reducer, initialState);
   const { data, loading, currentViewName, currentDate } = state;
+  const [currentAlert, setCurrentAlert] = useState({ severity: "", message: "" });
   const [resources, setResources] = useState([
     {
       fieldName: "tag",
@@ -174,12 +138,21 @@ const Planner = () => {
       instances: [],
     },
   ]);
+  const [snackbarOpen, setSnackbarOpen] = useState(false);
+  const handleSnackbarClose = (event, reason) => {
+    if (reason === "clickaway") {
+      return;
+    }
 
+    setSnackbarOpen(false);
+  };
   useEffect(() => {
     userService.getUserInfo().then((response) => {
-      const instances = response.data.tags.map((tag) => {
-        return { id: tag, text: tag, fieldName: "tag" };
-      });
+      const instances = response.data.tags
+        .map((tag) => {
+          return { id: tag, text: tag, fieldName: "tag" };
+        })
+        .concat({ id: "Reminder", text: "Reminder", fieldName: "tag", color: "#d50000" });
       setResources([
         {
           fieldName: "tag",
@@ -243,14 +216,17 @@ const Planner = () => {
             )
             .then(() => {
               getData(setData, setLoading);
-              alert("Activity added!");
+              setCurrentAlert({ severity: "success", message: "Activity added!" });
+              setSnackbarOpen(true);
             })
-            .catch((e) => {
-              alert(e.response.data.message);
+            .catch(() => {
+              setCurrentAlert({ severity: "error", message: "Error creating activity!" });
+              setSnackbarOpen(true);
             });
         })
         .catch(() => {
-          alert("Error creating new tag");
+          setCurrentAlert({ severity: "error", message: "Error creating new tag!" });
+          setSnackbarOpen(true);
         });
     }
     if (changed) {
@@ -258,7 +234,7 @@ const Planner = () => {
         if (changed[event.id]) {
           const updatedEvent = { ...event, ...changed[event.id] };
           if (event.eventType === "1") {
-            if (updatedEvent.newTag == undefined) {
+            if (updatedEvent.tag !== "New Tag") {
               activityService
                 .updateActivity(
                   updatedEvent.startDate,
@@ -270,35 +246,45 @@ const Planner = () => {
                 )
                 .then(() => {
                   getData(setData, setLoading);
-                  alert("Activity updated!");
-                })
-                .catch((e) => {
-                  alert(e.response.data.message);
-                });
-            } else {
-              userService
-                .addTag(updatedEvent.newTag)
-                .then(() => {
-                  activityService
-                    .updateActivity(
-                      updatedEvent.startDate,
-                      updatedEvent.endDate,
-                      updatedEvent.title,
-                      updatedEvent.description,
-                      event.id,
-                      updatedEvent.newTag
-                    )
-                    .then(() => {
-                      getData(setData, setLoading);
-                      alert("Activity updated!");
-                    })
-                    .catch((e) => {
-                      alert(e.response.data.message);
-                    });
+                  setCurrentAlert({ severity: "success", message: "Activity updated!" });
+                  setSnackbarOpen(true);
                 })
                 .catch(() => {
-                  alert("Error creating new tag");
+                  setCurrentAlert({ severity: "error", message: "Error updating activity!" });
+                  setSnackbarOpen(true);
                 });
+            } else {
+              if (updatedEvent.newTag === undefined) {
+                setCurrentAlert({ severity: "error", message: "New tag cannot be empty!" });
+                setSnackbarOpen(true);
+              } else {
+                userService
+                  .addTag(updatedEvent.newTag)
+                  .then(() => {
+                    activityService
+                      .updateActivity(
+                        updatedEvent.startDate,
+                        updatedEvent.endDate,
+                        updatedEvent.title,
+                        updatedEvent.description,
+                        event.id,
+                        updatedEvent.newTag
+                      )
+                      .then(() => {
+                        getData(setData, setLoading);
+                        setCurrentAlert({ severity: "success", message: "Activity updated!" });
+                        setSnackbarOpen(true);
+                      })
+                      .catch(() => {
+                        setCurrentAlert({ severity: "error", message: "Error updating activity!" });
+                        setSnackbarOpen(true);
+                      });
+                  })
+                  .catch(() => {
+                    setCurrentAlert({ severity: "error", message: "Error creating new tag!" });
+                    setSnackbarOpen(true);
+                  });
+              }
             }
           } else {
             reminderService
@@ -310,10 +296,12 @@ const Planner = () => {
               )
               .then(() => {
                 getData(setData, setLoading);
-                alert("Reminder updated!");
+                setCurrentAlert({ severity: "success", message: "Reminder updated!" });
+                setSnackbarOpen(true);
               })
-              .catch((e) => {
-                alert(e.response.data.message);
+              .catch(() => {
+                setCurrentAlert({ severity: "error", message: "Error updating reminder!" });
+                setSnackbarOpen(true);
               });
           }
         }
@@ -325,12 +313,14 @@ const Planner = () => {
           if (event.eventType == "1") {
             activityService.deleteActivity(deleted).then(() => {
               getData(setData, setLoading);
-              alert("Activity successfully deleted.");
+              setCurrentAlert({ severity: "success", message: "Activity deleted!" });
+              setSnackbarOpen(true);
             });
           } else {
             reminderService.deleteReminder(deleted).then(() => {
               getData(setData, setLoading);
-              alert("Reminder successfully deleted.");
+              setCurrentAlert({ severity: "success", message: "Reminder deleted!" });
+              setSnackbarOpen(true);
             });
           }
         }
@@ -412,7 +402,7 @@ const Planner = () => {
             direction="row"
             alignItems="center"
             alignContent="center"
-            justify="center"
+            justify="space-between"
             spacing={3}
           >
             <Grid item xs>
@@ -422,7 +412,7 @@ const Planner = () => {
               />
             </Grid>
             <Grid item xs={1}>
-              <Typography> - </Typography>
+              <Typography align="center"> -</Typography>
             </Grid>
             <Grid item xs>
               <AppointmentForm.DateEditor
@@ -448,9 +438,9 @@ const Planner = () => {
         <Grid item xs style={{ width: "90%" }}>
           <AppointmentForm.Select
             value={appointmentData.tag}
-            availableOptions={resources[0].instances.concat([
-              { id: "New Tag", text: "Add a new tag" },
-            ])}
+            availableOptions={resources[0].instances
+              .filter((resource) => resource.id != "Reminder")
+              .concat([{ id: "New Tag", text: "Add a new tag" }])}
             onValueChange={onTagFieldChange}
             placeholder="Add a Tag"
           />
@@ -480,6 +470,11 @@ const Planner = () => {
 
   return (
     <Paper>
+      <Snackbar open={snackbarOpen} autoHideDuration={3000} onClose={handleSnackbarClose}>
+        <Alert severity={currentAlert.severity}>
+          <AlertTitle>{currentAlert.message}</AlertTitle>
+        </Alert>
+      </Snackbar>
       <Scheduler data={data}>
         <ViewState
           currentDate={currentDate}
@@ -492,15 +487,10 @@ const Planner = () => {
         <IntegratedEditing />
         <WeekView startDayHour={8} endDayHour={24} />
         <MonthView startDayHour={8} endDayHour={24} />
-        <Appointments appointmentComponent={Appointment} />
+        <Appointments />
         <Resources data={resources} mainResourceName="tag" />
 
-        <AppointmentTooltip
-          showOpenButton
-          showCloseButton
-          showDeleteButton
-          contentComponent={Content}
-        />
+        <AppointmentTooltip showOpenButton showCloseButton showDeleteButton />
         <AppointmentForm basicLayoutComponent={BasicLayout} />
         <DragDropProvider allowResize={() => false} />
         <Toolbar {...(loading ? { rootComponent: ToolbarWithLoading } : null)} />
@@ -511,18 +501,6 @@ const Planner = () => {
       </Scheduler>
     </Paper>
   );
-};
-
-Appointment.propTypes = {
-  style: PropTypes.object,
-  children: PropTypes.any,
-  data: PropTypes.object,
-};
-
-Content.propTypes = {
-  style: PropTypes.object,
-  children: PropTypes.any,
-  appointmentData: PropTypes.object,
 };
 
 export default Planner;
