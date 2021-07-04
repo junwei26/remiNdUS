@@ -20,6 +20,13 @@ const convertLocaleDateString = (dateStr) => {
 const getAllActivities = () => {
   return axios.get(ACTIVITY_API_URL + "/", { params: { uid: firebaseAuth.currentUser.uid } });
 };
+
+const getTemplateActivities = () => {
+  return axios.get(ACTIVITY_API_URL + "/template", {
+    params: { uid: firebaseAuth.currentUser.uid },
+  });
+};
+
 const updateActivity = (startDateTime, endDateTime, name, description, activityId) => {
   return axios.post(ACTIVITY_API_URL + "/update", {
     uid: firebaseAuth.currentUser.uid,
@@ -57,4 +64,11 @@ const getRangeActivity = (currentDateTime, endDateTime) => {
   });
 };
 
-export default { getAllActivities, updateActivity, deleteActivity, addActivity, getRangeActivity };
+export default {
+  getAllActivities,
+  getTemplateActivities,
+  updateActivity,
+  deleteActivity,
+  addActivity,
+  getRangeActivity,
+};

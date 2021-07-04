@@ -1,4 +1,4 @@
-import React, { useState } from "react";
+import React, { useState, useEffect } from "react";
 import { makeStyles } from "@material-ui/core/styles";
 import {
   Button,
@@ -46,6 +46,10 @@ const AddActivityButton = () => {
   const [recurring, setRecurring] = useState(false);
   const [dialogOpen, setDialogOpen] = useState(false);
 
+  const [templateActivities, setTemplateActivities] = useState([]);
+  const [chosenTemplateActivity, setChosenTemplateReminder] = useState(
+    "Select from existing activity"
+  );
   const [frequency, setFrequency] = useState("weekly");
 
   const handleSelectFrequencyChange = (e) => {
@@ -124,6 +128,30 @@ const AddActivityButton = () => {
     handleDialogClose();
   };
 
+  const handleChangeTemplateActivity = (e) => {
+    setChosenTemplateReminder(templateActivities[e.target.value]);
+  };
+
+  const getTemplateActivities = () => {
+    activityService
+      .getTemplateActivities()
+      .then((response) => {
+        setTemplateActivities(response.data);
+        alert("Successfully retrieved template activities");
+      })
+      .catch((error) => {
+        alert(
+          error === undefined
+            ? `Issue retrieving template activities. Error status code ${error.response.status}. ${error.response.data.message}`
+            : "Error accessing API"
+        );
+      });
+  };
+
+  useEffect(() => {
+    getTemplateActivities();
+  }, []);
+
   const weeklyMenuItems = [
     "Monday",
     "Tuesday",
@@ -165,7 +193,15 @@ const AddActivityButton = () => {
               alignItems="center"
               spacing={2}
             >
-              Select from existing activity
+              <Grid item style={{ width: "100%" }}>
+                <Select value={chosenTemplateActivity} onChange={handleChangeTemplateActivity}>
+                  {templateActivities.map((templateActivity, index) => {
+                    <MenuItem value={index} key={index}>
+                      {templateActivity.name}
+                    </MenuItem>;
+                  })}
+                </Select>
+              </Grid>
               <Grid item style={{ width: "100%" }}>
                 <TextField
                   variant="outlined"

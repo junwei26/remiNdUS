@@ -1,6 +1,37 @@
 const admin = require("firebase-admin");
 const db = admin.firestore();
 
+exports.getTemplateActivities = (req, res) => {
+  if (!req.body.uid) {
+    return res.status(400).send({ message: "You must be logged in to make this operation!" });
+  }
+
+  db.collection("users")
+    .where("uid", "==", req.body.uid)
+    .limit(1)
+    .get()
+    .then((querySnapshot) => {
+      if (querySnapshot.empty) {
+        throw "No user found. Please contact the administrator";
+      }
+
+      querySnapshot.forEach((queryDocumentSnapshot) => {
+        queryDocumentSnapshot.ref
+          .collection("templateActivities")
+          .get()
+          .then((querySnapshot) => {
+            res.send(querySnapshot.docs);
+            return res.status(200).send({ message: "Template activities retrieved successfully" });
+          });
+      });
+    })
+    .catch((error) => {
+      return res
+        .status(400)
+        .send({ message: `Issue getting template activities from user. ${error}` });
+    });
+};
+
 exports.create = (req, res) => {
   if (!req.body.uid) {
     return res.status(400).send({ message: "You must be logged in to make this operation!" });
