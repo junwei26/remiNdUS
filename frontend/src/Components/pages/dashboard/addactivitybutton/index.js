@@ -149,8 +149,10 @@ const AddActivityButton = () => {
   };
 
   useEffect(() => {
-    getTemplateActivities();
-  }, []);
+    if (dialogOpen === true) {
+      getTemplateActivities();
+    }
+  }, [dialogOpen]);
 
   const weeklyMenuItems = [
     "Monday",

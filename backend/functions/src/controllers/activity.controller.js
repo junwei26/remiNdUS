@@ -1,13 +1,185 @@
 const admin = require("firebase-admin");
 const db = admin.firestore();
 
+// reminderCollection should be "plannedReminders" or "recurringReminders"
+const getActivity = (userDoc, activityId, activityCollection) => {
+  return userDoc
+    .collection(activityCollection)
+    .doc(activityId)
+    .get()
+    .then((documentSnapshot) => {
+      return userDoc
+        .collection("templateActivity")
+        .doc(documentSnapshot.get("templateActivityId"))
+        .get()
+        .then((templateDocumentSnapshot) => {
+          const reminderType = activityCollection === "plannedActivities" ? "planned" : "recurring";
+          return {
+            ...documentSnapshot.data(),
+            ...templateDocumentSnapshot.data(),
+            reminderType,
+            activityId,
+          };
+        })
+        .catch((error) => {
+          throw `Unable to retrieve template activity. ${error}`;
+        });
+    })
+    .catch((error) => {
+      throw `Unable to retrieve ${activityCollection}. ${error}`;
+    });
+};
+
+// Helper for getSubscribedPackages and get query
+const getActivitiesById = (uid, activityIds, activityCollection) => {
+  return db
+    .collection("users")
+    .where("uid", "==", uid)
+    .limit(1)
+    .get()
+    .then((querySnapshot) => {
+      if (querySnapshot.empty) {
+        throw new Error("No user found. Please contact the administrator");
+      }
+
+      let promises = [];
+      let activities = [];
+
+      querySnapshot.forEach((queryDocumentSnapshot) => {
+        for (let i = 0; i < activityIds.length; ++i) {
+          promises.push(getActivity(queryDocumentSnapshot.ref, activityIds[i], activityCollection));
+        }
+      });
+      return Promise.all(promises).then((values) => {
+        activities = [].concat.apply([], values);
+        return activities;
+      });
+    })
+    .catch((error) => {
+      throw error;
+    });
+};
+
+const getAllActivities = (userQuerySnapshot) => {
+  let promises = [];
+
+  userQuerySnapshot.forEach((queryDocumentSnapshot) => {
+    const userDoc = queryDocumentSnapshot.ref;
+    promises.push(
+      userDoc
+        .collection("plannedActivities")
+        .get()
+        .then((querySnapshot) => {
+          return getActivitiesById(
+            userDoc,
+            querySnapshot.docs.map((queryDocumentSnapshot) => queryDocumentSnapshot.id),
+            "plannedActivities"
+          );
+        })
+    );
+    promises.push(
+      userDoc
+        .collection("recurringActivities")
+        .get()
+        .then((querySnapshot) => {
+          return getActivitiesById(
+            userDoc,
+            querySnapshot.docs.map((queryDocumentSnapshot) => queryDocumentSnapshot.id),
+            "recurringActivities"
+          );
+        })
+    );
+  });
+
+  return Promise.all(promises);
+};
+
+exports.getAll = (req, res) => {
+  db.collection("users")
+    .where("uid", "==", req.query.uid)
+    .limit(1)
+    .get()
+    .then((querySnapshot) => {
+      if (querySnapshot.empty) {
+        throw new Error("No user found. Please contact the administrator");
+      }
+
+      let activities = [];
+
+      getAllActivities(querySnapshot)
+        .then((results) => {
+          activities = [].concat.apply([], results);
+          res.send(activities);
+          return res.status(200).send({ message: "Successfully retrieved all activities" });
+        })
+        .catch((error) => {
+          return res.status(404).send({ message: `Error retrieving all activities. ${error}` });
+        });
+    })
+    .catch((error) => {
+      return res
+        .status(404)
+        .send({ message: `Error getting user database when getting all activities. ${error}` });
+    });
+};
+
+exports.get = (req, res) => {
+  if (!req.query.uid) {
+    return res.status(400).send({ message: "You must be logged in to make this operation!" });
+  }
+  if (!req.query.activityIds || req.query.activityIds.length === 0) {
+    return res.status(400).send({ message: "Activities must have activity IDs!" });
+  }
+  if (!req.query.activityCollection) {
+    return res.status(400).send({ message: "Activities must be recurring or planned" });
+  }
+
+  return getActivitiesById(req.query.uid, req.query.activityIds, req.query.activityCollection)
+    .then((activities) => {
+      res.send(activities);
+      return res.status(200).send();
+    })
+    .catch((error) => {
+      return res.status(404).send({ message: `Error getting reminders. ${error}` });
+    });
+
+  // db.collection("users")
+  //   .where("uid", "==", req.query.uid)
+  //   .limit(1)
+  //   .get()
+  //   .then((data) => {
+  //     if (data.empty) {
+  //       return res.status(404).send({ message: "No activities found." });
+  //     }
+  //     data.forEach((doc) => {
+  //       db.collection("users")
+  //         .doc(doc.id)
+  //         .collection("activities")
+  //         .doc(req.query.activityId)
+  //         .get()
+  //         .then((doc) => {
+  //           res.send({ ...doc.data(), activityId: doc.id });
+  //           return res.status(200).send({ message: "Successfully retrieved activity!" });
+  //         })
+  //         .catch((error) => {
+  //           return res.status(404).send({ message: `Error getting activity. ${error}` });
+  //         });
+  //     });
+  //   })
+  //   .catch((error) => {
+  //     return res
+  //       .status(400)
+  //       .send({ message: `Error getting user database when getting activity. ${error}` });
+  //   });
+};
+
 exports.getTemplateActivities = (req, res) => {
-  if (!req.body.uid) {
+  if (!req.query.uid) {
     return res.status(400).send({ message: "You must be logged in to make this operation!" });
   }
 
   db.collection("users")
-    .where("uid", "==", req.body.uid)
+    .where("uid", "==", req.query.uid)
     .limit(1)
     .get()
     .then((querySnapshot) => {
@@ -31,6 +203,108 @@ exports.getTemplateActivities = (req, res) => {
         .send({ message: `Issue getting template activities from user. ${error}` });
     });
 };
+
+exports.getByTelegram = (req, res) => {
+  if (!req.query.telegramHandle) {
+    return res.status(400).send({ message: "You must be logged in to make this operation!" });
+  }
+
+  db.collection("users")
+    .where("telegramHandle", "==", req.query.telegramHandle)
+    .limit(1)
+    .get()
+    .then((querySnapshot) => {
+      if (querySnapshot.empty) {
+        return res.status(404).send({ message: "No activities found." });
+      }
+
+      let activities = [];
+
+      getAllActivities(querySnapshot)
+        .then((results) => {
+          activities = [].concat.apply([], results);
+          res.send(activities);
+          return res.status(200).send({ message: "Successfully retrieved all activities" });
+        })
+        .catch((error) => {
+          return res.status(404).send({ message: `Error retrieving all activities. ${error}` });
+        });
+    })
+    .catch((error) => {
+      return res.status(400).send({ message: `Error deleting activity ${error}` });
+    });
+};
+
+exports.range = (req, res) => {
+  if (!req.query.uid) {
+    return res.status(400).send({ message: "You must be logged in to make this operation!" });
+  }
+  if (!req.query.currentDateTime) {
+    return res.status(400).send({ message: "You must have a valid date time!" });
+  }
+
+  let activities = [];
+  let userDoc = db.collection("users").doc(req.query.uid);
+
+  userDoc
+    .collection("plannedActivities")
+    .where("startDateTime", ">=", req.query.currentDateTime)
+    .where("startDateTime", "<=", req.query.endDateTime)
+    .get()
+    .then((querySnapshot) => {
+      activities = getActivitiesById(
+        userDoc,
+        querySnapshot.docs.map((queryDocumentSnapshot) => queryDocumentSnapshot.id),
+        "plannedActivities"
+      );
+      res.send(activities);
+      return res.status(200).send({ message: "Successfully retrieved planned activities" });
+    })
+    .catch((error) => {
+      return res.status(404).send({
+        message: `Issue retrieving planned activities from certain range of time. ${error}`,
+      });
+    });
+
+  // userDoc.collection("recurringActivities").where("")
+
+  // generate recurring activities
+};
+
+// access the new document by using createTemplate(...).then((templateReminderDoc) => {...})
+// const createTemplate = (uid, name, description, defaultLength) => {
+//   return db
+//     .collection("users")
+//     .doc(uid)
+//     .collection("templateActivities")
+//     .add({ name, description, defaultLength, eventType: "1" });
+// };
+
+// // access the new document by using createPlannedReminder(...).then((plannedReminderDoc) => {...})
+// const createPlannedActivity = (uid, templateActivityId, startDateTime, endDateTime, active) => {
+//   return db
+//     .collection("users")
+//     .doc(uid)
+//     .collection("plannedActivities")
+//     .add({ templateActivityId, startDateTime, endDateTime, active });
+// };
+
+// // If frequency is weekly, take date as 1-7 (Mon, Tue, ..., Sun). If frequency is monthly, take date as 1-31
+// const createRecurringActivity = (
+//   uid,
+//   templateActivityId,
+//   frequency,
+//   startTime,
+//   endTime,
+//   date,
+//   active
+// ) => {
+//   return db
+//     .collection("users")
+//     .doc(uid)
+//     .collection("recurringActivities")
+//     .add({ templateActivityId, frequency, startTime, endTime, date, active });
+// };
 
 exports.create = (req, res) => {
   if (!req.body.uid) {
@@ -148,76 +422,6 @@ exports.update = (req, res) => {
     });
 };
 
-exports.get = (req, res) => {
-  if (!req.query.uid) {
-    return res.status(400).send({ message: "You must be logged in to make this operation!" });
-  }
-  if (!req.query.activityId) {
-    return res.status(400).send({ message: "Activity must have a activity ID!" });
-  }
-
-  db.collection("users")
-    .where("uid", "==", req.query.uid)
-    .limit(1)
-    .get()
-    .then((data) => {
-      if (data.empty) {
-        return res.status(404).send({ message: "No activities found." });
-      }
-      data.forEach((doc) => {
-        db.collection("users")
-          .doc(doc.id)
-          .collection("activities")
-          .doc(req.query.activityId)
-          .get()
-          .then((doc) => {
-            res.send({ ...doc.data(), activityId: doc.id });
-            return res.status(200).send({ message: "Successfully retrieved activity!" });
-          })
-          .catch((error) => {
-            return res.status(404).send({ message: `Error getting activity. ${error}` });
-          });
-      });
-    })
-    .catch((error) => {
-      return res
-        .status(400)
-        .send({ message: `Error getting user database when getting activity. ${error}` });
-    });
-};
-
-exports.getAll = (req, res) => {
-  var activities = [];
-
-  db.collection("users")
-    .where("uid", "==", req.query.uid)
-    .limit(1)
-    .get()
-    .then((data) => {
-      if (data.empty) {
-        return res.status(404).send({ message: "No activities found." });
-      }
-      data.forEach((doc) => {
-        db.collection("users")
-          .doc(doc.id)
-          .collection("activities")
-          .get()
-          .then((querySnapshot) => {
-            querySnapshot.forEach((activity) => {
-              activities.push({ activityId: activity.id, ...activity.data() });
-            });
-            res.send(activities);
-            return res.status(200).send();
-          });
-      });
-    })
-    .catch((error) => {
-      return res
-        .status(400)
-        .send({ message: `Error getting user database when getting all activities. ${error}` });
-    });
-};
-
 exports.delete = (req, res) => {
   if (!req.query.uid) {
     return res.status(400).send({ message: "You must be logged in to make this operation!" });
@@ -241,62 +445,6 @@ exports.delete = (req, res) => {
           .delete()
           .then(() => {
             return res.status(200).send({ message: "Activity successfully deleted" });
-          });
-      });
-    })
-    .catch((error) => {
-      return res.status(400).send({ message: `Error deleting activity ${error}` });
-    });
-};
-
-exports.range = (req, res) => {
-  if (!req.query.uid) {
-    return res.status(400).send({ message: "You must be logged in to make this operation!" });
-  }
-  if (!req.query.currentDateTime) {
-    return res.status(400).send({ message: "You must have a valid date time!" });
-  }
-  const activities = [];
-
-  db.collection("users")
-    .doc(req.query.uid)
-    .collection("activities")
-    .where("startDateTime", ">=", req.query.currentDateTime)
-    .where("startDateTime", "<=", req.query.endDateTime)
-    .get()
-    .then((querySnapshot) => {
-      querySnapshot.forEach((activity) => {
-        activities.push({ activityId: activity.id, ...activity.data() });
-      });
-      res.send(activities);
-      return res.status(200).send();
-    });
-};
-
-exports.getByTelegram = (req, res) => {
-  if (!req.query.telegramHandle) {
-    return res.status(400).send({ message: "You must be logged in to make this operation!" });
-  }
-
-  var activities = [];
-  db.collection("users")
-    .where("telegramHandle", "==", req.query.telegramHandle)
-    .limit(1)
-    .get()
-    .then((data) => {
-      if (data.empty) {
-        return res.status(404).send({ message: "No activities found." });
-      }
-      data.forEach((doc) => {
-        doc.ref
-          .collection("activities")
-          .get()
-          .then((querySnapshot) => {
-            querySnapshot.forEach((activity) => {
-              activities.push({ activityId: activity.id, ...activity.data() });
-            });
-            res.send(activities);
-            return res.status(200).send();
           });
       });
     })
