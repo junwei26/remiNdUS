@@ -325,3 +325,37 @@ exports.delete = (req, res) => {
       });
     });
 };
+
+exports.getByTelegram = (req, res) => {
+  if (!req.query.telegramHandle) {
+    return res.status(400).send({ message: "You must be logged in to make this operation!" });
+  }
+
+  var reminders = [];
+  db.collection("users")
+    .where("telegramHandle", "==", req.query.telegramHandle)
+    .limit(1)
+    .get()
+    .then((data) => {
+      if (data.empty) {
+        return res.status(404).send({ message: "No reminders found." });
+      }
+      data.forEach((doc) => {
+        doc.ref
+          .collection("reminders")
+          .where("dateTime", ">=", req.query.currentDateTime)
+          .where("dateTime", "<=", req.query.endDateTime)
+          .get()
+          .then((querySnapshot) => {
+            querySnapshot.forEach((reminder) => {
+              reminders.push({ reminderId: reminder.id, ...reminder.data() });
+            });
+            res.send(reminders);
+            return res.status(200).send();
+          });
+      });
+    })
+    .catch((error) => {
+      return res.status(400).send({ message: `Error retrieving reminders. ${error}` });
+    });
+};

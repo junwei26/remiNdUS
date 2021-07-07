@@ -261,6 +261,8 @@ exports.getByTelegram = (req, res) => {
       data.forEach((doc) => {
         doc.ref
           .collection("activities")
+          .where("startDateTime", ">=", req.query.currentDateTime)
+          .where("startDateTime", "<=", req.query.endDateTime)
           .get()
           .then((querySnapshot) => {
             querySnapshot.forEach((activity) => {
