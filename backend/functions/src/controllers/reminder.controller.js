@@ -16,7 +16,7 @@ const getReminder = (userDoc, reminderId, reminderCollection) => {
           const reminderType = reminderCollection === "plannedReminders" ? "planned" : "recurring";
           return {
             ...documentSnapshot.data(),
-            ...templateDocumentSnapshot.date(),
+            ...templateDocumentSnapshot.data(),
             reminderType,
           };
         })
@@ -362,7 +362,7 @@ exports.create = (req, res) => {
         });
     } else {
       if (!req.body.endTime) {
-        return res.status(400).send({ message: "Recurring reminder must have an active setting" });
+        return res.status(400).send({ message: "Recurring reminder must have an end time" });
       }
       if (!req.body.date) {
         return res.status(400).send({ message: "Recurring reminder must have a date" });
