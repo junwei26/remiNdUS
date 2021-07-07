@@ -44,13 +44,49 @@ const deleteActivity = (activityId) => {
   });
 };
 
-const addActivity = (startDateTime, endDateTime, name, description) => {
+const addPlannedActivity = (
+  startDateTime,
+  endDateTime,
+  active,
+  defaultLength,
+  name = null,
+  description = null,
+  templateActivityId = null
+) => {
   return axios.post(ACTIVITY_API_URL + "/create", {
     uid: firebaseAuth.currentUser.uid,
-    startDateTime: convertLocaleDateString(startDateTime),
-    endDateTime: convertLocaleDateString(endDateTime),
     name,
     description,
+    startDateTime: convertLocaleDateString(startDateTime),
+    endDateTime: convertLocaleDateString(endDateTime),
+    active,
+    defaultLength,
+    templateActivityId,
+  });
+};
+
+const addRecurringActivity = (
+  frequency,
+  startTime,
+  endTime,
+  date,
+  active,
+  defaultLength,
+  name = null,
+  description = null,
+  templateActivityId = null
+) => {
+  return axios.post(ACTIVITY_API_URL + "/create", {
+    uid: firebaseAuth.currentUser.uid,
+    name,
+    description,
+    frequency,
+    startTime,
+    endTime,
+    date,
+    active,
+    defaultLength,
+    templateActivityId,
   });
 };
 
@@ -69,6 +105,7 @@ export default {
   getTemplateActivities,
   updateActivity,
   deleteActivity,
-  addActivity,
+  addPlannedActivity,
+  addRecurringActivity,
   getRangeActivity,
 };

@@ -40,16 +40,17 @@ const AddActivityButton = () => {
   };
 
   const currentDateTime = roundUpDateTime(new Date());
-  const [startDateTime, setStartDateTime] = useState(currentDateTime);
   const [date, setDate] = useState(currentDateTime.getDate());
+  const [startDateTime, setStartDateTime] = useState(currentDateTime);
   const [endDateTime, setEndDateTime] = useState(currentDateTime);
   const [recurring, setRecurring] = useState(false);
+  const [active, setActive] = useState(true);
   const [dialogOpen, setDialogOpen] = useState(false);
+  const [activityName, setActivityName] = useState("");
+  const [description, setDescription] = useState("");
 
   const [templateActivities, setTemplateActivities] = useState([]);
-  const [chosenTemplateActivity, setChosenTemplateReminder] = useState(
-    "Select from existing activity"
-  );
+  const [chosenTemplateActivity, setChosenTemplateReminder] = useState(-1);
   const [frequency, setFrequency] = useState("weekly");
 
   const handleSelectFrequencyChange = (e) => {
@@ -76,6 +77,14 @@ const AddActivityButton = () => {
     setEndDateTime(roundUpDateTime(date));
   };
 
+  const handleSetActivityName = (e) => {
+    setActivityName(e.target.value);
+  };
+
+  const handleSetDescription = (e) => {
+    setDescription(e.target.value);
+  };
+
   const handleDateChange = (e) => {
     setDate(e.target.value);
   };
@@ -88,6 +97,10 @@ const AddActivityButton = () => {
     setEndDateTime(currentDateTime);
   };
 
+  const handleSetActive = (e) => {
+    setActive(e.target.checked);
+  };
+
   const handleDialogClickOpen = () => {
     setDialogOpen(true);
   };
@@ -96,40 +109,70 @@ const AddActivityButton = () => {
     setDialogOpen(false);
   };
 
-  const closeDialogAddActivity = (e) => {
-    e.preventDefault();
-
-    if (e.target.activityName.value === "") {
+  const closeDialogAddActivity = () => {
+    if (activityName === "") {
       alert("Please input an activity name");
       return;
-    } else if (e.target.description.value === "") {
+    } else if (description === "") {
       alert("Please input an activity description");
       return;
     }
 
-    // add check for recurring
+    const templateActivityId =
+      chosenTemplateActivity >= 0 ? templateActivities[chosenTemplateActivity].activityId : null;
 
-    activityService
-      .addActivity(
-        e.target.startDateTime.value,
-        e.target.endDateTime.value,
-        e.target.activityName.value,
-        e.target.description.value
-      )
-      .then(() => {
-        alert("Succesfully created activity");
-      })
-      .catch((error) => {
-        alert(
-          `Issue creating activity. Error status code: ${error.response.status}. ${error.response.data.message}`
-        );
-      });
+    const defaultLength =
+      chosenTemplateActivity < 0
+        ? endDateTime.getTime() - startDateTime.getTime()
+        : templateActivities[chosenTemplateActivity].defaultLength;
+
+    if (!recurring) {
+      activityService
+        .addPlannedActivity(
+          startDateTime,
+          endDateTime,
+          active,
+          defaultLength,
+          activityName,
+          description,
+          templateActivityId
+        )
+        .then(() => {
+          alert("Succesfully created activity");
+        })
+        .catch((error) => {
+          alert(
+            `Issue creating activity. Error status code: ${error.response.status}. ${error.response.data.message}`
+          );
+        });
+    } else {
+      activityService
+        .addRecurringActivity(
+          frequency,
+          `${startDateTime.getHours()}${startDateTime.getMinutes()}`,
+          `${endDateTime.getHours()}${endDateTime.getMinutes()}`,
+          date,
+          active,
+          defaultLength,
+          activityName,
+          description,
+          templateActivityId
+        )
+        .then(() => {
+          alert("Succesfully created activity");
+        })
+        .catch((error) => {
+          alert(
+            `Issue creating activity. Error status code: ${error.response.status}. ${error.response.data.message}`
+          );
+        });
+    }
 
     handleDialogClose();
   };
 
   const handleChangeTemplateActivity = (e) => {
-    setChosenTemplateReminder(templateActivities[e.target.value]);
+    setChosenTemplateReminder(e.target.value);
   };
 
   const getTemplateActivities = () => {
@@ -197,6 +240,7 @@ const AddActivityButton = () => {
             >
               <Grid item style={{ width: "100%" }}>
                 <Select value={chosenTemplateActivity} onChange={handleChangeTemplateActivity}>
+                  <MenuItem value={-1}>Choose an existing activity...</MenuItem>
                   {templateActivities.map((templateActivity, index) => {
                     <MenuItem value={index} key={index}>
                       {templateActivity.name}
@@ -212,6 +256,8 @@ const AddActivityButton = () => {
                   name="activityName"
                   label="Activity Name"
                   color="primary"
+                  value={activityName}
+                  onChange={handleSetActivityName}
                   autofocus
                 />
               </Grid>
@@ -223,21 +269,45 @@ const AddActivityButton = () => {
                   name="description"
                   label="Description"
                   color="primary"
+                  value={description}
+                  onChange={handleSetDescription}
                   autofocus
                 />
               </Grid>
-              <Grid item style={{ width: "100%" }}>
-                <FormControlLabel
-                  control={
-                    <Checkbox
-                      checked={recurring}
-                      onChange={handleSetRecurring}
-                      name="recurring"
-                      color="primary"
-                    />
-                  }
-                  label="Recurring Activity"
-                />
+              <Grid
+                container
+                item
+                direction="row"
+                justify="space-between"
+                alignItems="center"
+                style={{ width: "100%" }}
+              >
+                <Grid item>
+                  <FormControlLabel
+                    control={
+                      <Checkbox
+                        checked={recurring}
+                        onChange={handleSetRecurring}
+                        name="recurring"
+                        color="primary"
+                      />
+                    }
+                    label="Recurring Activity"
+                  />
+                </Grid>
+                <Grid item>
+                  <FormControlLabel
+                    control={
+                      <Checkbox
+                        checked={active}
+                        onChange={handleSetActive}
+                        name="active"
+                        color="primary"
+                      />
+                    }
+                    label="Active activity"
+                  />
+                </Grid>
               </Grid>
               {recurring ? (
                 <>
