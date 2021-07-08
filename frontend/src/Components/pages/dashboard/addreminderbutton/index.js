@@ -20,6 +20,7 @@ import ListItemText from "@material-ui/core/ListItemText";
 import DateFnsUtils from "@date-io/date-fns";
 import { MuiPickersUtilsProvider, DateTimePicker, TimePicker } from "@material-ui/pickers";
 import reminderService from "../../services/reminderService";
+import localService from "../../services/localService";
 
 const useStyles = makeStyles(() => ({
   card: {
@@ -31,7 +32,6 @@ const addReminderButton = () => {
   const classes = useStyles();
 
   const nearestTime = 1000 * 60 * 15; // round up to nearest 15 minutes
-  // const nearestMinutes = nearestTime / 1000 / 60;
 
   const roundUpDateTime = (date) => {
     return new Date(Math.ceil(date.getTime() / nearestTime) * nearestTime);
@@ -108,11 +108,6 @@ const addReminderButton = () => {
   };
 
   const handleSetDefaultLength = (e) => {
-    // const re = /^[0-9\b]+$/;
-
-    // if (e.target.value === "" || re.test(e.target.value)) {
-    //   setDefaultLength(e.target.value);
-    // }
     setDefaultLength(e.target.value);
   };
 
@@ -145,7 +140,7 @@ const addReminderButton = () => {
     if (!recurring) {
       reminderService
         .addPlannedReminder(
-          endDateTime,
+          localService.convertDateToString(endDateTime),
           active,
           defaultLength,
           reminderName,

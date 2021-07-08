@@ -154,8 +154,14 @@ const AddActivityButton = () => {
       activityService
         .addRecurringActivity(
           frequency,
-          `${startDateTime.getHours()}${startDateTime.getMinutes()}`,
-          `${endDateTime.getHours()}${endDateTime.getMinutes()}`,
+          `${startDateTime.getHours().toString().padStart(2, "0")}${startDateTime
+            .getMinutes()
+            .toString()
+            .padStart(2, "0")}`,
+          `${endDateTime.getHours().toString().padStart(2, "0")}${endDateTime
+            .getMinutes()
+            .toString()
+            .padStart(2, "0")}`,
           date,
           active,
           defaultLength,
