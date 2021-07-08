@@ -60,6 +60,54 @@ const addReminder = (dateTime, name, description) => {
   });
 };
 
+const getTemplateReminders = () => {
+  return axios.get(REMINDER_API_URL + "/template", {
+    params: { uid: firebaseAuth.currentUser.uid },
+  });
+};
+
+const addPlannedReminder = (
+  endDateTime,
+  active,
+  defaultLength,
+  name = null,
+  description = null,
+  templateReminderId = null
+) => {
+  return axios.post(REMINDER_API_URL + "/create", {
+    uid: firebaseAuth.currentUser.uid,
+    endDateTime,
+    active,
+    defaultLength,
+    name,
+    description,
+    templateReminderId,
+  });
+};
+
+const addRecurringReminder = (
+  frequency,
+  endTime,
+  date,
+  active,
+  defaultLength,
+  reminderName = null,
+  description = null,
+  templateReminderId = null
+) => {
+  return axios.post(REMINDER_API_URL + "/create", {
+    uid: firebaseAuth.currentUser.uid,
+    frequency,
+    endTime,
+    date,
+    active,
+    defaultLength,
+    reminderName,
+    description,
+    templateReminderId,
+  });
+};
+
 export default {
   getAllReminder,
   getReminders,
@@ -67,4 +115,7 @@ export default {
   deleteReminder,
   addReminder,
   getRangeReminder,
+  getTemplateReminders,
+  addPlannedReminder,
+  addRecurringReminder,
 };

@@ -3,10 +3,8 @@ import { makeStyles } from "@material-ui/core/styles";
 import {
   Button,
   TextField,
-  // Card,
   Grid,
   Dialog,
-  // Typography,
   DialogActions,
   DialogContent,
   DialogTitle,
@@ -52,7 +50,7 @@ const AddActivityButton = () => {
   const [description, setDescription] = useState("");
 
   const [templateActivities, setTemplateActivities] = useState([]);
-  const [chosenTemplateActivity, setChosenTemplateReminder] = useState(-1);
+  const [chosenTemplateActivity, setChosenTemplateActivity] = useState(-1);
   const [frequency, setFrequency] = useState("weekly");
   const [menuItemArray, setMenuItemArray] = useState([
     <MenuItem value={-1} key={-1}>
@@ -61,11 +59,7 @@ const AddActivityButton = () => {
   ]);
 
   const handleSelectFrequencyChange = (e) => {
-    if (frequency === "monthly" && e.target.value === "weekly" && date > 7) {
-      setDate(1);
-    } else if (e.target.value === "monthly") {
-      setDate(currentDateTime.getDate());
-    }
+    setDate(1);
     setFrequency(e.target.value);
   };
 
@@ -98,9 +92,8 @@ const AddActivityButton = () => {
 
   const handleSetRecurring = (e) => {
     setRecurring(e.target.checked);
-    const currentDateTime = roundUpDateTime(new Date());
     setStartDateTime(currentDateTime);
-    setDate(currentDateTime.getDate());
+    setDate(startDateTime.getDate());
     setEndDateTime(currentDateTime);
   };
 
@@ -184,7 +177,7 @@ const AddActivityButton = () => {
   };
 
   const handleChangeTemplateActivity = (e) => {
-    setChosenTemplateReminder(e.target.value);
+    setChosenTemplateActivity(e.target.value);
     if (e.target.value >= 0) {
       setActivityName(templateActivities[e.target.value].name);
       setDescription(templateActivities[e.target.value].description);
@@ -342,7 +335,7 @@ const AddActivityButton = () => {
                         color="primary"
                       />
                     }
-                    label="Active activity"
+                    label="Active Activity"
                   />
                 </Grid>
               </Grid>
