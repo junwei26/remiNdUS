@@ -25,7 +25,7 @@ import reminderService from "../../../services/reminderService";
 const getData = (setData, setLoading) => {
   setLoading(true);
   return activityService.getAllActivities().then((response1) => {
-    reminderService.getAllReminder().then((response2) => {
+    reminderService.getAllReminders().then((response2) => {
       setData([...response1.data, ...response2.data]);
       setLoading(false);
     });
