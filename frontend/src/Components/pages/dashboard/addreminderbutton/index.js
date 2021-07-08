@@ -103,7 +103,7 @@ const addReminderButton = () => {
 
   const handleSetRecurring = (e) => {
     setRecurring(e.target.checked);
-    setDate(currentDateTime.getDate());
+    setDate(1);
     setEndDateTime(currentDateTime);
   };
 
@@ -159,7 +159,10 @@ const addReminderButton = () => {
       reminderService
         .addRecurringReminder(
           frequency,
-          `${endDateTime.getHours()}${endDateTime.getMinutes()}`,
+          `${endDateTime.getHours().toString().padStart(2, "0")}${endDateTime
+            .getMinutes()
+            .toString()
+            .padStart(2, "0")}`,
           date,
           active,
           defaultLength,
@@ -185,9 +188,11 @@ const addReminderButton = () => {
     if (e.target.value >= 0) {
       setReminderName(templateReminders[e.target.value].name);
       setDescription(templateReminders[e.target.value].description);
+      setDefaultLength(templateReminders[e.target.value].defaultLength);
     } else {
       setReminderName("");
       setDescription("");
+      setDefaultLength("");
     }
   };
 
@@ -196,7 +201,6 @@ const addReminderButton = () => {
       .getTemplateReminders()
       .then((response) => {
         setTemplateReminders(response.data);
-        alert("Successfully retrieved template reminders");
       })
       .catch((error) => {
         alert(
@@ -307,37 +311,14 @@ const addReminderButton = () => {
                   disabled={chosenTemplateReminder !== -1}
                 />
               </Grid>
-              {/* <Grid item style={{ width: "100%" }}>
-                <TextField
-                  variant="outlined"
-                  required
-                  fullWidth
-                  name="defaultLength"
-                  label="Set Default Length"
-                  color="primary"
-                  value={defaultLength}
-                  onChange={handleSetDefaultLength}
-                  disabled={chosenTemplateReminder !== -1}
-                />
-              </Grid> */}
-
               <Grid item style={{ width: "100%" }}>
-                {/* <TimePicker
-                  label="Default Length"
-                  value={defaultLength}
-                  onChange={handleSetDefaultLength}
-                  format="HH:mm"
-                  ampm
-                  fullWidth
-                  minutesStep={15}
-                /> */}
-
                 <InputLabel>
                   Set default length required (in hours:minutes) to complete reminder
                 </InputLabel>
                 <Select
                   value={defaultLength}
                   onChange={handleSetDefaultLength}
+                  disabled={chosenTemplateReminder !== -1}
                   style={{ width: "100%" }}
                 >
                   {defaultLengthMenuItems}

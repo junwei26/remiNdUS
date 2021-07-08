@@ -20,6 +20,7 @@ import ListItemText from "@material-ui/core/ListItemText";
 import DateFnsUtils from "@date-io/date-fns";
 import { MuiPickersUtilsProvider, DateTimePicker, TimePicker } from "@material-ui/pickers";
 import activityService from "../../services/activityService";
+import localService from "../../services/localService";
 
 const useStyles = makeStyles(() => ({
   card: {
@@ -134,8 +135,8 @@ const AddActivityButton = () => {
     if (!recurring) {
       activityService
         .addPlannedActivity(
-          startDateTime,
-          endDateTime,
+          localService.convertDateToString(startDateTime),
+          localService.convertDateToString(endDateTime),
           active,
           defaultLength,
           activityName,
@@ -198,7 +199,6 @@ const AddActivityButton = () => {
       .getTemplateActivities()
       .then((response) => {
         setTemplateActivities(response.data);
-        alert("Successfully retrieved template activities");
       })
       .catch((error) => {
         alert(
