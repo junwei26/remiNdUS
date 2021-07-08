@@ -38,6 +38,7 @@ const getActivitiesById = (userDoc, activityIds, activityCollection) => {
   for (let i = 0; i < activityIds.length; ++i) {
     promises.push(getActivity(userDoc, activityIds[i], activityCollection));
   }
+
   return Promise.all(promises).then((values) => {
     activities = [].concat.apply([], values);
     return activities;

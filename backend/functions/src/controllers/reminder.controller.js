@@ -2,7 +2,7 @@ const admin = require("firebase-admin");
 const db = admin.firestore();
 
 // reminderCollection should be "plannedReminders" or "recurringReminders"
-const getReminder = (userDoc, reminderId, reminderCollection) => {
+const getReminder = (userDoc, reminderId, reminderCollection, subscribed) => {
   return userDoc
     .collection(reminderCollection)
     .doc(reminderId)
@@ -18,6 +18,8 @@ const getReminder = (userDoc, reminderId, reminderCollection) => {
             ...documentSnapshot.data(),
             ...templateDocumentSnapshot.data(),
             reminderType,
+            reminderId,
+            subscribed,
           };
         })
         .catch((error) => {
@@ -29,41 +31,8 @@ const getReminder = (userDoc, reminderId, reminderCollection) => {
     });
 };
 
-// Helper for getSubscribedPackages. Returns packageReminderIds for given user
-const getPackageReminderIds = (uid, reminderPackageId) => {
-  return db
-    .collection("users")
-    .where("uid", "==", uid)
-    .limit(1)
-    .get()
-    .then((querySnapshot) => {
-      if (querySnapshot.empty) {
-        throw "No user found. Please contact the administrator";
-      }
-      let reminderIds = [];
-      let promises = [];
-
-      querySnapshot.forEach((queryDocumentSnapshot) => {
-        promises.push(
-          queryDocumentSnapshot.ref
-            .collection("reminderPackages")
-            .doc(reminderPackageId)
-            .get()
-            .then((documentSnapshot) => {
-              return documentSnapshot.get("reminderIds");
-            })
-        );
-      });
-
-      return Promise.all(promises).then((values) => {
-        reminderIds = [].concat.apply([], values);
-        return reminderIds;
-      });
-    });
-};
-
 // Helper for getSubscribedPackages and get query
-const getRemindersByIds = (uid, reminderIds, reminderCollection) => {
+const getRemindersByIds = (uid, plannedReminderIds, recurringReminderIds, subscribed) => {
   return db
     .collection("users")
     .where("uid", "==", uid)
@@ -78,16 +47,24 @@ const getRemindersByIds = (uid, reminderIds, reminderCollection) => {
       let reminders = [];
 
       querySnapshot.forEach((queryDocumentSnapshot) => {
-        for (let i = 0; i < reminderIds.length; ++i) {
+        for (let i = 0; i < plannedReminderIds.length; ++i) {
           promises.push(
-            getReminder(queryDocumentSnapshot.ref, reminderIds[i], reminderCollection)
-            // queryDocumentSnapshot.ref
-            //   .collection("reminders")
-            //   .doc(reminderIds[i])
-            //   .get()
-            //   .then((doc) => {
-            //     return { ...doc.data(), reminderId: doc.id };
-            //   })
+            getReminder(
+              queryDocumentSnapshot.ref,
+              plannedReminderIds[i],
+              "plannedReminders",
+              subscribed
+            )
+          );
+        }
+        for (let i = 0; i < recurringReminderIds.length; ++i) {
+          promises.push(
+            getReminder(
+              queryDocumentSnapshot.ref,
+              recurringReminderIds[i],
+              "recurringReminders",
+              subscribed
+            )
           );
         }
       });
@@ -98,6 +75,82 @@ const getRemindersByIds = (uid, reminderIds, reminderCollection) => {
     })
     .catch((error) => {
       throw error;
+    });
+};
+
+const getAllReminders = (userQuerySnapshot) => {
+  let promises = [];
+
+  userQuerySnapshot.forEach((queryDocumentSnapshot) => {
+    const userDoc = queryDocumentSnapshot.ref;
+    promises.push(
+      userDoc
+        .collection("plannedReminders")
+        .get()
+        .then((querySnapshot) => {
+          const plannedReminderIds = querySnapshot.docs.map(
+            (queryDocumentSnapshot) => queryDocumentSnapshot.id
+          );
+          return userDoc
+            .collection("recurringReminders")
+            .get()
+            .then((querySnapshot) => {
+              const recurringReminderIds = querySnapshot.docs.map(
+                (queryDocumentSnapshot) => queryDocumentSnapshot.id
+              );
+
+              return getRemindersByIds(userDoc, plannedReminderIds, recurringReminderIds, false);
+            });
+        })
+    );
+    return Promise.all(promises);
+  });
+};
+
+// Helper for getSubscribedPackages. Returns packageReminderIds for given user
+const getPackageReminderIds = (uid, reminderPackageId) => {
+  return db
+    .collection("users")
+    .where("uid", "==", uid)
+    .limit(1)
+    .get()
+    .then((querySnapshot) => {
+      if (querySnapshot.empty) {
+        throw "No user found. Please contact the administrator";
+      }
+
+      let reminderIds = [];
+      let promises = [];
+
+      querySnapshot.forEach((queryDocumentSnapshot) => {
+        promises.push(
+          queryDocumentSnapshot.ref
+            .collection("reminderPackages")
+            .doc(reminderPackageId)
+            .get()
+            .then((documentSnapshot) => {
+              return {
+                plannedReminderIds: documentSnapshot.get("plannedReminderIds"),
+                recurringReminderIds: documentSnapshot.get("recurringReminderIds"),
+              };
+            })
+        );
+      });
+
+      return Promise.all(promises).then((values) => {
+        reminderIds = [].concat.apply([], values);
+        let plannedReminderIds = [];
+        let recurringReminderIds = [];
+        reminderIds.map((packageReminderIds) => {
+          plannedReminderIds = plannedReminderIds.concat(packageReminderIds.plannedReminderIds);
+          recurringReminderIds = recurringReminderIds.concat(
+            packageReminderIds.recurringReminderIds
+          );
+          return packageReminderIds;
+        });
+
+        return { plannedReminderIds, recurringReminderIds };
+      });
     });
 };
 
@@ -139,25 +192,73 @@ const getSubscribed = (
                   subscribedPackage.userUid,
                   subscribedPackage.reminderPackageId
                 ).then((reminderIds) => {
-                  return getRemindersByIds(subscribedPackage.userUid, reminderIds).then(
-                    (subscribedReminders) => {
-                      return subscribedReminders.map((reminders) => {
-                        return { ...reminders, subscribed: true };
-                      });
-                    }
-                  );
+                  return getRemindersByIds(
+                    subscribedPackage.userUid,
+                    reminderIds.plannedReminderIds,
+                    reminderIds.recurringReminderIds,
+                    true
+                  ).then((subscribedReminders) => {
+                    return subscribedReminders;
+                  });
                 })
               );
             }
             return Promise.all(promises).then((values) => {
               allSubscribedReminders = [].concat.apply([], values);
-              allSubscribedReminders = allSubscribedReminders.filter(reminderFilter);
-
-              return allSubscribedReminders;
+              return allSubscribedReminders.filter(reminderFilter);
             });
           });
       });
       return promise;
+    });
+};
+
+exports.getAll = (req, res) => {
+  db.collection("users")
+    .where("uid", "==", req.query.uid)
+    .limit(1)
+    .get()
+    .then((querySnapshot) => {
+      if (querySnapshot.empty) {
+        return res.status(404).send({ message: "No user found. Please contact the administrator" });
+      }
+
+      let reminders = [];
+
+      querySnapshot.forEach((queryDocumentSnapshot) => {
+        queryDocumentSnapshot.ref
+          .collection("reminders")
+          .get()
+          .then((querySnapshot) => {
+            getAllReminders(querySnapshot)
+              .then((results) => {
+                reminders = [].concat.apply([], results);
+
+                getSubscribed(req.query.uid)
+                  .then((allSubscribedReminders) => {
+                    const allReminders = reminders.concat(allSubscribedReminders);
+
+                    res.send(allReminders);
+                    return res.status(200).send({
+                      message: "Successfully retrieved all local and subscribed reminders",
+                    });
+                  })
+                  .catch((error) => {
+                    return res
+                      .status(404)
+                      .send({ message: `Error retrieving subscribed reminders. ${error}` });
+                  });
+              })
+              .catch((error) => {
+                return res
+                  .status(404)
+                  .send({ message: `Error retrieving user reminders. ${error}` });
+              });
+          });
+      });
+    })
+    .catch((error) => {
+      return res.status(404).send({ message: `Error retrieving reminders. ${error}` });
     });
 };
 
@@ -169,13 +270,53 @@ exports.get = (req, res) => {
     return res.status(400).send({ message: "Reminders must have reminder IDs!" });
   }
 
-  return getRemindersByIds(req.query.uid, req.query.reminderIds)
+  return getRemindersByIds(
+    req.query.uid,
+    req.query.reminderIds.plannedReminderIds,
+    req.query.reminderIds.recurringReminderIds,
+    false
+  )
     .then((reminders) => {
       res.send(reminders);
       return res.status(200).send();
     })
     .catch((error) => {
       return res.status(404).send({ message: `Error getting reminders. ${error}` });
+    });
+};
+
+exports.getTemplateReminders = (req, res) => {
+  if (!req.query.uid) {
+    return res.status(400).send({ message: "You must be logged in to make this operation!" });
+  }
+
+  db.collection("users")
+    .where("uid", "==", req.query.uid)
+    .limit(1)
+    .get()
+    .then((querySnapshot) => {
+      if (querySnapshot.empty) {
+        throw "No user found. Please contact the administrator";
+      }
+
+      querySnapshot.forEach((queryDocumentSnapshot) => {
+        queryDocumentSnapshot.ref
+          .collection("templateReminders")
+          .get()
+          .then((querySnapshot) => {
+            res.send(
+              querySnapshot.docs.map((doc) => {
+                return { ...doc.data(), templateReminderId: doc.id };
+              })
+            );
+            return res.status(200).send({ message: "Template reminders retrieved successfully" });
+          });
+      });
+    })
+    .catch((error) => {
+      return res
+        .status(400)
+        .send({ message: `Issue getting template reminders from user. ${error}` });
     });
 };
 
@@ -193,48 +334,6 @@ exports.getSubscribed = (req, res) => {
     })
     .catch((error) => {
       return res.status(404).send({ message: `Error retrieving subscribed reminders. ${error}` });
-    });
-};
-
-exports.getAll = (req, res) => {
-  let reminders = [];
-
-  db.collection("users")
-    .where("uid", "==", req.query.uid)
-    .limit(1)
-    .get()
-    .then((querySnapshot) => {
-      if (querySnapshot.empty) {
-        return res.status(404).send({ message: "No user found. Please contact the administrator" });
-      }
-      querySnapshot.forEach((queryDocumentSnapshot) => {
-        queryDocumentSnapshot.ref
-          .collection("reminders")
-          .get()
-          .then((querySnapshot) => {
-            querySnapshot.forEach((reminder) => {
-              reminders.push({ ...reminder.data(), reminderId: reminder.id, subscribed: false });
-            });
-
-            getSubscribed(req.query.uid)
-              .then((allSubscribedReminders) => {
-                const allReminders = reminders.concat(allSubscribedReminders);
-
-                res.send(allReminders);
-                return res
-                  .status(200)
-                  .send({ message: "Successfully retrieved all local and subscribed reminders" });
-              })
-              .catch((error) => {
-                return res
-                  .status(404)
-                  .send({ message: `Error retrieving subscribed reminders. ${error}` });
-              });
-          });
-      });
-    })
-    .catch((error) => {
-      return res.status(404).send({ message: `Error retrieving reminders. ${error}` });
     });
 };
 
