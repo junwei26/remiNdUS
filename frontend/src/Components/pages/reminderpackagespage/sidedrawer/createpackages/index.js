@@ -156,13 +156,23 @@ const SubscribedPackages = () => {
 
   const handleSubmitCreatePackage = (e) => {
     e.preventDefault();
-    const reminderIds = [];
+
+    const plannedReminderIds = [];
+    const recurringReminderIds = [];
+
     for (let i = 0; i < selectedRows.length; ++i) {
-      reminderIds.push(selectedRows[i].reminderId);
+      if (selectedRows[i].reminderType === "planned") {
+        plannedReminderIds.push(selectedRows[i].reminderId);
+      } else {
+        recurringReminderIds.push(selectedRows[i].reminderId);
+      }
     }
 
     reminderPackageService
-      .addReminderPackage(packageName, description, packageTag, reminderIds)
+      .addReminderPackage(packageName, description, packageTag, {
+        plannedReminderIds,
+        recurringReminderIds,
+      })
       .then(() => {
         alert("Successfully created reminder package!");
         clearAllFields();

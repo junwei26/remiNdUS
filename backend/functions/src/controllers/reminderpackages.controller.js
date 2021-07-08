@@ -1,6 +1,15 @@
 const admin = require("firebase-admin");
 const db = admin.firestore();
 
+const convertDateToString = (date) => {
+  return `${date.getFullYear().toString().padStart(4, "0")}${(date.getMonth() + 1)
+    .toString()
+    .padStart(2, "0")}${date.getDate().toString().padStart(2, "0")}${date
+    .getHours()
+    .toString()
+    .padStart(2, "0")}${date.getMinutes().toString().padStart(2, "0")}`;
+};
+
 exports.getAll = (req, res) => {
   if (!req.query.uid) {
     return res.status(400).send({ message: "You must be logged in to make this operation!" });
@@ -120,7 +129,7 @@ exports.create = (req, res) => {
             const reminderPackage = {
               name: req.body.name,
               description: req.body.description,
-              lastModified: new Date().getTime(),
+              lastModified: convertDateToString(new Date()),
               numberOfReminders:
                 req.body.reminderIds.plannedReminderIds.length +
                 req.body.reminderIds.recurringReminderIds.length,
