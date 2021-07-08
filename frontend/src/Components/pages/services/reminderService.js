@@ -17,8 +17,12 @@ const convertLocaleDateString = (dateStr) => {
   return year + month + day + hour + min;
 };
 
-const getAllReminder = () => {
+const getAllReminders = () => {
   return axios.get(REMINDER_API_URL + "/", { params: { uid: firebaseAuth.currentUser.uid } });
+};
+
+const getAllLocalReminders = () => {
+  return axios.get(REMINDER_API_URL + "/local", { params: { uid: firebaseAuth.currentUser.uid } });
 };
 
 const getReminders = (reminderIds, uid = firebaseAuth.currentUser.uid) => {
@@ -109,7 +113,8 @@ const addRecurringReminder = (
 };
 
 export default {
-  getAllReminder,
+  getAllReminders,
+  getAllLocalReminders,
   getReminders,
   updateReminder,
   deleteReminder,

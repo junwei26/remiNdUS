@@ -5,6 +5,7 @@ module.exports = (app) => {
 
   // Fetch all reminders of a specified user for a specified date
   router.get("/", reminders.getAll);
+  router.get("/local", reminders.getAllLocal);
   router.get("/get", reminders.get);
   router.get("/template", reminders.getTemplateReminders);
   router.get("/getSubscribed", reminders.getSubscribed);

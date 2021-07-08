@@ -99,12 +99,12 @@ const getAllReminders = (userQuerySnapshot) => {
                 (queryDocumentSnapshot) => queryDocumentSnapshot.id
               );
 
-              return getRemindersByIds(userDoc, plannedReminderIds, recurringReminderIds, false);
+              return getRemindersByIds(userDoc.id, plannedReminderIds, recurringReminderIds, false);
             });
         })
     );
-    return Promise.all(promises);
   });
+  return Promise.all(promises);
 };
 
 // Helper for getSubscribedPackages. Returns packageReminderIds for given user
@@ -256,6 +256,32 @@ exports.getAll = (req, res) => {
               });
           });
       });
+    })
+    .catch((error) => {
+      return res.status(404).send({ message: `Error retrieving reminders. ${error}` });
+    });
+};
+
+exports.getAllLocal = (req, res) => {
+  db.collection("users")
+    .where("uid", "==", req.query.uid)
+    .limit(1)
+    .get()
+    .then((querySnapshot) => {
+      if (querySnapshot.empty) {
+        return res.status(404).send({ message: "No user found. Please contact the administrator" });
+      }
+
+      getAllReminders(querySnapshot)
+        .then((results) => {
+          res.send([].concat.apply([], results));
+          return res.status(200).send({
+            message: "Successfully retrieved all local reminders",
+          });
+        })
+        .catch((error) => {
+          return res.status(404).send({ message: `Error retrieving user reminders. ${error}` });
+        });
     })
     .catch((error) => {
       return res.status(404).send({ message: `Error retrieving reminders. ${error}` });

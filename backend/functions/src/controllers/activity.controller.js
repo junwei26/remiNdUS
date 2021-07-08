@@ -13,11 +13,11 @@ const getActivity = (userDoc, activityId, activityCollection) => {
         .doc(documentSnapshot.get("templateActivityId"))
         .get()
         .then((templateDocumentSnapshot) => {
-          const reminderType = activityCollection === "plannedActivities" ? "planned" : "recurring";
+          const activityType = activityCollection === "plannedActivities" ? "planned" : "recurring";
           return {
             ...documentSnapshot.data(),
             ...templateDocumentSnapshot.data(),
-            reminderType,
+            activityType,
             activityId,
           };
         })

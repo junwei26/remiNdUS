@@ -34,7 +34,13 @@ const SubscribedPackages = () => {
       id: 1,
       name: "Loading...",
       description: "Loading...",
-      dateTime: "Loading...",
+      endTime: "Loading...",
+      endDateTime: "Loading...",
+      defaultLength: "Loading...",
+      reminderType: "Loading...",
+      date: "Loading...",
+      frequency: "Loading...",
+      active: "Loading...",
     },
   ];
   const [reminderList, setReminderList] = useState(loadingReminderList);
@@ -51,9 +57,66 @@ const SubscribedPackages = () => {
       flex: 2,
     },
     {
-      field: "dateTime",
-      headerName: "Datetime",
+      field: "defaultLength",
+      headerName: "Time required",
       flex: 1,
+    },
+    {
+      field: "endTime",
+      headerName: "End Time",
+      flex: 1,
+    },
+    {
+      field: "endDateTime",
+      headerName: "End Datetime",
+      flex: 1,
+    },
+    // {
+    //   field: "endTime",
+    //   headerName: "End Date/Time",
+    //   flex: 1,
+    //   valueGetter: (params) => {
+    //     return params.getValue(params.id, "reminderType") === "recurring"
+    //       ? params.getValue(params.id, "endTime")
+    //       : params.getValue(params.id, "endDateTime");
+    //   },
+    //   sortComparator: (v1, v2) => {
+    //     if (v1.length < v2) {
+    //       return -1;
+    //     } else if (v1.length > v2) {
+    //       return 1;
+    //     } else {
+    //       return parseInt(v1) - parseInt(v2);
+    //     }
+    //   },
+    // },
+    {
+      field: "reminderType",
+      headerName: "Reminder Type",
+      flex: 1.3,
+      valueFormatter: (params) => {
+        return `${
+          String(params.value).charAt(0).toUpperCase() + String(params.value).substring(1)
+        }`;
+      },
+    },
+    {
+      field: "date",
+      headerName: "Date",
+      flex: 0.7,
+      hide: true,
+    },
+    {
+      field: "frequency",
+      headerName: "Frequency",
+      flex: 1,
+      hide: true,
+    },
+    {
+      field: "active",
+      headerName: "Active",
+      flex: 1,
+      hide: true,
     },
   ];
 
@@ -119,10 +182,9 @@ const SubscribedPackages = () => {
   const getReminders = () => {
     let tempReminderList = [];
     reminderService
-      .getAllReminder()
+      .getAllLocalReminders()
       .then((response) => {
         tempReminderList = response.data;
-
         for (let i = 0; i < tempReminderList.length; ++i) {
           tempReminderList[i].id = i + 1;
         }
