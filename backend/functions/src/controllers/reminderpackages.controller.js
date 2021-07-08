@@ -113,16 +113,19 @@ exports.create = (req, res) => {
 
       // Only one user, one doc
       data.forEach((querySnapshotDoc) => {
-        const documentRef = querySnapshotDoc.ref;
-        documentRef
+        const userDoc = querySnapshotDoc.ref;
+        userDoc
           .get()
           .then((documentSnapshot) => {
             const reminderPackage = {
               name: req.body.name,
               description: req.body.description,
               lastModified: new Date().getTime(),
-              numberOfReminders: req.body.reminderIds.length,
-              reminderIds: req.body.reminderIds,
+              numberOfReminders:
+                req.body.reminderIds.plannedReminderIds.length +
+                req.body.reminderIds.recurringReminderIds.length,
+              plannedReminderIds: req.body.reminderIds.plannedReminderIds,
+              recurringReminderIds: req.body.reminderIds.recurringReminderIds,
               packageTag: req.body.packageTag,
               ownerUid: req.body.uid,
               ownerName: documentSnapshot.get("username"),
@@ -130,7 +133,7 @@ exports.create = (req, res) => {
               public: false,
             };
 
-            documentRef.collection("reminderPackages").add(reminderPackage);
+            userDoc.collection("reminderPackages").add(reminderPackage);
             return res.status(200).send({ message: "Reminder package successfully created!" });
           })
           .catch((error) => {
