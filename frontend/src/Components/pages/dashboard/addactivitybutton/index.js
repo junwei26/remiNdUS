@@ -40,9 +40,11 @@ const AddActivityButton = () => {
   };
 
   const currentDateTime = roundUpDateTime(new Date());
-  const [date, setDate] = useState(currentDateTime.getDate());
+  const [date, setDate] = useState(1);
   const [startDateTime, setStartDateTime] = useState(currentDateTime);
-  const [endDateTime, setEndDateTime] = useState(currentDateTime);
+  const [endDateTime, setEndDateTime] = useState(
+    roundUpDateTime(new Date(currentDateTime.getTime() + 1))
+  );
   const [recurring, setRecurring] = useState(false);
   const [active, setActive] = useState(true);
   const [dialogOpen, setDialogOpen] = useState(false);
@@ -52,28 +54,33 @@ const AddActivityButton = () => {
   const [templateActivities, setTemplateActivities] = useState([]);
   const [chosenTemplateActivity, setChosenTemplateReminder] = useState(-1);
   const [frequency, setFrequency] = useState("weekly");
+  const [menuItemArray, setMenuItemArray] = useState([
+    <MenuItem value={-1} key={-1}>
+      Choose an existing activity...
+    </MenuItem>,
+  ]);
 
   const handleSelectFrequencyChange = (e) => {
     if (frequency === "monthly" && e.target.value === "weekly" && date > 7) {
       setDate(1);
+    } else if (e.target.value === "monthly") {
+      setDate(currentDateTime.getDate());
     }
     setFrequency(e.target.value);
   };
 
   const handleStartDateChange = (date) => {
     setStartDateTime(roundUpDateTime(date));
-    setDate(date.getDate());
-    // If new start date is greater (later) than end datetime, update end date
-    if (date.getTime() > endDateTime.getTime()) {
-      setEndDateTime(roundUpDateTime(date));
+    if (frequency === "monthly") {
+      setDate(date.getDate());
+    }
+    // If new start date is greater (later) than end datetime or equal, update end date
+    if (date.getTime() >= endDateTime.getTime()) {
+      setEndDateTime(roundUpDateTime(new Date(roundUpDateTime(date).getTime() + 1)));
     }
   };
 
   const handleEndDateChange = (date) => {
-    if (date.getTime() < startDateTime.getTime()) {
-      setStartDateTime(roundUpDateTime(date));
-      setDate(date.getDate());
-    }
     setEndDateTime(roundUpDateTime(date));
   };
 
@@ -116,10 +123,15 @@ const AddActivityButton = () => {
     } else if (description === "") {
       alert("Please input an activity description");
       return;
+    } else if (endDateTime.getTime() <= startDateTime.getTime()) {
+      alert("End datetime cannot be earlier than start datetime");
+      return;
     }
 
     const templateActivityId =
-      chosenTemplateActivity >= 0 ? templateActivities[chosenTemplateActivity].activityId : null;
+      chosenTemplateActivity >= 0
+        ? templateActivities[chosenTemplateActivity].templateActivityId
+        : null;
 
     const defaultLength =
       chosenTemplateActivity < 0
@@ -142,7 +154,7 @@ const AddActivityButton = () => {
         })
         .catch((error) => {
           alert(
-            `Issue creating activity. Error status code: ${error.response.status}. ${error.response.data.message}`
+            `Issue creating planned activity. Error status code: ${error.response.status}. ${error.response.data.message}`
           );
         });
     } else {
@@ -163,7 +175,7 @@ const AddActivityButton = () => {
         })
         .catch((error) => {
           alert(
-            `Issue creating activity. Error status code: ${error.response.status}. ${error.response.data.message}`
+            `Issue creating recurring activity. Error status code: ${error.response.status}. ${error.response.data.message}`
           );
         });
     }
@@ -173,6 +185,13 @@ const AddActivityButton = () => {
 
   const handleChangeTemplateActivity = (e) => {
     setChosenTemplateReminder(e.target.value);
+    if (e.target.value >= 0) {
+      setActivityName(templateActivities[e.target.value].name);
+      setDescription(templateActivities[e.target.value].description);
+    } else {
+      setActivityName("");
+      setDescription("");
+    }
   };
 
   const getTemplateActivities = () => {
@@ -190,6 +209,22 @@ const AddActivityButton = () => {
         );
       });
   };
+
+  useEffect(() => {
+    setMenuItemArray(
+      [
+        <MenuItem value={-1} key={-1}>
+          Choose an existing activity...
+        </MenuItem>,
+      ].concat(
+        templateActivities.map((templateActivity, index) => (
+          <MenuItem value={index} key={index}>
+            {templateActivity.name}
+          </MenuItem>
+        ))
+      )
+    );
+  }, [templateActivities]);
 
   useEffect(() => {
     if (dialogOpen === true) {
@@ -239,13 +274,13 @@ const AddActivityButton = () => {
               spacing={2}
             >
               <Grid item style={{ width: "100%" }}>
-                <Select value={chosenTemplateActivity} onChange={handleChangeTemplateActivity}>
-                  <MenuItem value={-1}>Choose an existing activity...</MenuItem>
-                  {templateActivities.map((templateActivity, index) => {
-                    <MenuItem value={index} key={index}>
-                      {templateActivity.name}
-                    </MenuItem>;
-                  })}
+                <InputLabel>Select from existing activity</InputLabel>
+                <Select
+                  value={chosenTemplateActivity}
+                  onChange={handleChangeTemplateActivity}
+                  style={{ width: "100%" }}
+                >
+                  {menuItemArray}
                 </Select>
               </Grid>
               <Grid item style={{ width: "100%" }}>
@@ -258,6 +293,7 @@ const AddActivityButton = () => {
                   color="primary"
                   value={activityName}
                   onChange={handleSetActivityName}
+                  disabled={chosenTemplateActivity !== -1}
                   autofocus
                 />
               </Grid>
@@ -271,6 +307,7 @@ const AddActivityButton = () => {
                   color="primary"
                   value={description}
                   onChange={handleSetDescription}
+                  disabled={chosenTemplateActivity !== -1}
                   autofocus
                 />
               </Grid>
@@ -347,6 +384,12 @@ const AddActivityButton = () => {
                         label="End Time"
                         value={endDateTime}
                         onChange={handleEndDateChange}
+                        error={endDateTime.getTime() <= startDateTime.getTime()}
+                        helperText={
+                          endDateTime.getTime() <= startDateTime.getTime()
+                            ? "Must be later than start time"
+                            : ""
+                        }
                         minutesStep={15}
                       />
                     </Grid>
@@ -390,6 +433,12 @@ const AddActivityButton = () => {
                       minutesStep={15}
                       todayLabel={"Now"}
                       value={endDateTime}
+                      error={endDateTime.getTime() <= startDateTime.getTime()}
+                      helperText={
+                        endDateTime.getTime() <= startDateTime.getTime()
+                          ? "Must be later than start datetime"
+                          : ""
+                      }
                       format="yyyy/MM/dd HH:mm"
                       onChange={handleEndDateChange}
                     />

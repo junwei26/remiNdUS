@@ -1,7 +1,7 @@
 const admin = require("firebase-admin");
 const db = admin.firestore();
 
-// reminderCollection should be "plannedReminders" or "recurringReminders"
+// activityCollection should be "plannedActivities" or "recurringActivities"
 const getActivity = (userDoc, activityId, activityCollection) => {
   return userDoc
     .collection(activityCollection)
@@ -9,7 +9,7 @@ const getActivity = (userDoc, activityId, activityCollection) => {
     .get()
     .then((documentSnapshot) => {
       return userDoc
-        .collection("templateActivity")
+        .collection("templateActivities")
         .doc(documentSnapshot.get("templateActivityId"))
         .get()
         .then((templateDocumentSnapshot) => {
@@ -31,33 +31,17 @@ const getActivity = (userDoc, activityId, activityCollection) => {
 };
 
 // Helper for getSubscribedPackages and get query
-const getActivitiesById = (uid, activityIds, activityCollection) => {
-  return db
-    .collection("users")
-    .where("uid", "==", uid)
-    .limit(1)
-    .get()
-    .then((querySnapshot) => {
-      if (querySnapshot.empty) {
-        throw new Error("No user found. Please contact the administrator");
-      }
+const getActivitiesById = (userDoc, activityIds, activityCollection) => {
+  let promises = [];
+  let activities = [];
 
-      let promises = [];
-      let activities = [];
-
-      querySnapshot.forEach((queryDocumentSnapshot) => {
-        for (let i = 0; i < activityIds.length; ++i) {
-          promises.push(getActivity(queryDocumentSnapshot.ref, activityIds[i], activityCollection));
-        }
-      });
-      return Promise.all(promises).then((values) => {
-        activities = [].concat.apply([], values);
-        return activities;
-      });
-    })
-    .catch((error) => {
-      throw error;
-    });
+  for (let i = 0; i < activityIds.length; ++i) {
+    promises.push(getActivity(userDoc, activityIds[i], activityCollection));
+  }
+  return Promise.all(promises).then((values) => {
+    activities = [].concat.apply([], values);
+    return activities;
+  });
 };
 
 const getAllActivities = (userQuerySnapshot) => {
@@ -134,43 +118,30 @@ exports.get = (req, res) => {
     return res.status(400).send({ message: "Activities must be recurring or planned" });
   }
 
-  return getActivitiesById(req.query.uid, req.query.activityIds, req.query.activityCollection)
-    .then((activities) => {
-      res.send(activities);
-      return res.status(200).send();
-    })
-    .catch((error) => {
-      return res.status(404).send({ message: `Error getting reminders. ${error}` });
-    });
+  db.collection("users")
+    .where("uid", "==", req.query.uid)
+    .limit(1)
+    .get()
+    .then((querySnapshot) => {
+      if (querySnapshot.empty) {
+        throw "No user found. Please contact the administrator";
+      }
 
-  // db.collection("users")
-  //   .where("uid", "==", req.query.uid)
-  //   .limit(1)
-  //   .get()
-  //   .then((data) => {
-  //     if (data.empty) {
-  //       return res.status(404).send({ message: "No activities found." });
-  //     }
-  //     data.forEach((doc) => {
-  //       db.collection("users")
-  //         .doc(doc.id)
-  //         .collection("activities")
-  //         .doc(req.query.activityId)
-  //         .get()
-  //         .then((doc) => {
-  //           res.send({ ...doc.data(), activityId: doc.id });
-  //           return res.status(200).send({ message: "Successfully retrieved activity!" });
-  //         })
-  //         .catch((error) => {
-  //           return res.status(404).send({ message: `Error getting activity. ${error}` });
-  //         });
-  //     });
-  //   })
-  //   .catch((error) => {
-  //     return res
-  //       .status(400)
-  //       .send({ message: `Error getting user database when getting activity. ${error}` });
-  //   });
+      querySnapshot.forEach((queryDocumentSnapshot) => {
+        return getActivitiesById(
+          queryDocumentSnapshot.ref,
+          req.query.activityIds,
+          req.query.activityCollection
+        )
+          .then((activities) => {
+            res.send(activities);
+            return res.status(200).send();
+          })
+          .catch((error) => {
+            return res.status(404).send({ message: `Error getting activity. ${error}` });
+          });
+      });
+    });
 };
 
 exports.getTemplateActivities = (req, res) => {
@@ -192,7 +163,11 @@ exports.getTemplateActivities = (req, res) => {
           .collection("templateActivities")
           .get()
           .then((querySnapshot) => {
-            res.send(querySnapshot.docs);
+            res.send(
+              querySnapshot.docs.map((doc) => {
+                return { ...doc.data(), templateActivityId: doc.id };
+              })
+            );
             return res.status(200).send({ message: "Template activities retrieved successfully" });
           });
       });
@@ -323,9 +298,6 @@ endDateTime: required if creating plannedActivity
 exports.create = (req, res) => {
   if (!req.body.uid) {
     return res.status(400).send({ message: "You must be logged in to make this operation!" });
-  }
-  if (!req.body.active) {
-    return res.status(400).send({ message: "Activity must have an active setting" });
   }
 
   // If no templateActivityId provided, assume creating a brand new activity
@@ -480,9 +452,6 @@ exports.update = (req, res) => {
   }
   if (!req.body.defaultLength) {
     return res.status(400).send({ message: "Activities must have a default length" });
-  }
-  if (!req.body.active) {
-    return res.status(400).send({ message: "Missing activity active status" });
   }
   if (!req.body.frequency) {
     if (!req.body.startDateTime) {
