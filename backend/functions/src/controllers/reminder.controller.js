@@ -359,3 +359,39 @@ exports.getByTelegram = (req, res) => {
       return res.status(400).send({ message: `Error retrieving reminders. ${error}` });
     });
 };
+
+exports.createByTelegram = (req, res) => {
+  if (!req.body.name) {
+    return res.status(400).send({ message: "Reminders must have a name!" });
+  }
+  if (!req.body.description) {
+    return res.status(400).send({ message: "Reminders must have a description!" });
+  }
+  if (!req.body.dateTime) {
+    return res.status(400).send({ message: "Reminders must have a date!" });
+  }
+
+  const reminder = {
+    name: req.body.name,
+    description: req.body.description,
+    dateTime: req.body.dateTime,
+    eventType: "2",
+  };
+  db.collection("users")
+    .where("telegramHandle", "==", req.body.telegramHandle)
+    .limit(1)
+    .get()
+    .then((querySnapshot) =>
+      querySnapshot.forEach((doc) =>
+        db
+          .collection("users")
+          .doc(doc.id)
+          .collection("reminders")
+          .doc()
+          .set(reminder)
+          .then(() => {
+            return res.status(200).send({ message: "Reminder created successfully!" });
+          })
+      )
+    );
+};

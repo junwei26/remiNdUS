@@ -9,6 +9,7 @@ module.exports = (app) => {
   router.get("/getSubscribed", reminders.getSubscribed);
   router.get("/getRange", reminders.range);
   router.get("/getByTelegram", reminders.getByTelegram);
+  router.post("/createByTelegram", reminders.createByTelegram);
 
   // Creates a new reminder for a specified user
   router.post("/create", reminders.create);

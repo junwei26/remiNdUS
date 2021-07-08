@@ -7,6 +7,8 @@ const bot = new Telegraf(functions.config().telegram.token, {
   telegram: { webhookReply: true },
 });
 
+const backendURL = "https://asia-southeast2-remindus-76402.cloudfunctions.net/backendAPI/api";
+
 let selectedDate = "";
 const calendar = new Calendar(bot, {
   startWeekDay: 1,
@@ -47,14 +49,19 @@ const addReminderScene = new Scenes.WizardScene(
   },
   async (ctx) => {
     ctx.wizard.state.reminder.description = ctx.message.text;
-    ctx.reply("Adding reminder");
-    // axios call here
-    ctx.reply(
-      ctx.wizard.state.reminder.time +
-        ctx.wizard.state.reminder.name +
-        ctx.wizard.state.reminder.description +
-        selectedDate
-    );
+    ctx.reply("Adding reminder....");
+    const user = await bot.telegram.getChat(ctx.chat.id);
+    const reminder = {
+      telegramHandle: user.username,
+      name: ctx.wizard.state.reminder.name,
+      description: ctx.wizard.state.reminder.description,
+      dateTime: selectedDate.split("-").join("") + ctx.wizard.state.reminder.time,
+    };
+
+    axios
+      .post(backendURL + "/reminder/createByTelegram", reminder)
+      .then(() => ctx.reply("Reminder added successfully"))
+      .catch(() => ctx.reply("Error creating reminder, please try again."));
     return ctx.scene.leave();
   }
 );
@@ -98,16 +105,21 @@ const addActivityScene = new Scenes.WizardScene(
   },
   async (ctx) => {
     ctx.wizard.state.activity.tag = ctx.message.text;
-    ctx.reply("Adding activity");
-    // axios call here
-    ctx.reply(
-      ctx.wizard.state.activity.name +
-        ctx.wizard.state.activity.description +
-        ctx.wizard.state.activity.startTime +
-        ctx.wizard.state.activity.endTime +
-        ctx.wizard.state.activity.tag +
-        selectedDate
-    );
+    ctx.reply("Adding activity...");
+    const user = await bot.telegram.getChat(ctx.chat.id);
+    const activity = {
+      telegramHandle: user.username,
+      name: ctx.wizard.state.activity.name,
+      description: ctx.wizard.state.activity.description,
+      startDateTime: selectedDate.split("-").join("") + ctx.wizard.state.activity.startTime,
+      endDateTime: selectedDate.split("-").join("") + ctx.wizard.state.activity.endTime,
+      tag: ctx.wizard.state.activity.tag,
+    };
+
+    axios
+      .post(backendURL + "/activity/createByTelegram", activity)
+      .then(() => ctx.reply("Activity added successfully"))
+      .catch(() => ctx.reply("Error creating activity, please try again."));
     return ctx.scene.leave();
   }
 );
@@ -146,15 +158,13 @@ bot.command("/retrieve", async (ctx) => {
     const min = padZero(date.getMinutes());
     return year + month + day + hour + min;
   };
-  const backendURL =
-    "https://asia-southeast2-remindus-76402.cloudfunctions.net/backendAPI/api/activity/getByTelegram";
 
   const user = await bot.telegram.getChat(ctx.chat.id);
   const currentDate = new Date();
   const endDate = new Date();
   endDate.setDate(currentDate.getDate() + 1);
   axios
-    .get(backendURL, {
+    .get(backendURL + "/activity/getByTelegram", {
       params: {
         telegramHandle: user.username,
         currentDateTime: convertLocaleDateString(currentDate.toLocaleString()),
@@ -170,16 +180,13 @@ bot.command("/retrieve", async (ctx) => {
           )} - ${activity.endDateTime.slice(8, 12)}`
       );
       axios
-        .get(
-          "https://asia-southeast2-remindus-76402.cloudfunctions.net/backendAPI/api/reminder/getByTelegram",
-          {
-            params: {
-              telegramHandle: user.username,
-              currentDateTime: convertLocaleDateString(currentDate.toLocaleString()),
-              endDateTime: convertLocaleDateString(endDate.toLocaleString()),
-            },
-          }
-        )
+        .get(backendURL + "/reminder/getByTelegram", {
+          params: {
+            telegramHandle: user.username,
+            currentDateTime: convertLocaleDateString(currentDate.toLocaleString()),
+            endDateTime: convertLocaleDateString(endDate.toLocaleString()),
+          },
+        })
         .then((response) => {
           const reminderArr = response.data.map(
             (reminder) => ` ${reminder.name} : ${reminder.dateTime.slice(8, 12)}`
