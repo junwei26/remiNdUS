@@ -95,7 +95,7 @@ const addRecurringReminder = (
   date,
   active,
   defaultLength,
-  reminderName = null,
+  name = null,
   description = null,
   templateReminderId = null
 ) => {
@@ -106,7 +106,7 @@ const addRecurringReminder = (
     date,
     active,
     defaultLength,
-    reminderName,
+    name,
     description,
     templateReminderId,
   });

@@ -78,18 +78,21 @@ const getRemindersByIds = (uid, plannedReminderIds, recurringReminderIds, subscr
     });
 };
 
-const getAllReminders = (userQuerySnapshot) => {
+const getAllReminders = (
+  userDoc,
+  plannedRangeQuery = (x) => {
+    return x;
+  }
+) => {
   let promise = null;
 
-  const userDoc = userQuerySnapshot.ref;
-  promise = userDoc
-    .collection("plannedReminders")
+  promise = plannedRangeQuery(userDoc.collection("plannedReminders"))
     .get()
     .then((querySnapshot) => {
       const plannedReminderIds = querySnapshot.docs.map(
         (queryDocumentSnapshot) => queryDocumentSnapshot.id
       );
-      console.log(plannedReminderIds.length);
+
       return userDoc
         .collection("recurringReminders")
         .get()
@@ -104,7 +107,7 @@ const getAllReminders = (userQuerySnapshot) => {
             recurringReminderIds,
             false
           ).then((reminders) => {
-            return reminders;
+            return [].concat.apply([], reminders);
           });
         });
     });
@@ -228,13 +231,9 @@ exports.getAll = (req, res) => {
         return res.status(404).send({ message: "No user found. Please contact the administrator" });
       }
 
-      let reminders = [];
-
       querySnapshot.forEach((queryDocumentSnapshot) => {
-        getAllReminders(queryDocumentSnapshot)
-          .then((results) => {
-            reminders = [].concat.apply([], results);
-
+        getAllReminders(queryDocumentSnapshot.ref)
+          .then((reminders) => {
             getSubscribed(req.query.uid)
               .then((allSubscribedReminders) => {
                 const allReminders = reminders.concat(allSubscribedReminders);
@@ -269,17 +268,18 @@ exports.getAllLocal = (req, res) => {
       if (querySnapshot.empty) {
         return res.status(404).send({ message: "No user found. Please contact the administrator" });
       }
-
-      getAllReminders(querySnapshot)
-        .then((results) => {
-          res.send([].concat.apply([], results));
-          return res.status(200).send({
-            message: "Successfully retrieved all local reminders",
+      querySnapshot.forEach((queryDocumentSnapshot) => {
+        getAllReminders(queryDocumentSnapshot.ref)
+          .then((reminders) => {
+            res.send(reminders);
+            return res.status(200).send({
+              message: "Successfully retrieved all local reminders",
+            });
+          })
+          .catch((error) => {
+            return res.status(404).send({ message: `Error retrieving user reminders. ${error}` });
           });
-        })
-        .catch((error) => {
-          return res.status(404).send({ message: `Error retrieving user reminders. ${error}` });
-        });
+      });
     })
     .catch((error) => {
       return res.status(404).send({ message: `Error retrieving reminders. ${error}` });
@@ -368,38 +368,55 @@ exports.range = (req, res) => {
   if (!req.query.currentDateTime) {
     return res.status(400).send({ message: "You must have a valid date time!" });
   }
-  const reminders = [];
+  if (!req.query.endDateTime) {
+    return res.status(400).send({ message: "You must have a end date time!" });
+  }
+
+  const plannedRangeQuery = (collectionReference) => {
+    return collectionReference.where("endDateTime", "<=", req.query.endDateTime);
+  };
 
   db.collection("users")
-    .doc(req.query.uid)
-    .collection("reminders")
-    .where("dateTime", ">=", req.query.currentDateTime)
-    .where("dateTime", "<=", req.query.endDateTime)
+    .where("uid", "==", req.query.uid)
+    .limit(1)
     .get()
     .then((querySnapshot) => {
-      querySnapshot.forEach((reminder) => {
-        reminders.push({ ...reminder.data(), reminderId: reminder.id, subscribed: false });
-      });
+      if (querySnapshot.empty) {
+        throw "No user found. Please contact the administrator";
+      }
 
-      getSubscribed(req.query.uid, (reminder) => {
-        return (
-          reminder.dateTime >= req.query.currentDateTime &&
-          reminder.dateTime <= req.query.endDateTime
-        );
-      })
-        .then((allSubscribedReminders) => {
-          const allReminders = reminders.concat(allSubscribedReminders);
+      querySnapshot.forEach((queryDocumentSnapshot) => {
+        getAllReminders(queryDocumentSnapshot.ref, plannedRangeQuery).then((reminders) => {
+          getSubscribed(req.query.uid, (reminder) => {
+            // if reminder is recurring keep. if the subscribed reminder is not within given datetime range, remove
+            if (reminder.reminderType === "recurring") {
+              return true;
+            }
 
-          res.send(allReminders);
-          return res
-            .status(200)
-            .send({ message: "Successfully retrieved all local and subscribed reminders" });
-        })
-        .catch((error) => {
-          return res
-            .status(404)
-            .send({ message: `Error retrieving subscribed reminders. ${error}` });
+            if (
+              reminder.dateTime >= req.query.currentDateTime &&
+              reminder.dateTime <= req.query.endDateTime
+            ) {
+              return true;
+            }
+
+            return false;
+          })
+            .then((allSubscribedReminders) => {
+              const allReminders = reminders.concat(allSubscribedReminders);
+
+              res.send(allReminders);
+              return res
+                .status(200)
+                .send({ message: "Successfully retrieved all local and subscribed reminders" });
+            })
+            .catch((error) => {
+              return res
+                .status(404)
+                .send({ message: `Error retrieving subscribed reminders. ${error}` });
+            });
         });
+      });
     });
 };
 
