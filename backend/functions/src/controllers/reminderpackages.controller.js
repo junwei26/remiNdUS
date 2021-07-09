@@ -37,7 +37,7 @@ exports.getAll = (req, res) => {
               return res.status(200).send({ message: "No Reminder Packages found." });
             }
 
-            // For each reminder package, send its uid as well
+            // For each reminder package, send its uid as well (doc.id)
             data.forEach((doc) => {
               packageList.push({ ...doc.data(), reminderPackageId: doc.id });
             });

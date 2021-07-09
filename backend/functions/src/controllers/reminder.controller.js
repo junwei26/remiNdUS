@@ -79,32 +79,37 @@ const getRemindersByIds = (uid, plannedReminderIds, recurringReminderIds, subscr
 };
 
 const getAllReminders = (userQuerySnapshot) => {
-  let promises = [];
+  let promise = null;
 
-  userQuerySnapshot.forEach((queryDocumentSnapshot) => {
-    const userDoc = queryDocumentSnapshot.ref;
-    promises.push(
-      userDoc
-        .collection("plannedReminders")
+  const userDoc = userQuerySnapshot.ref;
+  promise = userDoc
+    .collection("plannedReminders")
+    .get()
+    .then((querySnapshot) => {
+      const plannedReminderIds = querySnapshot.docs.map(
+        (queryDocumentSnapshot) => queryDocumentSnapshot.id
+      );
+      console.log(plannedReminderIds.length);
+      return userDoc
+        .collection("recurringReminders")
         .get()
         .then((querySnapshot) => {
-          const plannedReminderIds = querySnapshot.docs.map(
+          const recurringReminderIds = querySnapshot.docs.map(
             (queryDocumentSnapshot) => queryDocumentSnapshot.id
           );
-          return userDoc
-            .collection("recurringReminders")
-            .get()
-            .then((querySnapshot) => {
-              const recurringReminderIds = querySnapshot.docs.map(
-                (queryDocumentSnapshot) => queryDocumentSnapshot.id
-              );
 
-              return getRemindersByIds(userDoc.id, plannedReminderIds, recurringReminderIds, false);
-            });
-        })
-    );
-  });
-  return Promise.all(promises);
+          return getRemindersByIds(
+            userDoc.id,
+            plannedReminderIds,
+            recurringReminderIds,
+            false
+          ).then((reminders) => {
+            return reminders;
+          });
+        });
+    });
+
+  return promise;
 };
 
 // Helper for getSubscribedPackages. Returns packageReminderIds for given user
@@ -226,34 +231,27 @@ exports.getAll = (req, res) => {
       let reminders = [];
 
       querySnapshot.forEach((queryDocumentSnapshot) => {
-        queryDocumentSnapshot.ref
-          .collection("reminders")
-          .get()
-          .then((querySnapshot) => {
-            getAllReminders(querySnapshot)
-              .then((results) => {
-                reminders = [].concat.apply([], results);
+        getAllReminders(queryDocumentSnapshot)
+          .then((results) => {
+            reminders = [].concat.apply([], results);
 
-                getSubscribed(req.query.uid)
-                  .then((allSubscribedReminders) => {
-                    const allReminders = reminders.concat(allSubscribedReminders);
+            getSubscribed(req.query.uid)
+              .then((allSubscribedReminders) => {
+                const allReminders = reminders.concat(allSubscribedReminders);
 
-                    res.send(allReminders);
-                    return res.status(200).send({
-                      message: "Successfully retrieved all local and subscribed reminders",
-                    });
-                  })
-                  .catch((error) => {
-                    return res
-                      .status(404)
-                      .send({ message: `Error retrieving subscribed reminders. ${error}` });
-                  });
+                res.send(allReminders);
+                return res.status(200).send({
+                  message: "Successfully retrieved all local and subscribed reminders",
+                });
               })
               .catch((error) => {
                 return res
                   .status(404)
-                  .send({ message: `Error retrieving user reminders. ${error}` });
+                  .send({ message: `Error retrieving subscribed reminders. ${error}` });
               });
+          })
+          .catch((error) => {
+            return res.status(404).send({ message: `Error retrieving user reminders. ${error}` });
           });
       });
     })
