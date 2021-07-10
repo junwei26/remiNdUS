@@ -373,7 +373,9 @@ exports.range = (req, res) => {
   }
 
   const plannedRangeQuery = (collectionReference) => {
-    return collectionReference.where("endDateTime", "<=", req.query.endDateTime);
+    return collectionReference
+      .where("endDateTime", ">=", req.query.currentDateTime)
+      .where("endDateTime", "<=", req.query.endDateTime);
   };
 
   db.collection("users")
