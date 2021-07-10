@@ -62,24 +62,26 @@ exports.getAll = (req, res) => {
 };
 
 exports.getPublicPackages = (req, res) => {
-  let publicPackages = [];
   let promises = [];
   db.collection("users")
     .get()
     .then((querySnapshot) => {
-      let userQueryDocSnapshotArr = querySnapshot.docs;
-      for (let i = 0; i < userQueryDocSnapshotArr.length; ++i) {
+      const userDocArray = querySnapshot.docs.map(
+        (queryDocumentSnapshot) => queryDocumentSnapshot.ref
+      );
+      for (let i = 0; i < userDocArray.length; ++i) {
         promises.push(
-          userQueryDocSnapshotArr[i].ref
+          userDocArray[i]
             .collection("reminderPackages")
             .where("public", "==", true)
             .get()
             .then((querySnapshot) => {
-              Promise.all(
-                querySnapshot.docs.map((queryDocumentSnapshot) =>
-                  publicPackages.push(queryDocumentSnapshot.data())
-                )
-              );
+              return querySnapshot.docs.map((queryDocumentSnapshot) => {
+                return {
+                  ...queryDocumentSnapshot.data(),
+                  reminderPackageId: queryDocumentSnapshot.id,
+                };
+              });
             })
             .catch((error) => {
               return res.status(400).send({ message: `Error retrieving user details. ${error}` });
@@ -87,7 +89,8 @@ exports.getPublicPackages = (req, res) => {
         );
       }
 
-      Promise.all(promises).then(() => {
+      Promise.all(promises).then((publicPackagesArray) => {
+        const publicPackages = [].concat.apply([], publicPackagesArray);
         res.send(publicPackages);
         return res.status(200).send({ message: "Public reminder packages successfully retrieved" });
       });
@@ -205,13 +208,13 @@ exports.subscribe = (req, res) => {
   if (!req.body.uid) {
     return res.status(400).send({ message: "You must be logged in to make this operation!" });
   }
-  if (!req.body.userUids || req.body.userUids.length === 0) {
+  if (!req.body.ownerUids || req.body.ownerUids.length === 0) {
     return res.status(400).send({ message: "Reminder packages must have accompanying user IDs!" });
   }
   if (!req.body.reminderPackageIds || req.body.reminderPackageIds.length === 0) {
     return res.status(400).send({ message: "Reminder packages must have reminder package IDs!" });
   }
-  if (req.body.userUids.length != req.body.reminderPackageIds.length) {
+  if (req.body.ownerUids.length != req.body.reminderPackageIds.length) {
     return res.status(400).send({
       message: "Unequal number of user IDs and reminder package IDs!",
     });
@@ -226,10 +229,10 @@ exports.subscribe = (req, res) => {
         let promises = [];
 
         let collection = queryDocumentSnapshot.ref.collection("subscribedPackages");
-        for (let i = 0; i < req.body.userUids.length; ++i) {
+        for (let i = 0; i < req.body.ownerUids.length; ++i) {
           promises.push(
             collection
-              .where("userUid", "==", req.body.userUids[i])
+              .where("ownerUid", "==", req.body.ownerUids[i])
               .where("reminderPackageId", "==", req.body.reminderPackageIds[i])
               .get()
               .then((querySnapshot) => {
@@ -238,7 +241,7 @@ exports.subscribe = (req, res) => {
                   ? Promise.resolve(0)
                   : Promise.all(
                       collection.add({
-                        userUid: req.body.userUids[i],
+                        ownerUid: req.body.ownerUids[i],
                         reminderPackageId: req.body.reminderPackageIds[i],
                       })
                     );

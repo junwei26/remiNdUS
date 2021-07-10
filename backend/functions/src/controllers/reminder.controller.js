@@ -127,7 +127,6 @@ const getPackageReminderIds = (uid, reminderPackageId) => {
         throw "No user found. Please contact the administrator";
       }
 
-      let reminderIds = [];
       let promises = [];
 
       querySnapshot.forEach((queryDocumentSnapshot) => {
@@ -145,11 +144,10 @@ const getPackageReminderIds = (uid, reminderPackageId) => {
         );
       });
 
-      return Promise.all(promises).then((values) => {
-        reminderIds = [].concat.apply([], values);
+      return Promise.all(promises).then((reminderIdsArray) => {
         let plannedReminderIds = [];
         let recurringReminderIds = [];
-        reminderIds.map((packageReminderIds) => {
+        reminderIdsArray.map((packageReminderIds) => {
           plannedReminderIds = plannedReminderIds.concat(packageReminderIds.plannedReminderIds);
           recurringReminderIds = recurringReminderIds.concat(
             packageReminderIds.recurringReminderIds
@@ -188,20 +186,22 @@ const getSubscribed = (
           .collection("subscribedPackages")
           .get()
           .then((querySnapshot) => {
-            subscribedPackages = querySnapshot.docs;
+            subscribedPackages = querySnapshot.docs.map((queryDocumentSnapshot) =>
+              queryDocumentSnapshot.data()
+            );
 
             let allSubscribedReminders = [];
             let promises = [];
 
             for (let i = 0; i < subscribedPackages.length; ++i) {
-              const subscribedPackage = subscribedPackages[i].data();
+              const subscribedPackage = subscribedPackages[i];
               promises.push(
                 getPackageReminderIds(
-                  subscribedPackage.userUid,
+                  subscribedPackage.ownerUid,
                   subscribedPackage.reminderPackageId
                 ).then((reminderIds) => {
                   return getRemindersByIds(
-                    subscribedPackage.userUid,
+                    subscribedPackage.ownerUid,
                     reminderIds.plannedReminderIds,
                     reminderIds.recurringReminderIds,
                     true

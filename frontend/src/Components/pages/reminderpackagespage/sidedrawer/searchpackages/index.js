@@ -135,15 +135,15 @@ const SearchPackages = () => {
 
   const handlePackageSubscription = (e) => {
     e.preventDefault();
-    const userUids = [];
+    const ownerUids = [];
     const reminderPackageIds = [];
     for (let i = 0; i < selectedRows.length; ++i) {
-      userUids.push(selectedRows[i].ownerUid);
+      ownerUids.push(selectedRows[i].ownerUid);
       reminderPackageIds.push(selectedRows[i].reminderPackageId);
     }
 
     reminderPackageService
-      .subscribeReminderPackages(userUids, reminderPackageIds)
+      .subscribeReminderPackages(ownerUids, reminderPackageIds)
       .then(() => {
         alert("Successfully subscribed to reminder packages");
       })
