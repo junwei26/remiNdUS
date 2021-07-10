@@ -6,19 +6,12 @@ import { Typography, ButtonGroup, Button, Grid } from "@material-ui/core";
 import Paper from "@material-ui/core/Paper";
 import { makeStyles } from "@material-ui/core/styles";
 import reminderService from "../../services/reminderService";
+import localService from "../../services/localService";
 
 const useStyles = makeStyles(() => ({
   root: { height: 400, width: 250, overflow: "auto" },
   buttongroup: { height: 50, width: 250 },
 }));
-
-const parseTime = (dateString) => {
-  return (
-    [dateString.slice(6, 8), dateString.slice(4, 6), dateString.slice(0, 4)].join("/") +
-    "  " +
-    [dateString.slice(8, 10), dateString.slice(10, 12)].join(":")
-  );
-};
 
 const ReminderList = () => {
   const [reminders, setReminders] = useState([]);
@@ -44,32 +37,57 @@ const ReminderList = () => {
           color="primary"
           aria-label="outlined primary button group"
         >
-          <Button
-            onClick={() => {
-              setNextNumberOfDays(7);
-            }}
-          >
-            Next 7 days
-          </Button>
-          <Button
-            onClick={() => {
-              setNextNumberOfDays(30);
-            }}
-          >
-            Next 30 days
-          </Button>
+          {nextNumberOfDays === 7 ? (
+            <Button
+              variant="contained"
+              onClick={() => {
+                setNextNumberOfDays(7);
+              }}
+            >
+              Next 7 days
+            </Button>
+          ) : (
+            <Button
+              onClick={() => {
+                setNextNumberOfDays(7);
+              }}
+            >
+              Next 7 days
+            </Button>
+          )}
+          {nextNumberOfDays === 30 ? (
+            <Button
+              variant="contained"
+              onClick={() => {
+                setNextNumberOfDays(30);
+              }}
+            >
+              Next 30 days
+            </Button>
+          ) : (
+            <Button
+              onClick={() => {
+                setNextNumberOfDays(30);
+              }}
+            >
+              Next 30 days
+            </Button>
+          )}
         </ButtonGroup>
       </Grid>
       <Grid item>
         <Paper fullWidth className={classes.root}>
           <List>
             {reminders.map((reminder) => {
-              const reminderDisplayText = parseTime(reminder.dateTime) + "  " + reminder.name;
-              return (
-                <ListItem key={reminder.reminderId} divider={true}>
-                  <ListItemText primary={reminderDisplayText} />
-                </ListItem>
-              );
+              if (reminder.reminderType === "planned") {
+                const reminderDisplayText =
+                  localService.parseTime(reminder.endDateTime) + "  " + reminder.name;
+                return (
+                  <ListItem key={reminder.reminderId} divider={true}>
+                    <ListItemText primary={reminderDisplayText} />
+                  </ListItem>
+                );
+              }
             })}
           </List>
         </Paper>
