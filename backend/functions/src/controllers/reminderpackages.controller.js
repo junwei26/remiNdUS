@@ -10,6 +10,51 @@ const convertDateToString = (date) => {
     .padStart(2, "0")}${date.getMinutes().toString().padStart(2, "0")}`;
 };
 
+const getSubscribedPackages = (userDoc) => {
+  return userDoc
+    .collection("subscribedPackages")
+    .get()
+    .then((querySnapshot) => {
+      let promises = [];
+
+      querySnapshot.forEach((queryDocumentSnapshot) => {
+        const subscribedPackage = queryDocumentSnapshot.data();
+
+        promises.push(
+          db
+            .collection("users")
+            .where("uid", "==", subscribedPackage.ownerUid)
+            .limit(1)
+            .get()
+            .then((querySnapshot) => {
+              if (querySnapshot.empty) {
+                throw "No user found. Please contact the administrator";
+              }
+
+              const userDoc = querySnapshot.docs[0].ref;
+              return userDoc
+                .collection("reminderPackages")
+                .doc(subscribedPackage.reminderPackageId)
+                .get()
+                .then((reminderPackageDocumentSnapshot) => {
+                  return {
+                    ...reminderPackageDocumentSnapshot.data(),
+                    subscribed: true,
+                  };
+                });
+            })
+        );
+      });
+
+      return Promise.all(promises).then((reminderPackagesArray) => {
+        return reminderPackagesArray;
+      });
+    })
+    .catch((error) => {
+      throw `Subscribed packages could not be received. ${error}`;
+    });
+};
+
 exports.getAll = (req, res) => {
   if (!req.query.uid) {
     return res.status(400).send({ message: "You must be logged in to make this operation!" });
@@ -19,40 +64,47 @@ exports.getAll = (req, res) => {
     .where("uid", "==", req.query.uid)
     .limit(1)
     .get()
-    .then((data) => {
-      if (data.empty) {
+    .then((querySnapshot) => {
+      if (querySnapshot.empty) {
         return res.status(404).send({ message: "No user found. Please contact the administrator" });
       }
+
+      const userDoc = querySnapshot.docs[0].ref;
 
       let packageList = [];
 
       // Actually only one doc (one user)
-      data.forEach((doc) => {
-        doc.ref
-          .collection("reminderPackages")
-          .get()
-          .then((data) => {
-            if (data.empty) {
-              res.send([]);
-              return res.status(200).send({ message: "No Reminder Packages found." });
-            }
+      userDoc
+        .collection("reminderPackages")
+        .get()
+        .then((querySnapshot) => {
+          if (querySnapshot.empty) {
+            res.send([]);
+            return res.status(200).send({ message: "No Reminder Packages found." });
+          }
 
-            // For each reminder package, send its uid as well (doc.id)
-            data.forEach((doc) => {
-              packageList.push({ ...doc.data(), reminderPackageId: doc.id });
+          // For each reminder package, send its uid as well (doc.id)
+          querySnapshot.forEach((queryDocumentSnapshot) => {
+            packageList.push({
+              ...queryDocumentSnapshot.data(),
+              reminderPackageId: queryDocumentSnapshot.id,
             });
+          });
 
-            res.send(packageList);
+          getSubscribedPackages(userDoc).then((subscribedPackages) => {
+            const fullPackageList = packageList.concat(subscribedPackages);
+
+            res.send(fullPackageList);
             return res.status(200).send({
               message: "Reminder packages successfully retrieved!",
             });
-          })
-          .catch((error) => {
-            return res.status(400).send({
-              message: `Error retrieving reminder packages. ${error}`,
-            });
           });
-      });
+        })
+        .catch((error) => {
+          return res.status(400).send({
+            message: `Error retrieving reminder packages. ${error}`,
+          });
+        });
     })
     .catch((error) => {
       return res.status(400).send({

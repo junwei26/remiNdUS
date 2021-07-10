@@ -228,6 +228,9 @@ const SubscribedPackages = () => {
                 }}
                 onSelectionModelChange={handleDataGridSelectionChange}
                 selectionModel={selectionModel}
+                isRowSelectable={(params) => {
+                  return !params.getValue(params.id, "subscribed");
+                }}
                 style={{ overflowX: "auto" }}
                 components={{ Toolbar: GridToolbar }}
               />
