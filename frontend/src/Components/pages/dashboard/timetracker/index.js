@@ -68,7 +68,8 @@ const TimeTracker = () => {
         parseTime(currentActivity.endDateTime).toLocaleString(),
         currentActivity.name,
         currentActivity.description + `  (Time spent on activity : ${formatTime()})`,
-        currentActivity.activityId
+        currentActivity.activityId,
+        currentActivity.tag
       )
       .then(() => {
         setTimer(0);

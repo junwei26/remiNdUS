@@ -26,7 +26,7 @@ const useStyles = makeStyles(() => ({
 
 const ActivitySelectorPopup = (props) => {
   const classes = useStyles();
-  const [activity, setActivity] = useState("hi");
+  const [activity, setActivity] = useState("");
   const [activities, setActivities] = useState([]);
 
   useEffect(() => {
