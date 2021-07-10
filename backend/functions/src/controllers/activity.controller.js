@@ -439,22 +439,19 @@ exports.update = (req, res) => {
   if (!req.body.uid) {
     return res.status(400).send({ message: "You must be logged in to make this operation!" });
   }
-  if (!req.body.activityId) {
-    return res.status(400).send({ message: "Missing Activity ID!" });
-  }
   if (!req.body.templateActivityId) {
     return res.status(400).send({ message: "Missing Activity Template ID!" });
   }
-  if (!req.body.name) {
-    return res.status(400).send({ message: "Activities must have a name!" });
+  if (!req.body.activityId) {
+    return res.status(400).send({ message: "Missing Activity ID!" });
   }
-  if (!req.body.description) {
-    return res.status(400).send({ message: "Activities must have a description!" });
+  if (!req.body.activityCollection) {
+    return res.status(400).send({ message: "Activity must have activity collection" });
   }
-  if (!req.body.defaultLength) {
-    return res.status(400).send({ message: "Activities must have a default length" });
-  }
-  if (!req.body.frequency) {
+
+  let updatedActivity = null;
+
+  if (req.body.activityCollection === "plannedActivities") {
     if (!req.body.startDateTime) {
       return res.status(400).send({ message: "Planned Activity must have a start date and time" });
     }
@@ -466,7 +463,14 @@ exports.update = (req, res) => {
         .status(400)
         .send({ message: "Activity start time must be before activity end time!" });
     }
-  } else {
+
+    updatedActivity = {
+      templateActivityId: req.body.templateActivityId,
+      startDateTime: req.body.startDateTime,
+      endDateTime: req.body.endDateTime,
+      active: req.body.active,
+    };
+  } else if (req.body.activityCollection === "recurringActivities") {
     if (!req.body.startTime) {
       return res.status(400).send({ message: "Recurring activity must have a start time" });
     }
@@ -476,70 +480,95 @@ exports.update = (req, res) => {
     if (!req.body.date) {
       return res.status(400).send({ message: "Recurring activity must have a date" });
     }
+    if (!req.body.frequency) {
+      return res.status(400).send({ message: "Recurring activity must have a frequency" });
+    }
+
+    updatedActivity = {
+      templateActivityId: req.body.templateActivityId,
+      frequency: req.body.frequency,
+      startTime: req.body.startTime,
+      endTime: req.body.endTime,
+      date: req.body.date,
+      active: req.body.active,
+    };
   }
 
-  const updatedTemplateActivity = {
-    name: req.body.name,
-    description: req.body.name,
-    defaultLength: req.body.defaultLength,
-  };
+  const promises = [];
 
-  db.collection("users")
-    .doc(req.body.uid)
-    .collection("templateActivities")
-    .doc(req.body.templateActivityId)
-    .update(updatedTemplateActivity)
+  if (req.body.updateTemplate) {
+    if (!req.body.name) {
+      return res.status(400).send({ message: "Template activity must have a name!" });
+    }
+    if (!req.body.description) {
+      return res.status(400).send({ message: "Template activity must have a description!" });
+    }
+    if (!req.body.activityTag) {
+      return res.status(400).send({ message: "Template activity must have an activity tag" });
+    }
+
+    const updatedTemplateActivity = {
+      name: req.body.name,
+      description: req.body.description,
+      activityTag: req.body.activityTag,
+      eventType: "1",
+    };
+
+    promises.push(
+      db
+        .collection("users")
+        .where("uid", "==", req.body.uid)
+        .limit(1)
+        .get()
+        .then((querySnapshot) => {
+          querySnapshot.forEach((queryDocumentSnapshot) => {
+            queryDocumentSnapshot.ref
+              .collection("templateActivities")
+              .doc(req.body.templateActivityId)
+              .update(updatedTemplateActivity);
+          });
+        })
+    );
+  }
+
+  promises.push(
+    db
+      .collection("users")
+      .where("uid", "==", req.body.uid)
+      .limit(1)
+      .get()
+      .then((querySnapshot) =>
+        querySnapshot.forEach((queryDocumentSnapshot) => {
+          queryDocumentSnapshot.ref
+            .collection(req.body.activityCollection)
+            .doc(req.body.activityId)
+            .update(updatedActivity);
+        })
+      )
+  );
+
+  Promise.all(promises)
     .then(() => {
-      if (!req.body.frequency) {
-        const updatedPlannedActivity = {
-          startDateTime: req.body.startDateTime,
-          endDateTime: req.body.endDateTime,
-          active: req.body.active,
-        };
-
-        db.collection("users")
-          .doc(req.body.uid)
-          .collection("plannedActivities")
-          .doc(req.body.activityId)
-          .update(updatedPlannedActivity)
-          .then(() => {
-            return res.status(200).send({ message: "Successfully updated planned activity!" });
-          });
-      } else {
-        const updatedRecurringActivity = {
-          startTime: req.body.startTime,
-          endTime: req.body.endTime,
-          date: req.body.date,
-        };
-
-        db.collection("users")
-          .doc(req.body.uid)
-          .collection("recurringActivities")
-          .doc(req.body.activityId)
-          .update(updatedRecurringActivity)
-          .then(() => {
-            return res.status(200).send({ message: "Successfully updated recurring activity!" });
-          });
-      }
+      return res.status(200).send({ message: "Successfully updated reminder!" });
     })
     .catch((error) => {
-      return res.status(400).send({ message: `Error updating activity. ${error}` });
+      return res.status(404).send({ message: `Error updating reminder. ${error}` });
     });
 };
 
 exports.delete = (req, res) => {
-  if (!req.query.uid) {
+  if (!req.body.uid) {
     return res.status(400).send({ message: "You must be logged in to make this operation!" });
   }
-  if (!req.query.activityId) {
-    return res.status(400).send({ message: "You must be logged in to make this operation!" });
+  if (!req.body.activityId) {
+    return res.status(400).send({ message: "Activity must have an activity ID!" });
   }
   if (!req.body.activityCollection) {
     return res.status(400).send({ message: "Missing activity collection!" });
   }
 
   db.collection("users")
-    .where("uid", "==", req.query.uid)
+    .where("uid", "==", req.body.uid)
     .limit(1)
     .get()
     .then((querySnapshot) => {
@@ -549,8 +578,8 @@ exports.delete = (req, res) => {
 
       querySnapshot.forEach((queryDocumentSnapshot) => {
         queryDocumentSnapshot.ref
-          .collection(req.query.activityCollection)
-          .doc(req.query.activityId)
+          .collection(req.body.activityCollection)
+          .doc(req.body.activityId)
           .delete()
           .then(() => {
             return res.status(200).send({ message: "Activity successfully deleted." });

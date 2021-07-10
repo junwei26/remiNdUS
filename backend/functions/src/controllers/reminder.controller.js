@@ -620,7 +620,7 @@ exports.update = (req, res) => {
     };
   }
 
-  let promises = [];
+  const promises = [];
 
   if (req.body.updateTemplate) {
     if (!req.body.name) {
@@ -673,14 +673,15 @@ exports.update = (req, res) => {
             .update(updatedReminder);
         })
       )
-      .catch((error) => {
-        return res.status(404).send({ message: `Error updating reminder. ${error}` });
-      })
   );
 
-  Promise.all(promises).then(() => {
-    return res.status(200).send({ message: "Successfully updated reminder!" });
-  });
+  Promise.all(promises)
+    .then(() => {
+      return res.status(200).send({ message: "Successfully updated reminder!" });
+    })
+    .catch((error) => {
+      return res.status(404).send({ message: `Error updating reminder. ${error}` });
+    });
 };
 
 exports.delete = (req, res) => {
