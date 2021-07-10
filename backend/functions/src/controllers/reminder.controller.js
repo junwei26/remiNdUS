@@ -576,20 +576,21 @@ exports.create = (req, res) => {
 };
 
 exports.update = (req, res) => {
-  let updatedReminder = {};
-
   if (!req.body.uid) {
     return res.status(400).send({ message: "You must be logged in to make this operation!" });
-  }
-  if (!req.body.active) {
-    return res.status(400).send({ message: "Reminder must have an active setting" });
-  }
-  if (!req.body.reminderId) {
-    return res.status(400).send({ message: "Reminder must have an Id!" });
   }
   if (!req.body.templateReminderId) {
     return res.status(400).send({ message: "Base/template reminder not specified!" });
   }
+  if (!req.body.reminderId) {
+    return res.status(400).send({ message: "Reminder must have an Id!" });
+  }
+  if (!req.body.reminderCollection) {
+    return res.status(400).send({ message: "Reminder must have a reminder collection!" });
+  }
+
+  let updatedReminder = null;
+
   if (req.body.reminderCollection === "plannedReminders") {
     if (!req.body.endDateTime) {
       return res.status(400).send({ message: "Planned reminder must have an end date and time" });
@@ -617,7 +618,11 @@ exports.update = (req, res) => {
       date: req.body.date,
       active: req.body.active,
     };
-  } else if (req.body.reminderCollection === "templateReminders") {
+  }
+
+  let promises = [];
+
+  if (req.body.updateTemplate) {
     if (!req.body.name) {
       return res.status(400).send({ message: "Template reminder must have a name!" });
     }
@@ -630,44 +635,67 @@ exports.update = (req, res) => {
         .send({ message: "Template reminder must have an associated default length!" });
     }
 
-    updatedReminder = {
+    const updatedTemplateReminder = {
       name: req.body.name,
       description: req.body.description,
       defaultLength: req.body.defaultLength,
       eventType: "2",
     };
+
+    promises.push(
+      db
+        .collection("users")
+        .where("uid", "==", req.body.uid)
+        .limit(1)
+        .get()
+        .then((querySnapshot) => {
+          querySnapshot.forEach((queryDocumentSnapshot) => {
+            queryDocumentSnapshot.ref
+              .collection("templateReminders")
+              .doc(req.body.templateReminderId)
+              .update(updatedTemplateReminder);
+          });
+        })
+    );
+  }
+
+  promises.push(
+    db
+      .collection("users")
+      .where("uid", "==", req.body.uid)
+      .limit(1)
+      .get()
+      .then((querySnapshot) =>
+        querySnapshot.forEach((queryDocumentSnapshot) => {
+          queryDocumentSnapshot.ref
+            .collection(req.body.reminderCollection)
+            .doc(req.body.reminderId)
+            .update(updatedReminder);
+        })
+      )
+      .catch((error) => {
+        return res.status(404).send({ message: `Error updating reminder. ${error}` });
+      })
+  );
+
+  Promise.all(promises).then(() => {
+    return res.status(200).send({ message: "Successfully updated reminder!" });
+  });
+};
+
+exports.delete = (req, res) => {
+  if (!req.body.uid) {
+    return res.status(400).send({ message: "You must be logged in to make this operation!" });
+  }
+  if (!req.body.reminderId) {
+    return res.status(400).send({ message: "Reminder must have a reminder ID!" });
+  }
+  if (!req.body.reminderCollection) {
+    return res.status(400).send({ message: "Reminder must have a reminder collection!" });
   }
 
   db.collection("users")
     .where("uid", "==", req.body.uid)
-    .limit(1)
-    .get()
-    .then((querySnapshot) =>
-      querySnapshot.forEach((queryDocumentSnapshot) =>
-        queryDocumentSnapshot.ref
-          .collection(req.body.reminderCollection)
-          .doc(req.body.reminderId)
-          .update(updatedReminder)
-          .then(() => {
-            return res.status(200).send({ message: "Successfully updated reminder!" });
-          })
-      )
-    )
-    .catch((error) => {
-      return res.status(404).send({ message: `Error updating reminder. ${error}` });
-    });
-};
-
-exports.delete = (req, res) => {
-  if (!req.query.uid) {
-    return res.status(400).send({ message: "You must be logged in to make this operation!" });
-  }
-  if (!req.query.reminderId) {
-    return res.status(400).send({ message: "Reminder must have a reminder ID!" });
-  }
-
-  db.collection("users")
-    .where("uid", "==", req.query.uid)
     .limit(1)
     .get()
     .then((querySnapshot) => {
@@ -676,8 +704,8 @@ exports.delete = (req, res) => {
       }
       querySnapshot.forEach((queryDocumentSnapshot) => {
         queryDocumentSnapshot.ref
-          .collection("reminders")
-          .doc(req.query.reminderId)
+          .collection(req.body.reminderCollection)
+          .doc(req.body.reminderId)
           .delete()
           .then(() => {
             return res.status(200).send({ message: "Successfully deleted reminder!" });
