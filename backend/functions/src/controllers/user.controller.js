@@ -13,6 +13,7 @@ exports.create = (req, res) => {
     username: req.body.username,
     verified: false,
     telegramHandle: req.body.telegramHandle,
+    telegramChatId: "",
     telegramSendReminders: false,
     telegramReminderTiming: "0800",
     tags: [],
@@ -248,7 +249,7 @@ exports.getTelegramReminderUsers = (req, res) => {
         return res.status(400).send({ message: "Is empty" });
       } else {
         data.forEach((doc) => {
-          telegramHandles.push(doc.get("telegramHandle"));
+          telegramHandles.push(doc.get("telegramChatId"));
         });
       }
       res.send(telegramHandles);
@@ -263,4 +264,18 @@ exports.addTag = (req, res) => {
       tags: admin.firestore.FieldValue.arrayUnion(req.body.tag),
     })
     .then(() => res.status(200).send({ message: "Tag added successfully" }));
+};
+
+exports.setChatId = (req, res) => {
+  db.collection("users")
+    .where("telegramHandle", "==", req.body.telegramHandle)
+    .limit(1)
+    .get()
+    .then((querySnapshot) => {
+      querySnapshot.forEach((doc) => {
+        db.collection("users").doc(doc.id).update({ telegramChatId: req.body.chatId });
+      });
+      return res.status(200).send({ message: "Chat Id successfully recorded" });
+    })
+    .catch(() => res.status(400).send({ message: "Chat Id not recorded" }));
 };

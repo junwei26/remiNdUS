@@ -154,8 +154,8 @@ bot.command("/retrieve", async (ctx) => {
     const year = date.getFullYear().toString();
     const month = padZero(date.getMonth() + 1);
     const day = padZero(date.getDate());
-    const hour = padZero(date.getHours());
-    const min = padZero(date.getMinutes());
+    const hour = "00";
+    const min = "00";
     return year + month + day + hour + min;
   };
 
@@ -192,55 +192,33 @@ bot.command("/retrieve", async (ctx) => {
             (reminder) => ` ${reminder.name} : ${reminder.dateTime.slice(8, 12)}`
           );
           ctx.reply(
-            "Here are today's activities.\n" +
+            "Here are your activities for today.\n" +
               activityArr.join("\n") +
-              "\n Today's reminders.\n" +
+              "\n Here are your reminders for today.\n" +
               reminderArr.join("\n")
           );
-        });
-    });
+        })
+        .catch(() => ctx.reply("Error retrieving reminders from database."));
+    })
+    .catch(() => ctx.reply("Error retrieving activities from database."));
+});
+
+bot.command("/initialize", async (ctx) => {
+  ctx.reply("Connecting with remiNdUS website....");
+  const user = await bot.telegram.getChat(ctx.chat.id);
+  axios
+    .post(backendURL + "/user/setChatId", {
+      telegramHandle: user.username,
+      chatId: ctx.chat.id,
+    })
+    .then(() => ctx.reply("Successfully Connected!"))
+    .catch(() => ctx.reply("Error connecting to website"));
 });
 
 bot.command("/help", (ctx) => {
   ctx.reply(
-    "List of commands:\n /addReminder  Adds a reminder to your planner\n /addActivity Adds an activity to your planner\n"
+    "Please do /initialize to connect the telegram bot to our website!\nList of commands:\n /addReminder  Adds a reminder to your planner\n /addActivity Adds an activity to your planner\n /retrieve Retrieves your activities and reminders for the day"
   );
-});
-
-bot.command("/sendAll", async (ctx) => {
-  () => {
-    const getTelegramReminderUsersUrl =
-      "https://asia-southeast2-remindus-76402.cloudfunctions.net/backendAPI/api/user/getTelegramReminderUsers";
-
-    let telegramHandles = [];
-
-    axios
-      .get(getTelegramReminderUsersUrl)
-      .then((response) => {
-        telegramHandles = response.data;
-
-        const updateURL =
-          "https://asia-southeast2-remindus-76402.cloudfunctions.net/backendAPI/api/user/updateTest";
-
-        for (let i = 0; i < telegramHandles.length; ++i) {
-          const updatedTest = {
-            telegramHandle: telegramHandles[i],
-            test: new Date(),
-          };
-          axios
-            .post(updateURL, updatedTest)
-            .then(() => {
-              ctx.reply(`Updated test to current date on firestore for user ${telegramHandles[i]}`);
-            })
-            .catch((error) => {
-              ctx.reply(
-                `Error encountered updating test. Error status code: ${error.response.status}. ${error.response.data.message}`
-              );
-            });
-        }
-      })
-      .catch(() => {});
-  };
 });
 
 // handle all telegram updates with HTTPs trigger
