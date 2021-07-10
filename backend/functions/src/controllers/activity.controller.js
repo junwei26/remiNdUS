@@ -261,6 +261,8 @@ exports.getByTelegram = (req, res) => {
       data.forEach((doc) => {
         doc.ref
           .collection("activities")
+          .where("startDateTime", ">=", req.query.currentDateTime)
+          .where("startDateTime", "<=", req.query.endDateTime)
           .get()
           .then((querySnapshot) => {
             querySnapshot.forEach((activity) => {
@@ -273,5 +275,64 @@ exports.getByTelegram = (req, res) => {
     })
     .catch((error) => {
       return res.status(400).send({ message: `Error deleting activity ${error}` });
+    });
+};
+
+exports.createByTelegram = (req, res) => {
+  if (!req.body.name) {
+    return res.status(400).send({ message: "Activity must have a name!" });
+  }
+  if (!req.body.description) {
+    return res.status(400).send({ message: "Activity must have a description!" });
+  }
+  if (!req.body.startDateTime) {
+    return res.status(400).send({ message: "Activity must have a start time!" });
+  }
+  if (!req.body.endDateTime) {
+    return res.status(400).send({ message: "Activity must have an end time!" });
+  }
+  if (req.body.endDateTime <= req.body.startDateTime) {
+    return res
+      .status(400)
+      .send({ message: "Activity start time must be before activity end time!" });
+  }
+
+  const activity = {
+    name: req.body.name,
+    description: req.body.description,
+    startDateTime: req.body.startDateTime,
+    endDateTime: req.body.endDateTime,
+    eventType: "1",
+    tag: req.body.tag,
+  };
+  db.collection("users")
+    .where("telegramHandle", "==", req.body.telegramHandle)
+    .limit(1)
+    .get()
+    .then((data) => {
+      data.forEach((doc) =>
+        db
+          .collection("users")
+          .doc(doc.id)
+          .collection("activities")
+          .doc()
+          .set(activity)
+          .then(() => {
+            db.collection("users")
+              .doc(doc.id)
+              .update({
+                tags: admin.firestore.FieldValue.arrayUnion(req.body.tag),
+              })
+              .then(() => res.status(200).send({ message: "Activity created successfully!" }));
+          })
+          .catch((error) => {
+            return res.status(400).send({ message: `Error creating activity. ${error}` });
+          })
+      );
+    })
+    .catch((error) => {
+      return res
+        .status(400)
+        .send({ message: `Error getting user database when creating activity. ${error}` });
     });
 };
