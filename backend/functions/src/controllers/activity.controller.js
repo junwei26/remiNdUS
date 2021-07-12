@@ -309,7 +309,7 @@ exports.create = (req, res) => {
     if (!req.body.description) {
       return res.status(400).send({ message: "Activities must have a description!" });
     }
-    if (!req.body.activtiyTag) {
+    if (!req.body.activityTag) {
       return res.status(400).send({ message: "Activities must have an activity tag" });
     }
 
@@ -592,7 +592,7 @@ exports.createByTelegram = (req, res) => {
   if (!req.body.description) {
     return res.status(400).send({ message: "Activity must have a description!" });
   }
-  if (!req.body.tag) {
+  if (!req.body.activityTag) {
     return res.status(400).send({ message: "Activity must have an activity tag!" });
   }
   if (!req.body.startDateTime) {
@@ -615,7 +615,7 @@ exports.createByTelegram = (req, res) => {
       querySnapshot.forEach((queryDocumentSnapshot) => {
         const userDoc = queryDocumentSnapshot.ref;
 
-        createTemplate(userDoc.id, req.body.name, req.body.description, "02:00", req.body.tag)
+        createTemplate(userDoc.id, req.body.name, req.body.description, req.body.activityTag)
           .then((templateActivityDoc) => {
             createPlannedActivity(
               userDoc.id,
@@ -626,7 +626,7 @@ exports.createByTelegram = (req, res) => {
             )
               .then(() => {
                 userDoc.update({
-                  tags: admin.firestore.FieldValue.arrayUnion(req.body.tag),
+                  tags: admin.firestore.FieldValue.arrayUnion(req.body.activityTag),
                 });
                 return res.status(200).send({ message: "Planned activity created successfully!" });
               })

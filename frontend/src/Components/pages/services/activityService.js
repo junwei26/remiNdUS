@@ -15,7 +15,7 @@ const getTemplateActivities = () => {
   });
 };
 
-const updateActivity = (startDateTime, endDateTime, name, description, activityId, tag) => {
+const updateActivity = (startDateTime, endDateTime, name, description, activityId, activityTag) => {
   return axios.post(ACTIVITY_API_URL + "/update", {
     uid: firebaseAuth.currentUser.uid,
     startDateTime,
@@ -23,7 +23,7 @@ const updateActivity = (startDateTime, endDateTime, name, description, activityI
     name,
     description,
     activityId,
-    tag,
+    activityTag,
   });
 };
 
@@ -36,6 +36,7 @@ const deleteActivity = (activityId) => {
 const addPlannedActivity = (
   startDateTime,
   endDateTime,
+  activityTag,
   name = null,
   description = null,
   templateActivityId = null
@@ -47,6 +48,7 @@ const addPlannedActivity = (
     startDateTime,
     endDateTime,
     templateActivityId,
+    activityTag,
   });
 };
 
@@ -55,6 +57,7 @@ const addRecurringActivity = (
   startTime,
   endTime,
   date,
+  activityTag,
   name = null,
   description = null,
   templateActivityId = null
@@ -68,6 +71,7 @@ const addRecurringActivity = (
     endTime,
     date,
     templateActivityId,
+    activityTag,
   });
 };
 

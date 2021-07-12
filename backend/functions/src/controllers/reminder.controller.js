@@ -753,7 +753,7 @@ exports.createByTelegram = (req, res) => {
       querySnapshot.forEach((queryDocumentSnapshot) => {
         const userDoc = queryDocumentSnapshot.ref;
 
-        createTemplate(userDoc.id, req.body.name, req.body.description, "02:00")
+        createTemplate(userDoc.id, req.body.name, req.body.description)
           .then((templateReminderDoc) => {
             createPlannedReminder(userDoc.id, templateReminderDoc.id, req.body.endDateTime, true)
               .then(() => {

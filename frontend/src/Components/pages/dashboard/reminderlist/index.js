@@ -76,7 +76,7 @@ const ReminderList = () => {
         </ButtonGroup>
       </Grid>
       <Grid item>
-        <Paper fullWidth className={classes.root}>
+        <Paper className={classes.root}>
           <List>
             {reminders
               .filter((reminder) => reminder.reminderType === "planned")

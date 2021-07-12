@@ -21,6 +21,7 @@ import DateFnsUtils from "@date-io/date-fns";
 import { MuiPickersUtilsProvider, DateTimePicker, TimePicker } from "@material-ui/pickers";
 import activityService from "../../services/activityService";
 import localService from "../../services/localService";
+import userService from "../../services/userService";
 
 const useStyles = makeStyles(() => ({
   card: {
@@ -48,13 +49,24 @@ const AddActivityButton = () => {
   const [dialogOpen, setDialogOpen] = useState(false);
   const [activityName, setActivityName] = useState("");
   const [description, setDescription] = useState("");
+  const [activityTag, setActivityTag] = useState("");
 
   const [templateActivities, setTemplateActivities] = useState([]);
   const [chosenTemplateActivity, setChosenTemplateActivity] = useState(-1);
+  const [activityTags, setActivityTags] = useState([]);
+  const [chosenActivityTag, setChosenActivityTag] = useState(-1);
   const [frequency, setFrequency] = useState("weekly");
-  const [menuItemArray, setMenuItemArray] = useState([
+  const [templateActivitiesMenuItemArray, setTemplateActivitiesMenuItemArray] = useState([
     <MenuItem value={-1} key={-1}>
       Choose an existing activity...
+    </MenuItem>,
+  ]);
+  const [activityTagMenuItemArray, setActivityTagMenuItemArray] = useState([
+    <MenuItem value={-1} key={-1}>
+      Choose an existing activity tag...
+    </MenuItem>,
+    <MenuItem value={-2} key={-2}>
+      Create new activity tag
     </MenuItem>,
   ]);
 
@@ -86,6 +98,39 @@ const AddActivityButton = () => {
     setDescription(e.target.value);
   };
 
+  const handleChangeTemplateActivity = (e) => {
+    setChosenTemplateActivity(e.target.value);
+    if (e.target.value >= 0) {
+      setActivityName(templateActivities[e.target.value].name);
+      setDescription(templateActivities[e.target.value].description);
+      setActivityTag(templateActivities[e.target.value].activityTag);
+      setChosenActivityTag(-1);
+      setActivityTagMenuItemArray(
+        <MenuItem value={-1} key={-1}>
+          {templateActivities[e.target.value].activityTag}
+        </MenuItem>
+      );
+    } else {
+      setActivityName("");
+      setDescription("");
+      setActivityTag("");
+      setChosenActivityTag(-1);
+    }
+  };
+
+  const handleChangeChosenActivityTag = (e) => {
+    setChosenActivityTag(e.target.value);
+    if (e.target.value >= 0) {
+      setActivityTag(activityTags[e.target.value]);
+    } else {
+      setActivityTag("");
+    }
+  };
+
+  const handleChangeActivityTag = (e) => {
+    setActivityTag(e.target.value);
+  };
+
   const handleDateChange = (e) => {
     setDate(e.target.value);
   };
@@ -115,6 +160,9 @@ const AddActivityButton = () => {
     } else if (endDateTime.getTime() <= startDateTime.getTime()) {
       alert("End datetime cannot be earlier than start datetime");
       return;
+    } else if (!activityTag) {
+      alert("Activity must have an associated tag");
+      return;
     }
 
     const templateActivityId =
@@ -122,62 +170,55 @@ const AddActivityButton = () => {
         ? templateActivities[chosenTemplateActivity].templateActivityId
         : null;
 
-    if (!recurring) {
-      activityService
-        .addPlannedActivity(
-          localService.convertDateToString(startDateTime),
-          localService.convertDateToString(endDateTime),
-          activityName,
-          description,
-          templateActivityId
-        )
-        .then(() => {
-          alert("Succesfully created activity");
-        })
-        .catch((error) => {
-          alert(
-            `Issue creating planned activity. Error status code: ${error.response.status}. ${error.response.data.message}`
-          );
-        });
-    } else {
-      activityService
-        .addRecurringActivity(
-          frequency,
-          `${startDateTime.getHours().toString().padStart(2, "0")}${startDateTime
-            .getMinutes()
-            .toString()
-            .padStart(2, "0")}`,
-          `${endDateTime.getHours().toString().padStart(2, "0")}${endDateTime
-            .getMinutes()
-            .toString()
-            .padStart(2, "0")}`,
-          date,
-          activityName,
-          description,
-          templateActivityId
-        )
-        .then(() => {
-          alert("Succesfully created activity");
-        })
-        .catch((error) => {
-          alert(
-            `Issue creating recurring activity. Error status code: ${error.response.status}. ${error.response.data.message}`
-          );
-        });
-    }
-
-    handleDialogClose();
-  };
-
-  const handleChangeTemplateActivity = (e) => {
-    setChosenTemplateActivity(e.target.value);
-    if (e.target.value >= 0) {
-      setActivityName(templateActivities[e.target.value].name);
-      setDescription(templateActivities[e.target.value].description);
-    } else {
-      setActivityName("");
-      setDescription("");
-    }
+    userService.addTag(activityTag).then(() => {
+      if (!recurring) {
+        activityService
+          .addPlannedActivity(
+            localService.convertDateToString(startDateTime),
+            localService.convertDateToString(endDateTime),
+            activityTag,
+            activityName,
+            description,
+            templateActivityId
+          )
+          .then(() => {
+            alert("Succesfully created activity");
+            handleDialogClose();
+          })
+          .catch((error) => {
+            alert(
+              `Issue creating planned activity. Error status code: ${error.response.status}. ${error.response.data.message}`
+            );
+          });
+      } else {
+        activityService
+          .addRecurringActivity(
+            frequency,
+            `${startDateTime.getHours().toString().padStart(2, "0")}${startDateTime
+              .getMinutes()
+              .toString()
+              .padStart(2, "0")}`,
+            `${endDateTime.getHours().toString().padStart(2, "0")}${endDateTime
+              .getMinutes()
+              .toString()
+              .padStart(2, "0")}`,
+            date,
+            activityTag,
+            activityName,
+            description,
+            templateActivityId
+          )
+          .then(() => {
+            alert("Succesfully created activity");
+            handleDialogClose();
+          })
+          .catch((error) => {
+            alert(
+              `Issue creating recurring activity. Error status code: ${error.response.status}. ${error.response.data.message}`
+            );
+          });
+      }
+    });
   };
 
   const getTemplateActivities = () => {
@@ -189,14 +230,29 @@ const AddActivityButton = () => {
       .catch((error) => {
         alert(
           error === undefined
-            ? `Issue retrieving template activities. Error status code ${error.response.status}. ${error.response.data.message}`
-            : "Error accessing API"
+            ? "Error accessing API"
+            : `Issue retrieving template activities. Error status code ${error.response.status}. ${error.response.data.message}`
+        );
+      });
+  };
+
+  const getActivityTags = () => {
+    userService
+      .getUserInfo()
+      .then((response) => {
+        setActivityTags(response.data.tags);
+      })
+      .catch((error) => {
+        alert(
+          error === undefined
+            ? "Error accessing API"
+            : `Issue retrieving activity tags. Error status code ${error.response.status}. ${error.response.data.message}`
         );
       });
   };
 
   useEffect(() => {
-    setMenuItemArray(
+    setTemplateActivitiesMenuItemArray(
       [
         <MenuItem value={-1} key={-1}>
           Choose an existing activity...
@@ -212,8 +268,28 @@ const AddActivityButton = () => {
   }, [templateActivities]);
 
   useEffect(() => {
+    setActivityTagMenuItemArray(
+      [
+        <MenuItem value={-1} key={-1}>
+          Choose an existing activity tag...
+        </MenuItem>,
+        <MenuItem value={-2} key={-2}>
+          Create new activity tag
+        </MenuItem>,
+      ].concat(
+        activityTags.map((activityTag, index) => (
+          <MenuItem value={index} key={index}>
+            {activityTag}
+          </MenuItem>
+        ))
+      )
+    );
+  }, [activityTags]);
+
+  useEffect(() => {
     if (dialogOpen === true) {
       getTemplateActivities();
+      getActivityTags();
     }
   }, [dialogOpen]);
 
@@ -265,7 +341,7 @@ const AddActivityButton = () => {
                   onChange={handleChangeTemplateActivity}
                   style={{ width: "100%" }}
                 >
-                  {menuItemArray}
+                  {templateActivitiesMenuItemArray}
                 </Select>
               </Grid>
               <Grid item style={{ width: "100%" }}>
@@ -279,7 +355,7 @@ const AddActivityButton = () => {
                   value={activityName}
                   onChange={handleSetActivityName}
                   disabled={chosenTemplateActivity !== -1}
-                  autofocus
+                  autoFocus
                 />
               </Grid>
               <Grid item style={{ width: "100%" }}>
@@ -293,9 +369,34 @@ const AddActivityButton = () => {
                   value={description}
                   onChange={handleSetDescription}
                   disabled={chosenTemplateActivity !== -1}
-                  autofocus
                 />
               </Grid>
+              <Grid item style={{ width: "100%" }}>
+                <InputLabel>Select an activity Tag</InputLabel>
+                <Select
+                  value={chosenActivityTag}
+                  onChange={handleChangeChosenActivityTag}
+                  disabled={chosenTemplateActivity !== -1}
+                  style={{ width: "100%" }}
+                >
+                  {activityTagMenuItemArray}
+                </Select>
+              </Grid>
+              {chosenActivityTag == -2 ? (
+                <Grid item style={{ width: "100%" }}>
+                  <TextField
+                    variant="outlined"
+                    required
+                    fullWidth
+                    name="activityTag"
+                    label="Activity Tag"
+                    color="primary"
+                    value={activityTag}
+                    onChange={handleChangeActivityTag}
+                    disabled={chosenTemplateActivity !== -1}
+                  ></TextField>
+                </Grid>
+              ) : null}
               <Grid
                 container
                 item

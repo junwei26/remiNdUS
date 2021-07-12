@@ -106,7 +106,7 @@ const TimeTracker = () => {
         spacing={1}
       >
         <Grid item xs>
-          <Typography alignContent="center">Activity Tracker </Typography>
+          <Typography>Activity Tracker </Typography>
         </Grid>
         <Grid item xs>
           <DisplayCurrentActivity />
