@@ -121,9 +121,13 @@ const SubscribedPackages = () => {
         setPackageList(tempPackageList);
       })
       .catch((error) => {
-        alert(
-          `Issue getting reminder packages. Error status code: ${error.response.status}. ${error.response.data.message}`
-        );
+        if (!error.response) {
+          alert("Issue accessing reminder package API");
+        } else {
+          alert(
+            `Issue getting reminder packages. Error status code: ${error.response.status}. ${error.response.data.message}`
+          );
+        }
       });
   };
 

@@ -11,6 +11,18 @@ const parseTime = (dateTime) => {
   return "";
 };
 
+const dates = ["Jan", "Feb", "Mar", "Apr", "May", "Jun", "Jul", "Aug", "Sep", "Oct", "Nov", "Dev"];
+
+const parseTimeShorter = (dateTime) => {
+  if (dateTime) {
+    return `${dateTime.getDate().padStart(2, "0")} ${dates[dateTime.getMonth() + 1]} ${dateTime
+      .getHours()
+      .toString()
+      .padStart(2, "0")}:${dateTime.getMinutes().toString.padStart(2, "0")}`;
+  }
+  return "";
+};
+
 const convertDateToString = (date) => {
   return `${date.getFullYear().toString().padStart(4, "0")}${(date.getMonth() + 1)
     .toString()
@@ -20,4 +32,4 @@ const convertDateToString = (date) => {
     .padStart(2, "0")}${date.getMinutes().toString().padStart(2, "0")}`;
 };
 
-export default { parseTime, convertDateToString };
+export default { parseTime, parseTimeShorter, convertDateToString };

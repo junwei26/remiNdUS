@@ -78,17 +78,17 @@ const ReminderList = () => {
       <Grid item>
         <Paper fullWidth className={classes.root}>
           <List>
-            {reminders.map((reminder) => {
-              if (reminder.reminderType === "planned") {
+            {reminders
+              .filter((reminder) => reminder.reminderType === "planned")
+              .map((reminder) => {
                 const reminderDisplayText =
-                  localService.parseTime(reminder.endDateTime) + "  " + reminder.name;
+                  localService.parseTimeShorter(reminder.endDateTime) + `\n${reminder.name}`;
                 return (
                   <ListItem key={reminder.reminderId} divider={true}>
                     <ListItemText primary={reminderDisplayText} />
                   </ListItem>
                 );
-              }
-            })}
+              })}
           </List>
         </Paper>
       </Grid>
