@@ -25,6 +25,25 @@ const addReminderPackage = (packageName, description, packageTag, reminderIds) =
   });
 };
 
+const updateReminderPackage = (
+  reminderPackageId,
+  packageName,
+  description,
+  packageTag,
+  reminderIds,
+  isPublic
+) => {
+  return axios.post(REMINDERPACKAGES_API_URL + "/update", {
+    uid: firebaseAuth.currentUser.uid,
+    reminderPackageId,
+    name: packageName,
+    description,
+    packageTag,
+    reminderIds,
+    public: isPublic,
+  });
+};
+
 const shareReminderPackages = (reminderPackageIds, share) => {
   return axios.post(REMINDERPACKAGES_API_URL + "/share", {
     uid: firebaseAuth.currentUser.uid,
@@ -55,6 +74,7 @@ export default {
   getPublicReminderPackages,
   subscribeReminderPackages,
   addReminderPackage,
+  updateReminderPackage,
   shareReminderPackages,
   deleteReminderPackages,
 };

@@ -1,7 +1,8 @@
 import React, { useState, useEffect } from "react";
 import { makeStyles } from "@material-ui/core/styles";
 import { Grid, Typography, TextField, Paper, Button } from "@material-ui/core";
-import { DataGrid } from "@material-ui/data-grid";
+import { DataGrid, GridToolbar } from "@material-ui/data-grid";
+import PropTypes from "prop-types";
 import reminderService from "../../../services/reminderService";
 import reminderPackageService from "../../../services/reminderPackageService";
 import localService from "../../../services/localService";
@@ -21,7 +22,7 @@ const useStyles = makeStyles(() => ({
   },
 }));
 
-const SubscribedPackages = () => {
+const CreatePackages = (props) => {
   const classes = useStyles();
 
   const [packageName, setPackageName] = useState("");
@@ -45,6 +46,7 @@ const SubscribedPackages = () => {
     },
   ];
   const [reminderList, setReminderList] = useState(loadingReminderList);
+  const [editingPackage, setEditingPackage] = useState(Boolean(props.reminderPackage));
 
   const reminderColumns = [
     {
@@ -81,7 +83,7 @@ const SubscribedPackages = () => {
     {
       field: "reminderType",
       headerName: "Reminder Type",
-      flex: 1.3,
+      flex: 1,
       valueFormatter: (params) => {
         return `${
           String(params.value).charAt(0).toUpperCase() + String(params.value).substring(1)
@@ -134,10 +136,26 @@ const SubscribedPackages = () => {
     setPackageTag("");
     setSearchRemindersText("");
     clearSelectionModel();
+    setEditingPackage(false);
   };
 
   const refreshPackages = () => {
-    clearAllFields();
+    setSearchRemindersText("");
+    if (editingPackage) {
+      const selectedRowIds = reminderList
+        .filter((reminder) => {
+          if (reminder.reminderType === "planned") {
+            return props.reminderPackage.plannedReminderIds.includes(reminder.reminderId);
+          } else {
+            return props.reminderPackage.recurringReminderIds.includes(reminder.reminderId);
+          }
+        })
+        .map((reminder) => reminder.id);
+
+      setSelectionModel(selectedRowIds);
+    } else {
+      clearSelectionModel();
+    }
     setReminderList(loadingReminderList);
     getReminders();
   };
@@ -156,20 +174,43 @@ const SubscribedPackages = () => {
       }
     }
 
-    reminderPackageService
-      .addReminderPackage(packageName, description, packageTag, {
-        plannedReminderIds,
-        recurringReminderIds,
-      })
-      .then(() => {
-        alert("Successfully created reminder package!");
-        clearAllFields();
-      })
-      .catch((error) => {
-        alert(
-          `Issue creating new reminder package. Error status code: ${error.response.status}. ${error.response.data.message}`
-        );
-      });
+    if (editingPackage) {
+      reminderPackageService
+        .updateReminderPackage(
+          props.reminderPackage.reminderPackageId,
+          packageName,
+          description,
+          packageTag,
+          {
+            plannedReminderIds,
+            recurringReminderIds,
+          },
+          props.reminderPackage.public
+        )
+        .then(() => {
+          alert("Successfully updated reminder package!");
+        })
+        .catch((error) => {
+          alert(
+            `Issue updating reminder package. Error status code: ${error.response.status}. ${error.response.data.message}`
+          );
+        });
+    } else {
+      reminderPackageService
+        .addReminderPackage(packageName, description, packageTag, {
+          plannedReminderIds,
+          recurringReminderIds,
+        })
+        .then(() => {
+          alert("Successfully created reminder package!");
+          clearAllFields();
+        })
+        .catch((error) => {
+          alert(
+            `Issue creating new reminder package. Error status code: ${error.response.status}. ${error.response.data.message}`
+          );
+        });
+    }
   };
 
   const handleDataGridSelectionChange = (e) => {
@@ -179,7 +220,7 @@ const SubscribedPackages = () => {
 
   const getReminders = () => {
     let tempReminderList = [];
-    reminderService
+    return reminderService
       .getAllLocalReminders()
       .then((response) => {
         tempReminderList = response.data;
@@ -187,6 +228,7 @@ const SubscribedPackages = () => {
           tempReminderList[i].id = i + 1;
         }
         setReminderList(tempReminderList);
+        return tempReminderList;
       })
       .catch((error) => {
         alert(
@@ -196,12 +238,31 @@ const SubscribedPackages = () => {
   };
 
   useEffect(() => {
-    getReminders();
+    getReminders().then((reminderList) => {
+      if (editingPackage) {
+        setPackageName(props.reminderPackage.name);
+        setDescription(props.reminderPackage.description);
+        setPackageTag(props.reminderPackage.packageTag);
+        const selectedRowIds = reminderList
+          .filter((reminder) => {
+            if (reminder.reminderType === "planned") {
+              return props.reminderPackage.plannedReminderIds.includes(reminder.reminderId);
+            } else {
+              return props.reminderPackage.recurringReminderIds.includes(reminder.reminderId);
+            }
+          })
+          .map((reminder) => reminder.id);
+
+        setSelectionModel(selectedRowIds);
+      }
+    });
   }, []);
 
   return (
     <>
-      <Typography>Create Reminder Packages</Typography>
+      <Typography>
+        {editingPackage ? "Edit Reminder Package" : "Create Reminder Packages"}
+      </Typography>
       <Paper elevation={2} variant="outlined" style={{ height: "780px" }}>
         <form
           noValidate
@@ -222,6 +283,7 @@ const SubscribedPackages = () => {
                 label="Package Name"
                 value={packageName}
                 onChange={updatePackageName}
+                disabled={editingPackage}
                 required
                 fullWidth
               />
@@ -232,6 +294,7 @@ const SubscribedPackages = () => {
                 label="Description"
                 value={description}
                 onChange={updateDescription}
+                disabled={editingPackage}
                 required
                 fullWidth
               />
@@ -242,6 +305,7 @@ const SubscribedPackages = () => {
                 label="Package Tag (Optional)"
                 value={packageTag}
                 onChange={updatePackageTag}
+                disabled={editingPackage}
                 fullWidth
               />
             </Grid>
@@ -290,6 +354,7 @@ const SubscribedPackages = () => {
                 }}
                 onSelectionModelChange={handleDataGridSelectionChange}
                 selectionModel={selectionModel}
+                components={{ Toolbar: GridToolbar }}
               />
             </Grid>
             <Grid
@@ -322,7 +387,7 @@ const SubscribedPackages = () => {
               </Grid>
               <Grid item>
                 <Button type="submit" variant="contained" color="primary">
-                  Create
+                  {editingPackage ? "Update" : "Create"}
                 </Button>
               </Grid>
             </Grid>
@@ -333,4 +398,8 @@ const SubscribedPackages = () => {
   );
 };
 
-export default SubscribedPackages;
+CreatePackages.propTypes = {
+  reminderPackage: PropTypes.object,
+};
+
+export default CreatePackages;
