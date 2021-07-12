@@ -3,6 +3,7 @@ import { makeStyles } from "@material-ui/core/styles";
 import { Grid, Typography, TextField, Paper, Button } from "@material-ui/core";
 import { DataGrid, GridToolbar } from "@material-ui/data-grid";
 import reminderPackageService from "../../../services/reminderPackageService";
+import localService from "../../../services/localService";
 
 const useStyles = makeStyles(() => ({
   root: {
@@ -77,8 +78,8 @@ const SearchPackages = () => {
       field: "lastModified",
       headerName: "Last Modified",
       flex: 1,
-      valueFormatter: (datetime) => {
-        return `${new Date(datetime.value).toLocaleDateString()}`;
+      valueFormatter: (params) => {
+        return `${localService.parseTime(params.value)}`;
       },
     },
     {
@@ -134,15 +135,15 @@ const SearchPackages = () => {
 
   const handlePackageSubscription = (e) => {
     e.preventDefault();
-    const userUids = [];
+    const ownerUids = [];
     const reminderPackageIds = [];
     for (let i = 0; i < selectedRows.length; ++i) {
-      userUids.push(selectedRows[i].ownerUid);
+      ownerUids.push(selectedRows[i].ownerUid);
       reminderPackageIds.push(selectedRows[i].reminderPackageId);
     }
 
     reminderPackageService
-      .subscribeReminderPackages(userUids, reminderPackageIds)
+      .subscribeReminderPackages(ownerUids, reminderPackageIds)
       .then(() => {
         alert("Successfully subscribed to reminder packages");
       })

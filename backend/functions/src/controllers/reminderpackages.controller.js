@@ -1,6 +1,60 @@
 const admin = require("firebase-admin");
 const db = admin.firestore();
 
+const convertDateToString = (date) => {
+  return `${date.getFullYear().toString().padStart(4, "0")}${(date.getMonth() + 1)
+    .toString()
+    .padStart(2, "0")}${date.getDate().toString().padStart(2, "0")}${date
+    .getHours()
+    .toString()
+    .padStart(2, "0")}${date.getMinutes().toString().padStart(2, "0")}`;
+};
+
+const getSubscribedPackages = (userDoc) => {
+  return userDoc
+    .collection("subscribedPackages")
+    .get()
+    .then((querySnapshot) => {
+      let promises = [];
+
+      querySnapshot.forEach((queryDocumentSnapshot) => {
+        const subscribedPackage = queryDocumentSnapshot.data();
+
+        promises.push(
+          db
+            .collection("users")
+            .where("uid", "==", subscribedPackage.ownerUid)
+            .limit(1)
+            .get()
+            .then((querySnapshot) => {
+              if (querySnapshot.empty) {
+                throw "No user found. Please contact the administrator";
+              }
+
+              const userDoc = querySnapshot.docs[0].ref;
+              return userDoc
+                .collection("reminderPackages")
+                .doc(subscribedPackage.reminderPackageId)
+                .get()
+                .then((reminderPackageDocumentSnapshot) => {
+                  return {
+                    ...reminderPackageDocumentSnapshot.data(),
+                    subscribed: true,
+                  };
+                });
+            })
+        );
+      });
+
+      return Promise.all(promises).then((reminderPackagesArray) => {
+        return reminderPackagesArray;
+      });
+    })
+    .catch((error) => {
+      throw `Subscribed packages could not be received. ${error}`;
+    });
+};
+
 exports.getAll = (req, res) => {
   if (!req.query.uid) {
     return res.status(400).send({ message: "You must be logged in to make this operation!" });
@@ -10,40 +64,47 @@ exports.getAll = (req, res) => {
     .where("uid", "==", req.query.uid)
     .limit(1)
     .get()
-    .then((data) => {
-      if (data.empty) {
+    .then((querySnapshot) => {
+      if (querySnapshot.empty) {
         return res.status(404).send({ message: "No user found. Please contact the administrator" });
       }
+
+      const userDoc = querySnapshot.docs[0].ref;
 
       let packageList = [];
 
       // Actually only one doc (one user)
-      data.forEach((doc) => {
-        doc.ref
-          .collection("reminderPackages")
-          .get()
-          .then((data) => {
-            if (data.empty) {
-              res.send([]);
-              return res.status(200).send({ message: "No Reminder Packages found." });
-            }
+      userDoc
+        .collection("reminderPackages")
+        .get()
+        .then((querySnapshot) => {
+          if (querySnapshot.empty) {
+            res.send([]);
+            return res.status(200).send({ message: "No Reminder Packages found." });
+          }
 
-            // For each reminder package, send its uid as well
-            data.forEach((doc) => {
-              packageList.push({ ...doc.data(), reminderPackageId: doc.id });
+          // For each reminder package, send its uid as well (doc.id)
+          querySnapshot.forEach((queryDocumentSnapshot) => {
+            packageList.push({
+              ...queryDocumentSnapshot.data(),
+              reminderPackageId: queryDocumentSnapshot.id,
             });
+          });
 
-            res.send(packageList);
+          getSubscribedPackages(userDoc).then((subscribedPackages) => {
+            const fullPackageList = packageList.concat(subscribedPackages);
+
+            res.send(fullPackageList);
             return res.status(200).send({
               message: "Reminder packages successfully retrieved!",
             });
-          })
-          .catch((error) => {
-            return res.status(400).send({
-              message: `Error retrieving reminder packages. ${error}`,
-            });
           });
-      });
+        })
+        .catch((error) => {
+          return res.status(400).send({
+            message: `Error retrieving reminder packages. ${error}`,
+          });
+        });
     })
     .catch((error) => {
       return res.status(400).send({
@@ -53,24 +114,26 @@ exports.getAll = (req, res) => {
 };
 
 exports.getPublicPackages = (req, res) => {
-  let publicPackages = [];
   let promises = [];
   db.collection("users")
     .get()
     .then((querySnapshot) => {
-      let userQueryDocSnapshotArr = querySnapshot.docs;
-      for (let i = 0; i < userQueryDocSnapshotArr.length; ++i) {
+      const userDocArray = querySnapshot.docs.map(
+        (queryDocumentSnapshot) => queryDocumentSnapshot.ref
+      );
+      for (let i = 0; i < userDocArray.length; ++i) {
         promises.push(
-          userQueryDocSnapshotArr[i].ref
+          userDocArray[i]
             .collection("reminderPackages")
             .where("public", "==", true)
             .get()
             .then((querySnapshot) => {
-              Promise.all(
-                querySnapshot.docs.map((queryDocumentSnapshot) =>
-                  publicPackages.push(queryDocumentSnapshot.data())
-                )
-              );
+              return querySnapshot.docs.map((queryDocumentSnapshot) => {
+                return {
+                  ...queryDocumentSnapshot.data(),
+                  reminderPackageId: queryDocumentSnapshot.id,
+                };
+              });
             })
             .catch((error) => {
               return res.status(400).send({ message: `Error retrieving user details. ${error}` });
@@ -78,7 +141,8 @@ exports.getPublicPackages = (req, res) => {
         );
       }
 
-      Promise.all(promises).then(() => {
+      Promise.all(promises).then((publicPackagesArray) => {
+        const publicPackages = [].concat.apply([], publicPackagesArray);
         res.send(publicPackages);
         return res.status(200).send({ message: "Public reminder packages successfully retrieved" });
       });
@@ -113,16 +177,19 @@ exports.create = (req, res) => {
 
       // Only one user, one doc
       data.forEach((querySnapshotDoc) => {
-        const documentRef = querySnapshotDoc.ref;
-        documentRef
+        const userDoc = querySnapshotDoc.ref;
+        userDoc
           .get()
           .then((documentSnapshot) => {
             const reminderPackage = {
               name: req.body.name,
               description: req.body.description,
-              lastModified: new Date().getTime(),
-              numberOfReminders: req.body.reminderIds.length,
-              reminderIds: req.body.reminderIds,
+              lastModified: convertDateToString(new Date()),
+              numberOfReminders:
+                req.body.reminderIds.plannedReminderIds.length +
+                req.body.reminderIds.recurringReminderIds.length,
+              plannedReminderIds: req.body.reminderIds.plannedReminderIds,
+              recurringReminderIds: req.body.reminderIds.recurringReminderIds,
               packageTag: req.body.packageTag,
               ownerUid: req.body.uid,
               ownerName: documentSnapshot.get("username"),
@@ -130,7 +197,7 @@ exports.create = (req, res) => {
               public: false,
             };
 
-            documentRef.collection("reminderPackages").add(reminderPackage);
+            userDoc.collection("reminderPackages").add(reminderPackage);
             return res.status(200).send({ message: "Reminder package successfully created!" });
           })
           .catch((error) => {
@@ -193,13 +260,13 @@ exports.subscribe = (req, res) => {
   if (!req.body.uid) {
     return res.status(400).send({ message: "You must be logged in to make this operation!" });
   }
-  if (!req.body.userUids || req.body.userUids.length === 0) {
+  if (!req.body.ownerUids || req.body.ownerUids.length === 0) {
     return res.status(400).send({ message: "Reminder packages must have accompanying user IDs!" });
   }
   if (!req.body.reminderPackageIds || req.body.reminderPackageIds.length === 0) {
     return res.status(400).send({ message: "Reminder packages must have reminder package IDs!" });
   }
-  if (req.body.userUids.length != req.body.reminderPackageIds.length) {
+  if (req.body.ownerUids.length != req.body.reminderPackageIds.length) {
     return res.status(400).send({
       message: "Unequal number of user IDs and reminder package IDs!",
     });
@@ -214,10 +281,10 @@ exports.subscribe = (req, res) => {
         let promises = [];
 
         let collection = queryDocumentSnapshot.ref.collection("subscribedPackages");
-        for (let i = 0; i < req.body.userUids.length; ++i) {
+        for (let i = 0; i < req.body.ownerUids.length; ++i) {
           promises.push(
             collection
-              .where("userUid", "==", req.body.userUids[i])
+              .where("ownerUid", "==", req.body.ownerUids[i])
               .where("reminderPackageId", "==", req.body.reminderPackageIds[i])
               .get()
               .then((querySnapshot) => {
@@ -226,7 +293,7 @@ exports.subscribe = (req, res) => {
                   ? Promise.resolve(0)
                   : Promise.all(
                       collection.add({
-                        userUid: req.body.userUids[i],
+                        ownerUid: req.body.ownerUids[i],
                         reminderPackageId: req.body.reminderPackageIds[i],
                       })
                     );

@@ -5,7 +5,7 @@ import { firebaseAuth } from "../firebase";
 import axios from "axios";
 import { updateProfile } from "./userSettings";
 
-const { REACT_APP_URL } = process.env;
+const { REACT_APP_URL, REACT_APP_BACKEND_URL } = process.env;
 
 export function signInWithEmailPassword(email, password) {
   // [START auth_signin_password]
@@ -41,10 +41,7 @@ export function signUpWithEmailPassword(email, password) {
         telegramHandle: "",
       };
       axios
-        .post(
-          "https://asia-southeast2-remindus-76402.cloudfunctions.net/backendAPI/api/user/create/",
-          userDetails
-        )
+        .post(REACT_APP_BACKEND_URL + "/user/create/", userDetails)
         .then(() => {
           updateProfile(userDetails.username, null);
           alert(`Signed up as user ${user.uid}. Please check your email for email verification.`);

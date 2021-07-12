@@ -1,8 +1,38 @@
 const admin = require("firebase-admin");
 const db = admin.firestore();
 
-// Helper for getSubscribedPackages
-const getRemindersByIds = (req, res, uid, reminderIds, terminal = true) => {
+// reminderCollection should be "plannedReminders" or "recurringReminders"
+const getReminder = (userDoc, reminderId, reminderCollection, subscribed) => {
+  return userDoc
+    .collection(reminderCollection)
+    .doc(reminderId)
+    .get()
+    .then((documentSnapshot) => {
+      return userDoc
+        .collection("templateReminders")
+        .doc(documentSnapshot.get("templateReminderId"))
+        .get()
+        .then((templateDocumentSnapshot) => {
+          const reminderType = reminderCollection === "plannedReminders" ? "planned" : "recurring";
+          return {
+            ...documentSnapshot.data(),
+            ...templateDocumentSnapshot.data(),
+            reminderType,
+            reminderId,
+            subscribed,
+          };
+        })
+        .catch((error) => {
+          throw `Unable to retrieve template reminder. ${error}`;
+        });
+    })
+    .catch((error) => {
+      throw `Unable to retrieve ${reminderCollection}. ${error}`;
+    });
+};
+
+// Helper for getSubscribedPackages and get query
+const getRemindersByIds = (uid, plannedReminderIds, recurringReminderIds, subscribed) => {
   return db
     .collection("users")
     .where("uid", "==", uid)
@@ -10,52 +40,82 @@ const getRemindersByIds = (req, res, uid, reminderIds, terminal = true) => {
     .get()
     .then((querySnapshot) => {
       if (querySnapshot.empty) {
-        if (terminal) {
-          return res
-            .status(404)
-            .send({ message: "No user found. Please contact the administrator" });
-        } else {
-          throw new Error("No user found. Please contact the administrator");
-        }
+        throw new Error("No user found. Please contact the administrator");
       }
 
       let promises = [];
       let reminders = [];
 
       querySnapshot.forEach((queryDocumentSnapshot) => {
-        for (let i = 0; i < reminderIds.length; ++i) {
+        for (let i = 0; i < plannedReminderIds.length; ++i) {
           promises.push(
-            queryDocumentSnapshot.ref
-              .collection("reminders")
-              .doc(reminderIds[i])
-              .get()
-              .then((doc) => {
-                return { ...doc.data(), reminderId: doc.id };
-              })
+            getReminder(
+              queryDocumentSnapshot.ref,
+              plannedReminderIds[i],
+              "plannedReminders",
+              subscribed
+            )
+          );
+        }
+        for (let i = 0; i < recurringReminderIds.length; ++i) {
+          promises.push(
+            getReminder(
+              queryDocumentSnapshot.ref,
+              recurringReminderIds[i],
+              "recurringReminders",
+              subscribed
+            )
           );
         }
       });
       return Promise.all(promises).then((values) => {
         reminders = [].concat.apply([], values);
-
-        if (terminal) {
-          res.send(reminders);
-          return res.status(200).send({ message: "Successfully retrieved reminder!" });
-        } else {
-          return reminders;
-        }
+        return reminders;
       });
     })
     .catch((error) => {
-      if (terminal) {
-        return res.status(404).send({ message: `Error getting reminders from owner. ${error}` });
-      } else {
-        throw error;
-      }
+      throw error;
     });
 };
 
-// Helper for getSubscribedPackages
+const getAllReminders = (
+  userDoc,
+  plannedRangeQuery = (x) => {
+    return x;
+  }
+) => {
+  let promise = null;
+
+  promise = plannedRangeQuery(userDoc.collection("plannedReminders"))
+    .get()
+    .then((querySnapshot) => {
+      const plannedReminderIds = querySnapshot.docs.map(
+        (queryDocumentSnapshot) => queryDocumentSnapshot.id
+      );
+
+      return userDoc
+        .collection("recurringReminders")
+        .get()
+        .then((querySnapshot) => {
+          const recurringReminderIds = querySnapshot.docs.map(
+            (queryDocumentSnapshot) => queryDocumentSnapshot.id
+          );
+
+          return getRemindersByIds(
+            userDoc.id,
+            plannedReminderIds,
+            recurringReminderIds,
+            false
+          ).then((reminders) => {
+            return [].concat.apply([], reminders);
+          });
+        });
+    });
+
+  return promise;
+};
+
+// Helper for getSubscribedPackages. Returns packageReminderIds for given user
 const getPackageReminderIds = (uid, reminderPackageId) => {
   return db
     .collection("users")
@@ -66,7 +126,7 @@ const getPackageReminderIds = (uid, reminderPackageId) => {
       if (querySnapshot.empty) {
         throw "No user found. Please contact the administrator";
       }
-      let reminderIds = [];
+
       let promises = [];
 
       querySnapshot.forEach((queryDocumentSnapshot) => {
@@ -76,21 +136,130 @@ const getPackageReminderIds = (uid, reminderPackageId) => {
             .doc(reminderPackageId)
             .get()
             .then((documentSnapshot) => {
-              return documentSnapshot.get("reminderIds");
+              return {
+                plannedReminderIds: documentSnapshot.get("plannedReminderIds"),
+                recurringReminderIds: documentSnapshot.get("recurringReminderIds"),
+              };
             })
         );
       });
 
-      return Promise.all(promises).then((values) => {
-        reminderIds = [].concat.apply([], values);
-        return reminderIds;
+      return Promise.all(promises).then((reminderIdsArray) => {
+        let plannedReminderIds = [];
+        let recurringReminderIds = [];
+        reminderIdsArray.map((packageReminderIds) => {
+          plannedReminderIds = plannedReminderIds.concat(packageReminderIds.plannedReminderIds);
+          recurringReminderIds = recurringReminderIds.concat(
+            packageReminderIds.recurringReminderIds
+          );
+          return packageReminderIds;
+        });
+
+        return { plannedReminderIds, recurringReminderIds };
       });
     });
 };
 
-exports.getAll = (req, res) => {
-  let reminders = [];
+const getSubscribed = (
+  uid,
+  reminderFilter = () => {
+    return true;
+  }
+) => {
+  return db
+    .collection("users")
+    .where("uid", "==", uid)
+    .limit(1)
+    .get()
+    .then((querySnapshot) => {
+      if (querySnapshot.empty) {
+        throw new Error("No user found. Please contact the administrator");
+      }
 
+      let subscribedPackages = [];
+
+      let promise = null;
+
+      querySnapshot.forEach((queryDocumentSnapshot) => {
+        // Note there is only one promise because there is only one user
+        promise = queryDocumentSnapshot.ref
+          .collection("subscribedPackages")
+          .get()
+          .then((querySnapshot) => {
+            subscribedPackages = querySnapshot.docs.map((queryDocumentSnapshot) =>
+              queryDocumentSnapshot.data()
+            );
+
+            let allSubscribedReminders = [];
+            let promises = [];
+
+            for (let i = 0; i < subscribedPackages.length; ++i) {
+              const subscribedPackage = subscribedPackages[i];
+              promises.push(
+                getPackageReminderIds(
+                  subscribedPackage.ownerUid,
+                  subscribedPackage.reminderPackageId
+                ).then((reminderIds) => {
+                  return getRemindersByIds(
+                    subscribedPackage.ownerUid,
+                    reminderIds.plannedReminderIds,
+                    reminderIds.recurringReminderIds,
+                    true
+                  ).then((subscribedReminders) => {
+                    return subscribedReminders;
+                  });
+                })
+              );
+            }
+            return Promise.all(promises).then((values) => {
+              allSubscribedReminders = [].concat.apply([], values);
+              return allSubscribedReminders.filter(reminderFilter);
+            });
+          });
+      });
+      return promise;
+    });
+};
+
+exports.getAll = (req, res) => {
+  db.collection("users")
+    .where("uid", "==", req.query.uid)
+    .limit(1)
+    .get()
+    .then((querySnapshot) => {
+      if (querySnapshot.empty) {
+        return res.status(404).send({ message: "No user found. Please contact the administrator" });
+      }
+
+      querySnapshot.forEach((queryDocumentSnapshot) => {
+        getAllReminders(queryDocumentSnapshot.ref)
+          .then((reminders) => {
+            getSubscribed(req.query.uid)
+              .then((allSubscribedReminders) => {
+                const allReminders = reminders.concat(allSubscribedReminders);
+
+                res.send(allReminders);
+                return res.status(200).send({
+                  message: "Successfully retrieved all local and subscribed reminders",
+                });
+              })
+              .catch((error) => {
+                return res
+                  .status(404)
+                  .send({ message: `Error retrieving subscribed reminders. ${error}` });
+              });
+          })
+          .catch((error) => {
+            return res.status(404).send({ message: `Error retrieving user reminders. ${error}` });
+          });
+      });
+    })
+    .catch((error) => {
+      return res.status(404).send({ message: `Error retrieving reminders. ${error}` });
+    });
+};
+
+exports.getAllLocal = (req, res) => {
   db.collection("users")
     .where("uid", "==", req.query.uid)
     .limit(1)
@@ -100,17 +269,20 @@ exports.getAll = (req, res) => {
         return res.status(404).send({ message: "No user found. Please contact the administrator" });
       }
       querySnapshot.forEach((queryDocumentSnapshot) => {
-        queryDocumentSnapshot.ref
-          .collection("reminders")
-          .get()
-          .then((querySnapshot) => {
-            querySnapshot.forEach((reminder) => {
-              reminders.push({ ...reminder.data(), reminderId: reminder.id });
-            });
+        getAllReminders(queryDocumentSnapshot.ref)
+          .then((reminders) => {
             res.send(reminders);
-            return res.status(200).send();
+            return res.status(200).send({
+              message: "Successfully retrieved all local reminders",
+            });
+          })
+          .catch((error) => {
+            return res.status(404).send({ message: `Error retrieving user reminders. ${error}` });
           });
       });
+    })
+    .catch((error) => {
+      return res.status(404).send({ message: `Error retrieving reminders. ${error}` });
     });
 };
 
@@ -122,69 +294,70 @@ exports.get = (req, res) => {
     return res.status(400).send({ message: "Reminders must have reminder IDs!" });
   }
 
-  return getRemindersByIds(req, res, req.query.uid, req.query.reminderIds);
+  return getRemindersByIds(
+    req.query.uid,
+    req.query.reminderIds.plannedReminderIds,
+    req.query.reminderIds.recurringReminderIds,
+    false
+  )
+    .then((reminders) => {
+      res.send(reminders);
+      return res.status(200).send();
+    })
+    .catch((error) => {
+      return res.status(404).send({ message: `Error getting reminders. ${error}` });
+    });
 };
 
-exports.getSubscribed = (req, res) => {
+exports.getTemplateReminders = (req, res) => {
   if (!req.query.uid) {
     return res.status(400).send({ message: "You must be logged in to make this operation!" });
   }
+
   db.collection("users")
     .where("uid", "==", req.query.uid)
     .limit(1)
     .get()
     .then((querySnapshot) => {
       if (querySnapshot.empty) {
-        return res.status(404).send({ message: "No user found. Please contact the administrator" });
+        throw "No user found. Please contact the administrator";
       }
-
-      let subscribedPackages = [];
 
       querySnapshot.forEach((queryDocumentSnapshot) => {
         queryDocumentSnapshot.ref
-          .collection("subscribedPackages")
+          .collection("templateReminders")
           .get()
           .then((querySnapshot) => {
-            subscribedPackages = querySnapshot.docs;
-
-            let allSubscribedReminders = [];
-            let promises = [];
-
-            for (let i = 0; i < subscribedPackages.length; ++i) {
-              const subscribedPackage = subscribedPackages[i].data();
-              promises.push(
-                getPackageReminderIds(
-                  subscribedPackage.userUid,
-                  subscribedPackage.reminderPackageId
-                ).then((reminderIds) => {
-                  return getRemindersByIds(
-                    req,
-                    res,
-                    subscribedPackage.userUid,
-                    reminderIds,
-                    false
-                  ).then((subscribedReminders) => {
-                    return subscribedReminders;
-                  });
-                })
-              );
-            }
-
-            Promise.all(promises).then((values) => {
-              allSubscribedReminders = [].concat.apply([], values);
-
-              res.send(allSubscribedReminders);
-              return res.status(200).send({
-                message: "Successfully retrieved all reminders from subscribed reminder packages.",
-              });
-            });
+            res.send(
+              querySnapshot.docs.map((doc) => {
+                return { ...doc.data(), templateReminderId: doc.id };
+              })
+            );
+            return res.status(200).send({ message: "Template reminders retrieved successfully" });
           });
       });
     })
     .catch((error) => {
       return res
-        .status(404)
-        .send({ message: `Error retrieving all subscribed reminders. ${error}` });
+        .status(400)
+        .send({ message: `Issue getting template reminders from user. ${error}` });
+    });
+};
+
+exports.getSubscribed = (req, res) => {
+  if (!req.query.uid) {
+    return res.status(400).send({ message: "You must be logged in to make this operation!" });
+  }
+
+  return getSubscribed(req.query.uid)
+    .then((allSubscribedReminders) => {
+      res.send(allSubscribedReminders);
+      return res.status(200).send({
+        message: "Successfully retrieved all reminders from subscribed reminder packages.",
+      });
+    })
+    .catch((error) => {
+      return res.status(404).send({ message: `Error retrieving subscribed reminders. ${error}` });
     });
 };
 
@@ -195,116 +368,335 @@ exports.range = (req, res) => {
   if (!req.query.currentDateTime) {
     return res.status(400).send({ message: "You must have a valid date time!" });
   }
-  const reminders = [];
+  if (!req.query.endDateTime) {
+    return res.status(400).send({ message: "You must have a end date time!" });
+  }
+
+  const plannedRangeQuery = (collectionReference) => {
+    return collectionReference
+      .where("endDateTime", ">=", req.query.currentDateTime)
+      .where("endDateTime", "<=", req.query.endDateTime);
+  };
 
   db.collection("users")
-    .doc(req.query.uid)
-    .collection("reminders")
-    .where("dateTime", ">=", req.query.currentDateTime)
-    .where("dateTime", "<=", req.query.endDateTime)
+    .where("uid", "==", req.query.uid)
+    .limit(1)
     .get()
     .then((querySnapshot) => {
-      querySnapshot.forEach((reminder) => {
-        reminders.push({ reminderId: reminder.id, ...reminder.data() });
+      if (querySnapshot.empty) {
+        throw "No user found. Please contact the administrator";
+      }
+
+      querySnapshot.forEach((queryDocumentSnapshot) => {
+        getAllReminders(queryDocumentSnapshot.ref, plannedRangeQuery).then((reminders) => {
+          getSubscribed(req.query.uid, (reminder) => {
+            // if reminder is recurring keep. if the subscribed reminder is not within given datetime range, remove
+            if (reminder.reminderType === "recurring") {
+              return true;
+            }
+
+            if (
+              reminder.dateTime >= req.query.currentDateTime &&
+              reminder.dateTime <= req.query.endDateTime
+            ) {
+              return true;
+            }
+
+            return false;
+          })
+            .then((allSubscribedReminders) => {
+              const allReminders = reminders.concat(allSubscribedReminders);
+
+              res.send(allReminders);
+              return res
+                .status(200)
+                .send({ message: "Successfully retrieved all local and subscribed reminders" });
+            })
+            .catch((error) => {
+              return res
+                .status(404)
+                .send({ message: `Error retrieving subscribed reminders. ${error}` });
+            });
+        });
       });
-      res.send(reminders);
-      return res.status(200).send();
     });
 };
 
+// access the new document by using createTemplate(...).then((templateReminderDoc) => {...})
+const createTemplate = (uid, name, description, defaultLength) => {
+  return db
+    .collection("users")
+    .doc(uid)
+    .collection("templateReminders")
+    .add({ name, description, defaultLength, eventType: "2" });
+};
+
+// access the new document by using createPlannedReminder(...).then((plannedReminderDoc) => {...})
+const createPlannedReminder = (uid, templateReminderId, endDateTime, active) => {
+  return db
+    .collection("users")
+    .doc(uid)
+    .collection("plannedReminders")
+    .add({ templateReminderId, endDateTime, active });
+};
+
+// If frequency is weekly, take date as 1-7 (Mon, Tue, ..., Sun). If frequency is monthly, take date as 1-31
+const createRecurringReminder = (uid, templateReminderId, frequency, endTime, date, active) => {
+  return db
+    .collection("users")
+    .doc(uid)
+    .collection("recurringReminders")
+    .add({ templateReminderId, frequency, endTime, date, active });
+};
+
+/*
+uid: mandatory
+active: mandatory
+templateReminderId: required if not creating new templateReminder
+name: required if creating new templateReminder
+description: required if creating new templateReminder
+endDateTime: required if creating plannedReminder
+frequency: required if creating recurringReminder
+endTime: required if creating recurringReminder
+date: required if creating recurringReminder
+*/
 exports.create = (req, res) => {
   if (!req.body.uid) {
     return res.status(400).send({ message: "You must be logged in to make this operation!" });
   }
-  if (!req.body.name) {
-    return res.status(400).send({ message: "Reminders must have a name!" });
+  if (!req.body.active) {
+    return res.status(400).send({ message: "Reminder must have an active setting" });
   }
-  if (!req.body.description) {
-    return res.status(400).send({ message: "Reminders must have a description!" });
-  }
-  if (!req.body.dateTime) {
-    return res.status(400).send({ message: "Reminders must have a date!" });
-  }
+  // If no templateReminderId provided, assume creating a brand new reminder
+  if (!req.body.templateReminderId) {
+    if (!req.body.name) {
+      return res.status(400).send({ message: "Reminders must have a name!" });
+    }
+    if (!req.body.description) {
+      return res.status(400).send({ message: "Reminders must have a description!" });
+    }
+    if (!req.body.defaultLength) {
+      return res.status(400).send({ message: "Reminders must have a default length" });
+    }
 
-  const reminder = {
-    name: req.body.name,
-    description: req.body.description,
-    dateTime: req.body.dateTime,
-    eventType: "2",
-  };
-  db.collection("users")
-    .where("uid", "==", req.body.uid)
-    .limit(1)
-    .get()
-    .then((querySnapshot) =>
-      querySnapshot.forEach((doc) =>
-        db
-          .collection("users")
-          .doc(doc.id)
-          .collection("reminders")
-          .doc()
-          .set(reminder)
-          .then(() => {
-            return res.status(200).send({ message: "Reminder created successfully!" });
-          })
+    // If there is no frequency specified, it is a planned reminder, not recurring
+    if (!req.body.frequency) {
+      if (!req.body.endDateTime) {
+        return res.status(400).send({ message: "Planned reminder must have an end date and time" });
+      }
+      createTemplate(req.body.uid, req.body.name, req.body.description, req.body.defaultLength)
+        .then((templateReminderDoc) => {
+          createPlannedReminder(
+            req.body.uid,
+            templateReminderDoc.id,
+            req.body.endDateTime,
+            req.body.active
+          )
+            .then(() => {
+              return res.status(200).send({ message: "Planned reminder created successfully!" });
+            })
+            .catch((error) => {
+              return res.status(404).send({ message: `Error creating planned reminder. ${error}` });
+            });
+        })
+        .catch((error) => {
+          return res.status(404).send({ message: `Error creating template reminder. ${error}` });
+        });
+    } else {
+      if (!req.body.endTime) {
+        return res.status(400).send({ message: "Recurring reminder must have an end time" });
+      }
+      if (!req.body.date) {
+        return res.status(400).send({ message: "Recurring reminder must have a date" });
+      }
+      createTemplate(req.body.uid, req.body.name, req.body.description, req.body.defaultLength)
+        .then((templateReminderDoc) => {
+          createRecurringReminder(
+            req.body.uid,
+            templateReminderDoc.id,
+            req.body.frequency,
+            req.body.endTime,
+            req.body.date,
+            req.body.active
+          )
+            .then(() => {
+              return res.status(200).send({ message: "Recurring reminder created successfully!" });
+            })
+            .catch((error) => {
+              return res
+                .status(404)
+                .send({ message: `Error creating recurring reminder. ${error}` });
+            });
+        })
+        .catch((error) => {
+          return res.status(404).send({ message: `Error creating template reminder. ${error}` });
+        });
+    }
+  } else {
+    // If there is no frequency specified, it is a planned reminder, not recurring
+    if (!req.body.frequency) {
+      if (!req.body.endDateTime) {
+        return res.status(400).send({ message: "Planned reminder must have an end date and time" });
+      }
+      createPlannedReminder(
+        req.body.uid,
+        req.body.templateReminderId,
+        req.body.endDateTime,
+        req.body.active
       )
-    );
+        .then(() => {
+          return res.status(200).send({ message: "Planned reminder created successfully!" });
+        })
+        .catch((error) => {
+          return res.status(404).send({ message: `Error creating planned reminder. ${error}` });
+        });
+    } else {
+      if (!req.body.endTime) {
+        return res.status(400).send({ message: "Recurring reminder must have an active setting" });
+      }
+      if (!req.body.date) {
+        return res.status(400).send({ message: "Recurring reminder must have a date" });
+      }
+      createRecurringReminder(
+        req.body.uid,
+        req.body.templateReminderId,
+        req.body.frequency,
+        req.body.endTime,
+        req.body.date,
+        req.body.active
+      )
+        .then(() => {
+          return res.status(200).send({ message: "Recurring reminder created successfully!" });
+        })
+        .catch((error) => {
+          return res.status(404).send({ message: `Error creating recurring reminder. ${error}` });
+        });
+    }
+  }
 };
 
 exports.update = (req, res) => {
   if (!req.body.uid) {
     return res.status(400).send({ message: "You must be logged in to make this operation!" });
   }
+  if (!req.body.templateReminderId) {
+    return res.status(400).send({ message: "Base/template reminder not specified!" });
+  }
   if (!req.body.reminderId) {
-    return res.status(400).send({ message: "Missing Reminder ID!" });
+    return res.status(400).send({ message: "Reminder must have an Id!" });
   }
-  if (!req.body.name) {
-    return res.status(400).send({ message: "Reminders must have a name!" });
-  }
-  if (!req.body.description) {
-    return res.status(400).send({ message: "Reminders must have a description!" });
-  }
-  if (!req.body.dateTime) {
-    return res.status(400).send({ message: "Reminders must have a date!" });
+  if (!req.body.reminderCollection) {
+    return res.status(400).send({ message: "Reminder must have a reminder collection!" });
   }
 
-  const updatedReminder = {
-    name: req.body.name,
-    description: req.body.description,
-    dateTime: req.body.dateTime,
-    eventType: "2",
-  };
+  let updatedReminder = null;
 
-  db.collection("users")
-    .where("uid", "==", req.body.uid)
-    .limit(1)
-    .get()
-    .then((querySnapshot) =>
-      querySnapshot.forEach((queryDocumentSnapshot) =>
-        queryDocumentSnapshot.ref
-          .collection("reminders")
-          .doc(req.body.reminderId)
-          .update(updatedReminder)
-          .then(() => {
-            return res.status(200).send({ message: "Successfully updated reminder!" });
-          })
-          .catch((error) => {
-            return res.status(404).send({ message: `Error updating reminder. ${error}` });
-          })
-      )
+  if (req.body.reminderCollection === "plannedReminders") {
+    if (!req.body.endDateTime) {
+      return res.status(400).send({ message: "Planned reminder must have an end date and time" });
+    }
+    updatedReminder = {
+      templateReminderId: req.body.templateReminderId,
+      endDateTime: req.body.endDateTime,
+      active: req.body.active,
+    };
+  } else if (req.body.reminderCollection === "recurringReminders") {
+    if (!req.body.frequency) {
+      return res.status(400).send({ message: "Recurring reminder must have a set frequency" });
+    }
+    if (!req.body.endTime) {
+      return res.status(400).send({ message: "Recurring reminder must have an active setting" });
+    }
+    if (!req.body.date) {
+      return res.status(400).send({ message: "Recurring reminder must have a date" });
+    }
+
+    updatedReminder = {
+      templateReminderId: req.body.templateReminderId,
+      frequency: req.body.frequency,
+      endTime: req.body.endTime,
+      date: req.body.date,
+      active: req.body.active,
+    };
+  }
+
+  const promises = [];
+
+  if (req.body.updateTemplate) {
+    if (!req.body.name) {
+      return res.status(400).send({ message: "Template reminder must have a name!" });
+    }
+    if (!req.body.description) {
+      return res.status(400).send({ message: "Template reminder must have a description!" });
+    }
+    if (!req.body.defaultLength) {
+      return res
+        .status(400)
+        .send({ message: "Template reminder must have an associated default length!" });
+    }
+
+    const updatedTemplateReminder = {
+      name: req.body.name,
+      description: req.body.description,
+      defaultLength: req.body.defaultLength,
+      eventType: "2",
+    };
+
+    promises.push(
+      db
+        .collection("users")
+        .where("uid", "==", req.body.uid)
+        .limit(1)
+        .get()
+        .then((querySnapshot) => {
+          querySnapshot.forEach((queryDocumentSnapshot) => {
+            queryDocumentSnapshot.ref
+              .collection("templateReminders")
+              .doc(req.body.templateReminderId)
+              .update(updatedTemplateReminder);
+          });
+        })
     );
+  }
+
+  promises.push(
+    db
+      .collection("users")
+      .where("uid", "==", req.body.uid)
+      .limit(1)
+      .get()
+      .then((querySnapshot) =>
+        querySnapshot.forEach((queryDocumentSnapshot) => {
+          queryDocumentSnapshot.ref
+            .collection(req.body.reminderCollection)
+            .doc(req.body.reminderId)
+            .update(updatedReminder);
+        })
+      )
+  );
+
+  Promise.all(promises)
+    .then(() => {
+      return res.status(200).send({ message: "Successfully updated reminder!" });
+    })
+    .catch((error) => {
+      return res.status(404).send({ message: `Error updating reminder. ${error}` });
+    });
 };
 
 exports.delete = (req, res) => {
-  if (!req.query.uid) {
+  if (!req.body.uid) {
     return res.status(400).send({ message: "You must be logged in to make this operation!" });
   }
-  if (!req.query.reminderId) {
+  if (!req.body.reminderId) {
     return res.status(400).send({ message: "Reminder must have a reminder ID!" });
+  }
+  if (!req.body.reminderCollection) {
+    return res.status(400).send({ message: "Reminder must have a reminder collection!" });
   }
 
   db.collection("users")
-    .where("uid", "==", req.query.uid)
+    .where("uid", "==", req.body.uid)
     .limit(1)
     .get()
     .then((querySnapshot) => {
@@ -313,8 +705,8 @@ exports.delete = (req, res) => {
       }
       querySnapshot.forEach((queryDocumentSnapshot) => {
         queryDocumentSnapshot.ref
-          .collection("reminders")
-          .doc(req.query.reminderId)
+          .collection(req.body.reminderCollection)
+          .doc(req.body.reminderId)
           .delete()
           .then(() => {
             return res.status(200).send({ message: "Successfully deleted reminder!" });

@@ -17,8 +17,12 @@ const convertLocaleDateString = (dateStr) => {
   return year + month + day + hour + min;
 };
 
-const getAllReminder = () => {
+const getAllReminders = () => {
   return axios.get(REMINDER_API_URL + "/", { params: { uid: firebaseAuth.currentUser.uid } });
+};
+
+const getAllLocalReminders = () => {
+  return axios.get(REMINDER_API_URL + "/local", { params: { uid: firebaseAuth.currentUser.uid } });
 };
 
 const getReminders = (reminderIds, uid = firebaseAuth.currentUser.uid) => {
@@ -60,11 +64,63 @@ const addReminder = (dateTime, name, description) => {
   });
 };
 
+const getTemplateReminders = () => {
+  return axios.get(REMINDER_API_URL + "/template", {
+    params: { uid: firebaseAuth.currentUser.uid },
+  });
+};
+
+const addPlannedReminder = (
+  endDateTime,
+  active,
+  defaultLength,
+  name = null,
+  description = null,
+  templateReminderId = null
+) => {
+  return axios.post(REMINDER_API_URL + "/create", {
+    uid: firebaseAuth.currentUser.uid,
+    endDateTime,
+    active,
+    defaultLength,
+    name,
+    description,
+    templateReminderId,
+  });
+};
+
+const addRecurringReminder = (
+  frequency,
+  endTime,
+  date,
+  active,
+  defaultLength,
+  name = null,
+  description = null,
+  templateReminderId = null
+) => {
+  return axios.post(REMINDER_API_URL + "/create", {
+    uid: firebaseAuth.currentUser.uid,
+    frequency,
+    endTime,
+    date,
+    active,
+    defaultLength,
+    name,
+    description,
+    templateReminderId,
+  });
+};
+
 export default {
-  getAllReminder,
+  getAllReminders,
+  getAllLocalReminders,
   getReminders,
   updateReminder,
   deleteReminder,
   addReminder,
   getRangeReminder,
+  getTemplateReminders,
+  addPlannedReminder,
+  addRecurringReminder,
 };

@@ -3,6 +3,7 @@ import { makeStyles } from "@material-ui/core/styles";
 import { Grid, Typography, TextField, Paper, Button } from "@material-ui/core";
 import { DataGrid, GridToolbar } from "@material-ui/data-grid";
 import reminderPackageService from "../../../services/reminderPackageService";
+import localService from "../../../services/localService";
 
 const useStyles = makeStyles(() => ({
   root: {
@@ -77,8 +78,8 @@ const SubscribedPackages = () => {
       field: "lastModified",
       headerName: "Last Modified",
       flex: 1,
-      valueFormatter: (datetime) => {
-        return `${new Date(datetime.value).toLocaleDateString()}`;
+      valueFormatter: (params) => {
+        return `${localService.parseTime(params.value)}`;
       },
     },
     {
@@ -120,9 +121,13 @@ const SubscribedPackages = () => {
         setPackageList(tempPackageList);
       })
       .catch((error) => {
-        alert(
-          `Issue getting reminder packages. Error status code: ${error.response.status}. ${error.response.data.message}`
-        );
+        if (!error.response) {
+          alert("Issue accessing reminder package API");
+        } else {
+          alert(
+            `Issue getting reminder packages. Error status code: ${error.response.status}. ${error.response.data.message}`
+          );
+        }
       });
   };
 
@@ -227,6 +232,9 @@ const SubscribedPackages = () => {
                 }}
                 onSelectionModelChange={handleDataGridSelectionChange}
                 selectionModel={selectionModel}
+                isRowSelectable={(params) => {
+                  return !params.getValue(params.id, "subscribed");
+                }}
                 style={{ overflowX: "auto" }}
                 components={{ Toolbar: GridToolbar }}
               />

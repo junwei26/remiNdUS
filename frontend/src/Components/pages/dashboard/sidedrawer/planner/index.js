@@ -24,13 +24,14 @@ import {
 } from "@devexpress/dx-react-scheduler-material-ui";
 import activityService from "../../../services/activityService";
 import reminderService from "../../../services/reminderService";
+import localService from "../../../services/localService";
 import userService from "../../../services/userService";
 
 const getData = (setData, setLoading) => {
   setLoading(true);
-  return activityService.getAllActivities().then((response1) => {
-    reminderService.getAllReminder().then((response2) => {
-      setData([...response1.data, ...response2.data]);
+  return activityService.getAllActivities().then((activities) => {
+    reminderService.getAllReminders().then((reminders) => {
+      setData([...activities.data, ...reminders.data]);
       setLoading(false);
     });
   });
@@ -57,39 +58,28 @@ const ToolbarWithLoading = withStyles(styles, { name: "Toolbar" })(
   )
 );
 
-const parseTime = (dateTime) => {
-  if (dateTime) {
-    return new Date(
-      dateTime.slice(0, 4),
-      dateTime.slice(4, 6) - 1,
-      dateTime.slice(6, 8),
-      dateTime.slice(8, 10),
-      dateTime.slice(10, 12)
-    ).toLocaleString("en-US");
-  }
-  return "";
-};
-
 const mapAppointmentData = (appointment) => {
-  if (appointment.eventType === "1") {
-    return {
-      id: appointment.activityId,
-      startDate: parseTime(appointment.startDateTime),
-      endDate: parseTime(appointment.endDateTime),
-      title: appointment.name,
-      description: appointment.description,
-      eventType: appointment.eventType,
-      tag: appointment.tag,
-    };
+  if (appointment.active) {
+    if (appointment.eventType === "1") {
+      return {
+        id: appointment.activityId,
+        startDate: localService.parseTime(appointment.startDateTime),
+        endDate: localService.parseTime(appointment.endDateTime),
+        title: appointment.name,
+        description: appointment.description,
+        eventType: appointment.eventType,
+      };
+    } else {
+      return {
+        id: appointment.reminderId,
+        startDate: localService.parseTime(appointment.endDateTime),
+        title: appointment.name,
+        description: appointment.description,
+        eventType: appointment.eventType,
+      };
+    }
   } else {
-    return {
-      id: appointment.reminderId,
-      startDate: parseTime(appointment.dateTime),
-      title: appointment.name,
-      description: appointment.description,
-      eventType: appointment.eventType,
-      tag: "Reminder",
-    };
+    return {}; // not active, do not display
   }
 };
 
