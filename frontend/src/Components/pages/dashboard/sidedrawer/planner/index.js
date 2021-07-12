@@ -62,8 +62,8 @@ const mapAppointmentData = (appointment) => {
   if (appointment.eventType === "1") {
     return {
       id: appointment.activityId,
-      startDate: localService.parseTime(appointment.startDateTime),
-      endDate: localService.parseTime(appointment.endDateTime),
+      startDate: localService.parseTimeToString(appointment.startDateTime),
+      endDate: localService.parseTimeToString(appointment.endDateTime),
       title: appointment.name,
       description: appointment.description,
       eventType: appointment.eventType,
@@ -71,7 +71,7 @@ const mapAppointmentData = (appointment) => {
   } else {
     return {
       id: appointment.reminderId,
-      startDate: localService.parseTime(appointment.endDateTime),
+      startDate: localService.parseTimeToString(appointment.endDateTime),
       title: appointment.name,
       description: appointment.description,
       eventType: appointment.eventType,

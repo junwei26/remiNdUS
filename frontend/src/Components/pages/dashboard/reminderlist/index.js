@@ -2,7 +2,7 @@ import React, { useState, useEffect } from "react";
 import ListItem from "@material-ui/core/ListItem";
 import List from "@material-ui/core/List";
 import ListItemText from "@material-ui/core/ListItemText";
-import { Typography, ButtonGroup, Button, Grid } from "@material-ui/core";
+import { Typography, ButtonGroup, Button, Grid, Tooltip } from "@material-ui/core";
 import Paper from "@material-ui/core/Paper";
 import { makeStyles } from "@material-ui/core/styles";
 import reminderService from "../../services/reminderService";
@@ -81,8 +81,17 @@ const ReminderList = () => {
             {reminders
               .filter((reminder) => reminder.reminderType === "planned")
               .map((reminder) => {
-                const reminderDisplayText =
-                  localService.parseTimeShorter(reminder.endDateTime) + `\n${reminder.name}`;
+                const reminderDisplayText = (
+                  <Tooltip title={"Description: " + reminder.description}>
+                    <div>
+                      {localService.convertDateToShorterString(
+                        localService.parseTimeToDate(reminder.endDateTime)
+                      )}
+                      <br />
+                      {reminder.name}
+                    </div>
+                  </Tooltip>
+                );
                 return (
                   <ListItem key={reminder.reminderId} divider={true}>
                     <ListItemText primary={reminderDisplayText} />
