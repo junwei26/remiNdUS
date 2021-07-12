@@ -78,6 +78,10 @@ const getRemindersByIds = (uid, plannedReminderIds, recurringReminderIds, subscr
     });
 };
 
+exports.getAllRemindersExport = (userQuerySnapshot) => {
+  return getAllReminders(userQuerySnapshot);
+};
+
 const getAllReminders = (
   userDoc,
   plannedRangeQuery = (x) => {
@@ -723,29 +727,34 @@ exports.getByTelegram = (req, res) => {
     return res.status(400).send({ message: "You must be logged in to make this operation!" });
   }
 
-  var reminders = [];
+  const plannedRangeQuery = (plannedRecurringCollection) => {
+    return plannedRecurringCollection
+      .where("endDateTime", ">=", req.query.currentDateTime)
+      .where("endDateTime", "<=", req.query.endDateTime);
+  };
+
   db.collection("users")
     .where("telegramHandle", "==", req.query.telegramHandle)
     .limit(1)
     .get()
-    .then((data) => {
-      if (data.empty) {
+    .then((querySnapshot) => {
+      if (querySnapshot.empty) {
         return res.status(404).send({ message: "No reminders found." });
       }
-      data.forEach((doc) => {
-        doc.ref
-          .collection("reminders")
-          .where("dateTime", ">=", req.query.currentDateTime)
-          .where("dateTime", "<=", req.query.endDateTime)
-          .get()
-          .then((querySnapshot) => {
-            querySnapshot.forEach((reminder) => {
-              reminders.push({ reminderId: reminder.id, ...reminder.data() });
-            });
-            res.send(reminders);
-            return res.status(200).send();
-          });
-      });
+
+      let reminders = [];
+
+      const userDoc = querySnapshot.docs[0].ref;
+
+      getAllReminders(userDoc, plannedRangeQuery)
+        .then((results) => {
+          reminders = [].concat.apply([], results);
+          res.send(reminders);
+          return res.status(200).send({ message: "Successfully retrieved all reminders" });
+        })
+        .catch((error) => {
+          return res.status(404).send({ message: `Error retrieving all reminders. ${error}` });
+        });
     })
     .catch((error) => {
       return res.status(400).send({ message: `Error retrieving reminders. ${error}` });
@@ -759,31 +768,38 @@ exports.createByTelegram = (req, res) => {
   if (!req.body.description) {
     return res.status(400).send({ message: "Reminders must have a description!" });
   }
-  if (!req.body.dateTime) {
-    return res.status(400).send({ message: "Reminders must have a date!" });
+  if (!req.body.endDateTime) {
+    return res.status(400).send({ message: "Reminders must have an end datetime!" });
   }
 
-  const reminder = {
-    name: req.body.name,
-    description: req.body.description,
-    dateTime: req.body.dateTime,
-    eventType: "2",
-  };
   db.collection("users")
     .where("telegramHandle", "==", req.body.telegramHandle)
     .limit(1)
     .get()
-    .then((querySnapshot) =>
-      querySnapshot.forEach((doc) =>
-        db
-          .collection("users")
-          .doc(doc.id)
-          .collection("reminders")
-          .doc()
-          .set(reminder)
-          .then(() => {
-            return res.status(200).send({ message: "Reminder created successfully!" });
+    .then((querySnapshot) => {
+      querySnapshot.forEach((queryDocumentSnapshot) => {
+        const userDoc = queryDocumentSnapshot.ref;
+
+        createTemplate(userDoc.id, req.body.name, req.body.description, "02:00")
+          .then((templateReminderDoc) => {
+            createPlannedReminder(userDoc.id, templateReminderDoc.id, req.body.endDateTime, true)
+              .then(() => {
+                return res.status(200).send({ message: "Planned reminder created successfully!" });
+              })
+              .catch((error) => {
+                return res
+                  .status(404)
+                  .send({ message: `Error creating planned reminder. ${error}` });
+              });
           })
-      )
-    );
+          .catch((error) => {
+            return res.status(404).send({ message: `Error creating template reminder. ${error}` });
+          });
+      });
+    })
+    .catch((error) => {
+      return res
+        .status(400)
+        .send({ message: `Error getting user database when creating reminder. ${error}` });
+    });
 };

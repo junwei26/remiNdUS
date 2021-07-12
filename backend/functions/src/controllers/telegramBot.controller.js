@@ -1,3 +1,9 @@
+const activityController = require("./activity.controller.js");
+const reminderController = require("./reminder.controller.js");
+
+const getAllActivities = activityController.getAllActivitiesExport;
+const getAllReminders = reminderController.getAllRemindersExport;
+
 const { Telegraf } = require("telegraf");
 const functions = require("firebase-functions");
 const admin = require("firebase-admin");
@@ -16,66 +22,80 @@ const retrieveDaily = (chatId) => {
     const min = "00";
     return year + month + day + hour + min;
   };
+
   const currentDate = new Date();
   const endDate = new Date();
   endDate.setDate(currentDate.getDate() + 1);
-  var activities = [];
-  var reminders = [];
+
+  const promises = [];
+
   db.collection("users")
     .where("telegramChatId", "==", chatId)
     .limit(1)
     .get()
-    .then((data) => {
-      data.forEach((doc) => {
-        doc.ref
-          .collection("activities")
+    .then((querySnapshot) => {
+      if (querySnapshot.empty) {
+        // return res.status(404).send({ message: "No activities found." });
+      }
+
+      const plannedActivityQuery = (plannedActivitiesCollection) => {
+        return plannedActivitiesCollection
           .where("startDateTime", ">=", convertLocaleDateString(currentDate))
-          .where("startDateTime", "<=", convertLocaleDateString(endDate))
-          .get()
-          .then((querySnapshot) => {
-            querySnapshot.forEach((activity) => {
-              activities.push(activity.data());
-            });
-            db.collection("users")
-              .where("telegramChatId", "==", chatId)
-              .limit(1)
-              .get()
-              .then((data) => {
-                data.forEach((doc) => {
-                  doc.ref
-                    .collection("reminders")
-                    .where("dateTime", ">=", convertLocaleDateString(currentDate))
-                    .where("dateTime", "<=", convertLocaleDateString(endDate))
-                    .get()
-                    .then((querySnapshot) => {
-                      querySnapshot.forEach((reminder) => {
-                        reminders.push({ reminderId: reminder.id, ...reminder.data() });
-                      });
-                      const activityArr = activities.map(
-                        (activity) =>
-                          ` ${activity.name} : ${activity.startDateTime.slice(
-                            8,
-                            12
-                          )} - ${activity.endDateTime.slice(8, 12)}`
-                      );
-                      const reminderArr = reminders.map(
-                        (reminder) => ` ${reminder.name} : ${reminder.dateTime.slice(8, 12)}`
-                      );
-                      bot.telegram.sendMessage(
-                        chatId,
-                        "Here are your activities for the day.\n" +
-                          activityArr.join("\n") +
-                          "\n Here are your reminders for the day.\n" +
-                          reminderArr.join("\n")
-                      );
-                    });
-                });
-              })
-              .catch(() => {});
-          });
-      });
-    })
-    .catch(() => {});
+          .where("startDateTime", "<=", convertLocaleDateString(endDate));
+      };
+
+      promises.push(
+        getAllActivities(querySnapshot, plannedActivityQuery)
+          .then((results) => {
+            return [].concat.apply([], results);
+          })
+          .catch(() => {
+            // return res.status(404).send({ message: `Error retrieving all activities. ${error}` });
+          })
+      );
+
+      const plannedRangeQuery = (plannedRecurringCollection) => {
+        return plannedRecurringCollection
+          .where("endDateTime", ">=", convertLocaleDateString(currentDate))
+          .where("endDateTime", "<=", convertLocaleDateString(endDate));
+      };
+
+      const userDoc = querySnapshot.docs[0].ref;
+
+      promises.push(
+        getAllReminders(userDoc, plannedRangeQuery)
+          .then((results) => {
+            return [].concat.apply([], results);
+          })
+          .catch(() => {
+            // return res.status(404).send({ message: `Error retrieving all reminders. ${error}` });
+          })
+      );
+
+      Promise.all(promises)
+        .then((results) => {
+          const activityArr = results[0].map(
+            (activity) =>
+              ` ${activity.name} : ${activity.startDateTime.slice(
+                8,
+                12
+              )} - ${activity.endDateTime.slice(8, 12)}`
+          );
+          const reminderArr = results[1].map(
+            (reminder) => ` ${reminder.name} : ${reminder.endDateTime.slice(8, 12)}`
+          );
+          bot.telegram.sendMessage(
+            chatId,
+            "Here are your activities for the day.\n" +
+              activityArr.join("\n") +
+              "\n Here are your reminders for the day.\n" +
+              reminderArr.join("\n")
+          );
+        })
+        .catch(() => {
+          // return res.status(400).send({ message: `Error getting all activities and reminders ${error}` });
+        });
+    });
 };
 
 exports.sendReminders = async (req, res) => {
