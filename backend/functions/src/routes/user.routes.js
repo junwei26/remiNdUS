@@ -10,6 +10,8 @@ module.exports = (app) => {
   router.post("/updateTelegramSendReminders", user.updateTelegramSendReminders);
   router.post("/updateTelegramReminderTiming", user.updateTelegramReminderTiming);
   router.post("/updateTest", user.updateTest);
+  router.post("/addTag", user.addTag);
+  router.post("/setChatId", user.setChatId);
 
   router.get("/", user.get);
   router.get("/getTelegramReminderUsers", user.getTelegramReminderUsers);

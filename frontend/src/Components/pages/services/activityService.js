@@ -15,7 +15,7 @@ const getTemplateActivities = () => {
   });
 };
 
-const updateActivity = (startDateTime, endDateTime, name, description, activityId) => {
+const updateActivity = (startDateTime, endDateTime, name, description, activityId, tag) => {
   return axios.post(ACTIVITY_API_URL + "/update", {
     uid: firebaseAuth.currentUser.uid,
     startDateTime: startDateTime,
@@ -23,6 +23,7 @@ const updateActivity = (startDateTime, endDateTime, name, description, activityI
     name,
     description,
     activityId,
+    tag,
   });
 };
 

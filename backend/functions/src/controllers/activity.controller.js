@@ -45,14 +45,21 @@ const getActivitiesById = (userDoc, activityIds, activityCollection) => {
   });
 };
 
-const getAllActivities = (userQuerySnapshot) => {
+exports.getAllActivitiesExport = (userQuerySnapshot) => {
+  return getAllActivities(userQuerySnapshot);
+};
+
+const getAllActivities = (
+  userQuerySnapshot,
+  plannedActivityQuery = (x) => x,
+  recurringActivityQuery = (x) => x
+) => {
   let promises = [];
 
   userQuerySnapshot.forEach((queryDocumentSnapshot) => {
     const userDoc = queryDocumentSnapshot.ref;
     promises.push(
-      userDoc
-        .collection("plannedActivities")
+      plannedActivityQuery(userDoc.collection("plannedActivities"))
         .get()
         .then((querySnapshot) => {
           return getActivitiesById(
@@ -63,8 +70,7 @@ const getAllActivities = (userQuerySnapshot) => {
         })
     );
     promises.push(
-      userDoc
-        .collection("recurringActivities")
+      recurringActivityQuery(userDoc.collection("recurringActivities"))
         .get()
         .then((querySnapshot) => {
           return getActivitiesById(
@@ -196,7 +202,13 @@ exports.getByTelegram = (req, res) => {
 
       let activities = [];
 
-      getAllActivities(querySnapshot)
+      const plannedActivityQuery = (plannedActivitiesCollection) => {
+        return plannedActivitiesCollection
+          .where("startDateTime", ">=", req.query.currentDateTime)
+          .where("startDateTime", "<=", req.query.endDateTime);
+      };
+
+      getAllActivities(querySnapshot, plannedActivityQuery)
         .then((results) => {
           activities = [].concat.apply([], results);
           res.send(activities);
@@ -248,12 +260,12 @@ exports.range = (req, res) => {
 };
 
 // access the new document by using createTemplate(...).then((templateReminderDoc) => {...})
-const createTemplate = (uid, name, description, defaultLength) => {
+const createTemplate = (uid, name, description, defaultLength, activityTag) => {
   return db
     .collection("users")
     .doc(uid)
     .collection("templateActivities")
-    .add({ name, description, defaultLength, eventType: "1" });
+    .add({ name, description, defaultLength, activityTag, eventType: "1" });
 };
 
 // access the new document by using createPlannedReminder(...).then((plannedReminderDoc) => {...})
@@ -312,6 +324,9 @@ exports.create = (req, res) => {
     if (!req.body.defaultLength) {
       return res.status(400).send({ message: "Activities must have a default length" });
     }
+    if (!req.body.activtiyTag) {
+      return res.status(400).send({ message: "Activities must have an activity tag" });
+    }
 
     // If there is no frequency specified, it is a planned activity, not recurring
     if (!req.body.frequency) {
@@ -329,7 +344,13 @@ exports.create = (req, res) => {
           .status(400)
           .send({ message: "Activity start time must be before activity end time!" });
       }
-      createTemplate(req.body.uid, req.body.name, req.body.description, req.body.defaultLength)
+      createTemplate(
+        req.body.uid,
+        req.body.name,
+        req.body.description,
+        req.body.defaultLength,
+        req.body.activityTag
+      )
         .then((templateActivityDoc) => {
           createPlannedActivity(
             req.body.uid,
@@ -358,7 +379,13 @@ exports.create = (req, res) => {
       if (!req.body.date) {
         return res.status(400).send({ message: "Recurring activity must have a date" });
       }
-      createTemplate(req.body.uid, req.body.name, req.body.description, req.body.defaultLength)
+      createTemplate(
+        req.body.uid,
+        req.body.name,
+        req.body.description,
+        req.body.defaultLength,
+        req.body.activityTag
+      )
         .then((templateActivityDoc) => {
           createRecurringActivity(
             req.body.uid,
@@ -588,5 +615,68 @@ exports.delete = (req, res) => {
     })
     .catch((error) => {
       return res.status(400).send({ message: `Error deleting activity. ${error}` });
+    });
+};
+
+exports.createByTelegram = (req, res) => {
+  if (!req.body.name) {
+    return res.status(400).send({ message: "Activity must have a name!" });
+  }
+  if (!req.body.description) {
+    return res.status(400).send({ message: "Activity must have a description!" });
+  }
+  if (!req.body.tag) {
+    return res.status(400).send({ message: "Activity must have an activity tag!" });
+  }
+  if (!req.body.startDateTime) {
+    return res.status(400).send({ message: "Activity must have a start time!" });
+  }
+  if (!req.body.endDateTime) {
+    return res.status(400).send({ message: "Activity must have an end time!" });
+  }
+  if (req.body.endDateTime <= req.body.startDateTime) {
+    return res
+      .status(400)
+      .send({ message: "Activity start time must be before activity end time!" });
+  }
+
+  db.collection("users")
+    .where("telegramHandle", "==", req.body.telegramHandle)
+    .limit(1)
+    .get()
+    .then((querySnapshot) => {
+      querySnapshot.forEach((queryDocumentSnapshot) => {
+        const userDoc = queryDocumentSnapshot.ref;
+
+        createTemplate(userDoc.id, req.body.name, req.body.description, "02:00", req.body.tag)
+          .then((templateActivityDoc) => {
+            createPlannedActivity(
+              userDoc.id,
+              templateActivityDoc.id,
+              req.body.startDateTime,
+              req.body.endDateTime,
+              true
+            )
+              .then(() => {
+                userDoc.update({
+                  tags: admin.firestore.FieldValue.arrayUnion(req.body.tag),
+                });
+                return res.status(200).send({ message: "Planned activity created successfully!" });
+              })
+              .catch((error) => {
+                return res
+                  .status(404)
+                  .send({ message: `Error creating planned activity. ${error}` });
+              });
+          })
+          .catch((error) => {
+            return res.status(404).send({ message: `Error creating template activity. ${error}` });
+          });
+      });
+    })
+    .catch((error) => {
+      return res
+        .status(400)
+        .send({ message: `Error getting user database when creating activity. ${error}` });
     });
 };
