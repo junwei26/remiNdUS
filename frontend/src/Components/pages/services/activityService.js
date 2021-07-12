@@ -18,8 +18,8 @@ const getTemplateActivities = () => {
 const updateActivity = (startDateTime, endDateTime, name, description, activityId, tag) => {
   return axios.post(ACTIVITY_API_URL + "/update", {
     uid: firebaseAuth.currentUser.uid,
-    startDateTime: startDateTime,
-    endDateTime: endDateTime,
+    startDateTime,
+    endDateTime,
     name,
     description,
     activityId,
@@ -36,8 +36,6 @@ const deleteActivity = (activityId) => {
 const addPlannedActivity = (
   startDateTime,
   endDateTime,
-  active,
-  defaultLength,
   name = null,
   description = null,
   templateActivityId = null
@@ -46,10 +44,8 @@ const addPlannedActivity = (
     uid: firebaseAuth.currentUser.uid,
     name,
     description,
-    startDateTime: startDateTime,
-    endDateTime: endDateTime,
-    active,
-    defaultLength,
+    startDateTime,
+    endDateTime,
     templateActivityId,
   });
 };
@@ -59,8 +55,6 @@ const addRecurringActivity = (
   startTime,
   endTime,
   date,
-  active,
-  defaultLength,
   name = null,
   description = null,
   templateActivityId = null
@@ -73,8 +67,6 @@ const addRecurringActivity = (
     startTime,
     endTime,
     date,
-    active,
-    defaultLength,
     templateActivityId,
   });
 };
@@ -83,8 +75,8 @@ const getRangeActivity = (currentDateTime, endDateTime) => {
   return axios.get(ACTIVITY_API_URL + "/getRange", {
     params: {
       uid: firebaseAuth.currentUser.uid,
-      currentDateTime: currentDateTime,
-      endDateTime: endDateTime,
+      currentDateTime,
+      endDateTime,
     },
   });
 };

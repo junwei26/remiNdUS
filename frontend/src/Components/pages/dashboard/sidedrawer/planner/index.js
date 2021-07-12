@@ -59,27 +59,23 @@ const ToolbarWithLoading = withStyles(styles, { name: "Toolbar" })(
 );
 
 const mapAppointmentData = (appointment) => {
-  if (appointment.active) {
-    if (appointment.eventType === "1") {
-      return {
-        id: appointment.activityId,
-        startDate: localService.parseTime(appointment.startDateTime),
-        endDate: localService.parseTime(appointment.endDateTime),
-        title: appointment.name,
-        description: appointment.description,
-        eventType: appointment.eventType,
-      };
-    } else {
-      return {
-        id: appointment.reminderId,
-        startDate: localService.parseTime(appointment.endDateTime),
-        title: appointment.name,
-        description: appointment.description,
-        eventType: appointment.eventType,
-      };
-    }
+  if (appointment.eventType === "1") {
+    return {
+      id: appointment.activityId,
+      startDate: localService.parseTime(appointment.startDateTime),
+      endDate: localService.parseTime(appointment.endDateTime),
+      title: appointment.name,
+      description: appointment.description,
+      eventType: appointment.eventType,
+    };
   } else {
-    return {}; // not active, do not display
+    return {
+      id: appointment.reminderId,
+      startDate: localService.parseTime(appointment.endDateTime),
+      title: appointment.name,
+      description: appointment.description,
+      eventType: appointment.eventType,
+    };
   }
 };
 

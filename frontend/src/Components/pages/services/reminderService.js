@@ -72,8 +72,6 @@ const getTemplateReminders = () => {
 
 const addPlannedReminder = (
   endDateTime,
-  active,
-  defaultLength,
   name = null,
   description = null,
   templateReminderId = null
@@ -81,8 +79,6 @@ const addPlannedReminder = (
   return axios.post(REMINDER_API_URL + "/create", {
     uid: firebaseAuth.currentUser.uid,
     endDateTime,
-    active,
-    defaultLength,
     name,
     description,
     templateReminderId,
@@ -93,8 +89,6 @@ const addRecurringReminder = (
   frequency,
   endTime,
   date,
-  active,
-  defaultLength,
   name = null,
   description = null,
   templateReminderId = null
@@ -104,8 +98,6 @@ const addRecurringReminder = (
     frequency,
     endTime,
     date,
-    active,
-    defaultLength,
     name,
     description,
     templateReminderId,

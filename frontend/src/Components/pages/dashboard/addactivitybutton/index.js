@@ -45,7 +45,6 @@ const AddActivityButton = () => {
     roundUpDateTime(new Date(currentDateTime.getTime() + 1))
   );
   const [recurring, setRecurring] = useState(false);
-  const [active, setActive] = useState(true);
   const [dialogOpen, setDialogOpen] = useState(false);
   const [activityName, setActivityName] = useState("");
   const [description, setDescription] = useState("");
@@ -67,7 +66,7 @@ const AddActivityButton = () => {
   const handleStartDateChange = (date) => {
     setStartDateTime(roundUpDateTime(date));
     if (frequency === "monthly") {
-      setDate(date.getDate());
+      setDate(1);
     }
     // If new start date is greater (later) than end datetime or equal, update end date
     if (date.getTime() >= endDateTime.getTime()) {
@@ -94,12 +93,8 @@ const AddActivityButton = () => {
   const handleSetRecurring = (e) => {
     setRecurring(e.target.checked);
     setStartDateTime(currentDateTime);
-    setDate(startDateTime.getDate());
+    setDate(1);
     setEndDateTime(currentDateTime);
-  };
-
-  const handleSetActive = (e) => {
-    setActive(e.target.checked);
   };
 
   const handleDialogClickOpen = () => {
@@ -127,18 +122,11 @@ const AddActivityButton = () => {
         ? templateActivities[chosenTemplateActivity].templateActivityId
         : null;
 
-    const defaultLength =
-      chosenTemplateActivity < 0
-        ? endDateTime.getTime() - startDateTime.getTime()
-        : templateActivities[chosenTemplateActivity].defaultLength;
-
     if (!recurring) {
       activityService
         .addPlannedActivity(
           localService.convertDateToString(startDateTime),
           localService.convertDateToString(endDateTime),
-          active,
-          defaultLength,
           activityName,
           description,
           templateActivityId
@@ -164,8 +152,6 @@ const AddActivityButton = () => {
             .toString()
             .padStart(2, "0")}`,
           date,
-          active,
-          defaultLength,
           activityName,
           description,
           templateActivityId
@@ -329,19 +315,6 @@ const AddActivityButton = () => {
                       />
                     }
                     label="Recurring Activity"
-                  />
-                </Grid>
-                <Grid item>
-                  <FormControlLabel
-                    control={
-                      <Checkbox
-                        checked={active}
-                        onChange={handleSetActive}
-                        name="active"
-                        color="primary"
-                      />
-                    }
-                    label="Active Activity"
                   />
                 </Grid>
               </Grid>

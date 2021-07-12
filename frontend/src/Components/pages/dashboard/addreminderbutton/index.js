@@ -41,11 +41,9 @@ const addReminderButton = () => {
   const [date, setDate] = useState(1);
   const [endDateTime, setEndDateTime] = useState(roundUpDateTime(currentDateTime));
   const [recurring, setRecurring] = useState(false);
-  const [active, setActive] = useState(true);
   const [dialogOpen, setDialogOpen] = useState(false);
   const [reminderName, setReminderName] = useState("");
   const [description, setDescription] = useState("");
-  const [defaultLength, setDefaultLength] = useState("02:00");
 
   const [templateReminders, setTemplateReminders] = useState([]);
   const [chosenTemplateReminder, setChosenTemplateReminder] = useState(-1);
@@ -55,30 +53,6 @@ const addReminderButton = () => {
       Choose an existing reminder...
     </MenuItem>,
   ]);
-
-  const defaultLengthMenuItems = (() => {
-    let tempMenuItems = [];
-    const minuteIntervals = 15;
-    const intervals = 60 / minuteIntervals;
-    for (let i = 0; i < 24; ++i) {
-      for (let j = 0; j < intervals; ++j) {
-        tempMenuItems.push(
-          <MenuItem
-            key={i * intervals + j}
-            value={`${i.toString().padStart(2, "0")}:${(j * minuteIntervals)
-              .toString()
-              .padStart(2, "0")}`}
-          >
-            {`${i.toString().padStart(2, "0")}:${(j * minuteIntervals)
-              .toString()
-              .padStart(2, "0")}`}
-          </MenuItem>
-        );
-      }
-    }
-
-    return tempMenuItems;
-  })();
 
   const handleSelectFrequencyChange = (e) => {
     setDate(1);
@@ -107,14 +81,6 @@ const addReminderButton = () => {
     setEndDateTime(currentDateTime);
   };
 
-  const handleSetDefaultLength = (e) => {
-    setDefaultLength(e.target.value);
-  };
-
-  const handleSetActive = (e) => {
-    setActive(e.target.checked);
-  };
-
   const handleDialogClickOpen = () => {
     setDialogOpen(true);
   };
@@ -141,8 +107,6 @@ const addReminderButton = () => {
       reminderService
         .addPlannedReminder(
           localService.convertDateToString(endDateTime),
-          active,
-          defaultLength,
           reminderName,
           description,
           templateReminderId
@@ -164,8 +128,6 @@ const addReminderButton = () => {
             .toString()
             .padStart(2, "0")}`,
           date,
-          active,
-          defaultLength,
           reminderName,
           description,
           templateReminderId
@@ -188,11 +150,9 @@ const addReminderButton = () => {
     if (e.target.value >= 0) {
       setReminderName(templateReminders[e.target.value].name);
       setDescription(templateReminders[e.target.value].description);
-      setDefaultLength(templateReminders[e.target.value].defaultLength);
     } else {
       setReminderName("");
       setDescription("");
-      setDefaultLength("");
     }
   };
 
@@ -311,19 +271,6 @@ const addReminderButton = () => {
                   disabled={chosenTemplateReminder !== -1}
                 />
               </Grid>
-              <Grid item style={{ width: "100%" }}>
-                <InputLabel>
-                  Set default length required (in hours:minutes) to complete reminder
-                </InputLabel>
-                <Select
-                  value={defaultLength}
-                  onChange={handleSetDefaultLength}
-                  disabled={chosenTemplateReminder !== -1}
-                  style={{ width: "100%" }}
-                >
-                  {defaultLengthMenuItems}
-                </Select>
-              </Grid>
               <Grid
                 container
                 item
@@ -343,19 +290,6 @@ const addReminderButton = () => {
                       />
                     }
                     label="Recurring Reminder"
-                  />
-                </Grid>
-                <Grid item>
-                  <FormControlLabel
-                    control={
-                      <Checkbox
-                        checked={active}
-                        onChange={handleSetActive}
-                        name="active"
-                        color="primary"
-                      />
-                    }
-                    label="Active Reminder"
                   />
                 </Grid>
               </Grid>
