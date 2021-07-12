@@ -34,7 +34,7 @@ const useStyles = makeStyles((theme) => ({
 
 const Sidedrawer = () => {
   const [active, setActive] = useState(1);
-  const [selectedReminderPackage, setSelectedReminderPackage] = useState([]);
+  const [selectedReminderPackage, setSelectedReminderPackage] = useState(null);
   const setView = (active) => {
     setActive(active);
   };
@@ -51,7 +51,12 @@ const Sidedrawer = () => {
       case "Search Packages":
         return <SearchPackages />;
       case "Create Packages":
-        return <CreatePackages reminderPackage={selectedReminderPackage} />;
+        return (
+          <CreatePackages
+            reminderPackage={selectedReminderPackage}
+            setSelectedReminderPackage={setSelectedReminderPackage}
+          />
+        );
       default:
         return (
           <SubscribedPackages

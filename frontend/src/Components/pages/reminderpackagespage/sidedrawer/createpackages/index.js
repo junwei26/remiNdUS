@@ -1,8 +1,10 @@
 import React, { useState, useEffect } from "react";
 import { makeStyles } from "@material-ui/core/styles";
-import { Grid, Typography, TextField, Paper, Button } from "@material-ui/core";
+import { Grid, Typography, TextField, Paper, Button, Tooltip, IconButton } from "@material-ui/core";
 import { DataGrid, GridToolbar } from "@material-ui/data-grid";
 import PropTypes from "prop-types";
+import RefreshIcon from "@material-ui/icons/Refresh";
+import AddBoxIcon from "@material-ui/icons/AddBox";
 import reminderService from "../../../services/reminderService";
 import reminderPackageService from "../../../services/reminderPackageService";
 import localService from "../../../services/localService";
@@ -18,7 +20,7 @@ const useStyles = makeStyles(() => ({
   },
   dataGrid: {
     width: "90%",
-    height: "410px",
+    height: "400px",
   },
 }));
 
@@ -137,6 +139,7 @@ const CreatePackages = (props) => {
     setSearchRemindersText("");
     clearSelectionModel();
     setEditingPackage(false);
+    props.setSelectedReminderPackage(null);
   };
 
   const refreshPackages = () => {
@@ -375,20 +378,29 @@ const CreatePackages = (props) => {
                 spacing={2}
               >
                 <Grid item>
-                  <Button onClick={clearAllFields} variant="contained" color="primary">
-                    Clear
-                  </Button>
+                  <Tooltip title="Clear" aria-label="clear">
+                    <Button onClick={clearAllFields} color="primary">
+                      Clear
+                    </Button>
+                  </Tooltip>
                 </Grid>
                 <Grid item>
-                  <Button onClick={refreshPackages} variant="contained" color="primary">
-                    Refresh
-                  </Button>
+                  <Tooltip title="Refresh" aria-label="refresh">
+                    <IconButton onClick={refreshPackages} variant="contained" color="primary">
+                      <RefreshIcon />
+                    </IconButton>
+                  </Tooltip>
                 </Grid>
               </Grid>
               <Grid item>
-                <Button type="submit" variant="contained" color="primary">
-                  {editingPackage ? "Update" : "Create"}
-                </Button>
+                <Tooltip
+                  title={editingPackage ? "Update" : "Create"}
+                  aria-label={editingPackage ? "update" : "create"}
+                >
+                  <IconButton type="submit" variant="contained" color="primary">
+                    <AddBoxIcon />
+                  </IconButton>
+                </Tooltip>
               </Grid>
             </Grid>
           </Grid>
@@ -400,6 +412,7 @@ const CreatePackages = (props) => {
 
 CreatePackages.propTypes = {
   reminderPackage: PropTypes.object,
+  setSelectedReminderPackage: PropTypes.func,
 };
 
 export default CreatePackages;

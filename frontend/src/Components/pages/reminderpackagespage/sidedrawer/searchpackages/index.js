@@ -1,7 +1,8 @@
 import React, { useEffect, useState } from "react";
 import { makeStyles } from "@material-ui/core/styles";
-import { Grid, Typography, TextField, Paper, Button } from "@material-ui/core";
+import { Grid, Typography, TextField, Paper, Button, Tooltip, IconButton } from "@material-ui/core";
 import { DataGrid, GridToolbar } from "@material-ui/data-grid";
+import RefreshIcon from "@material-ui/icons/Refresh";
 import reminderPackageService from "../../../services/reminderPackageService";
 import localService from "../../../services/localService";
 
@@ -222,14 +223,18 @@ const SearchPackages = () => {
                 spacing={2}
               >
                 <Grid item>
-                  <Button onClick={clearAllFields} variant="contained" color="primary">
-                    Clear
-                  </Button>
+                  <Tooltip title="Clear" aria-label="clear">
+                    <Button onClick={clearAllFields} color="primary">
+                      Clear
+                    </Button>
+                  </Tooltip>
                 </Grid>
                 <Grid item>
-                  <Button onClick={refreshPackages} variant="contained" color="primary">
-                    Refresh
-                  </Button>
+                  <Tooltip title="Refresh" aria-label="refresh">
+                    <IconButton onClick={refreshPackages} variant="contained" color="primary">
+                      <RefreshIcon />
+                    </IconButton>
+                  </Tooltip>
                 </Grid>
               </Grid>
               <Grid item>

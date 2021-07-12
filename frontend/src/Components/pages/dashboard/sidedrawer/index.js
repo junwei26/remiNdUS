@@ -35,10 +35,6 @@ const useStyles = makeStyles((theme) => ({
   },
 }));
 
-const MassEditPlanner = () => {
-  return <div> Mass edit planner </div>;
-};
-
 const SearchActivities = () => {
   return <div> Search activities </div>;
 };
@@ -55,10 +51,6 @@ const Sidedrawer = () => {
 
   const ActiveView = () => {
     switch (active) {
-      case "Planner View":
-        return <Planner />;
-      case "Mass edit planner":
-        return <MassEditPlanner />;
       case "Search activities":
         return <SearchActivities />;
       case "Search reminders":
@@ -83,17 +75,8 @@ const Sidedrawer = () => {
         <div className={classes.toolbar} />
         <Divider />
         <List>
-          <ListItem button key="Planner View">
-            <ListItemText primary="Planner View" onClick={() => SetView("Planner View")} />
-          </ListItem>
           <AddActivityButton />
           <AddReminderButton />
-          <ListItem button key="Mass edit planner">
-            <ListItemText
-              primary="Mass edit planner"
-              onClick={() => SetView("Mass edit planner")}
-            />
-          </ListItem>
           <ListItem button key="Search activities">
             <ListItemText
               primary="Search activities"
