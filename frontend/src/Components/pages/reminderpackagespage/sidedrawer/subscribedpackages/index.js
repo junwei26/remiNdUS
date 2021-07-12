@@ -79,7 +79,7 @@ const SubscribedPackages = () => {
       headerName: "Last Modified",
       flex: 1,
       valueFormatter: (params) => {
-        return `${localService.parseTime(params.value)}`;
+        return `${localService.parseTimeToString(params.value)}`;
       },
     },
     {

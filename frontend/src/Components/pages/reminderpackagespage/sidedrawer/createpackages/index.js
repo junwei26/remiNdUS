@@ -4,6 +4,7 @@ import { Grid, Typography, TextField, Paper, Button } from "@material-ui/core";
 import { DataGrid } from "@material-ui/data-grid";
 import reminderService from "../../../services/reminderService";
 import reminderPackageService from "../../../services/reminderPackageService";
+import localService from "../../../services/localService";
 
 const useStyles = makeStyles(() => ({
   root: {
@@ -57,39 +58,26 @@ const SubscribedPackages = () => {
       flex: 2,
     },
     {
-      field: "defaultLength",
-      headerName: "Time required",
+      field: "endDateAndTime",
+      headerName: "End Date/Time",
       flex: 1,
+      valueGetter: (params) => {
+        return params.getValue(params.id, "reminderType") === "recurring"
+          ? `${params.getValue(params.id, "endTime").slice(0, 2)}:${params
+              .getValue(params.id, "endTime")
+              .slice(2, 4)}`
+          : localService.parseTimeToString(params.getValue(params.id, "endDateTime"));
+      },
+      sortComparator: (v1, v2) => {
+        if (v1.length < v2) {
+          return -1;
+        } else if (v1.length > v2) {
+          return 1;
+        } else {
+          return parseInt(v1) > parseInt(v2);
+        }
+      },
     },
-    {
-      field: "endTime",
-      headerName: "End Time",
-      flex: 1,
-    },
-    {
-      field: "endDateTime",
-      headerName: "End Datetime",
-      flex: 1,
-    },
-    // {
-    //   field: "endTime",
-    //   headerName: "End Date/Time",
-    //   flex: 1,
-    //   valueGetter: (params) => {
-    //     return params.getValue(params.id, "reminderType") === "recurring"
-    //       ? params.getValue(params.id, "endTime")
-    //       : params.getValue(params.id, "endDateTime");
-    //   },
-    //   sortComparator: (v1, v2) => {
-    //     if (v1.length < v2) {
-    //       return -1;
-    //     } else if (v1.length > v2) {
-    //       return 1;
-    //     } else {
-    //       return parseInt(v1) - parseInt(v2);
-    //     }
-    //   },
-    // },
     {
       field: "reminderType",
       headerName: "Reminder Type",
