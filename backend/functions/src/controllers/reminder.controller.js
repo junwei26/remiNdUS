@@ -738,10 +738,6 @@ exports.getByTelegram = (req, res) => {
     .limit(1)
     .get()
     .then((querySnapshot) => {
-      if (querySnapshot.empty) {
-        return res.status(404).send({ message: "No reminders found." });
-      }
-
       let reminders = [];
 
       const userDoc = querySnapshot.docs[0].ref;

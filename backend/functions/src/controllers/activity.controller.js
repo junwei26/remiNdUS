@@ -196,10 +196,6 @@ exports.getByTelegram = (req, res) => {
     .limit(1)
     .get()
     .then((querySnapshot) => {
-      if (querySnapshot.empty) {
-        return res.status(404).send({ message: "No activities found." });
-      }
-
       let activities = [];
 
       const plannedActivityQuery = (plannedActivitiesCollection) => {
@@ -324,7 +320,7 @@ exports.create = (req, res) => {
     if (!req.body.defaultLength) {
       return res.status(400).send({ message: "Activities must have a default length" });
     }
-    if (!req.body.activtiyTag) {
+    if (!req.body.activityTag) {
       return res.status(400).send({ message: "Activities must have an activity tag" });
     }
 

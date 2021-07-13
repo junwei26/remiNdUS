@@ -34,10 +34,6 @@ const retrieveDaily = (chatId) => {
     .limit(1)
     .get()
     .then((querySnapshot) => {
-      if (querySnapshot.empty) {
-        // return res.status(404).send({ message: "No activities found." });
-      }
-
       const plannedActivityQuery = (plannedActivitiesCollection) => {
         return plannedActivitiesCollection
           .where("startDateTime", ">=", convertLocaleDateString(currentDate))
@@ -49,9 +45,7 @@ const retrieveDaily = (chatId) => {
           .then((results) => {
             return [].concat.apply([], results);
           })
-          .catch(() => {
-            // return res.status(404).send({ message: `Error retrieving all activities. ${error}` });
-          })
+          .catch(() => {})
       );
 
       const plannedRangeQuery = (plannedRecurringCollection) => {
@@ -67,9 +61,7 @@ const retrieveDaily = (chatId) => {
           .then((results) => {
             return [].concat.apply([], results);
           })
-          .catch(() => {
-            // return res.status(404).send({ message: `Error retrieving all reminders. ${error}` });
-          })
+          .catch(() => {})
       );
 
       Promise.all(promises)
@@ -92,9 +84,7 @@ const retrieveDaily = (chatId) => {
               reminderArr.join("\n")
           );
         })
-        .catch(() => {
-          // return res.status(400).send({ message: `Error getting all activities and reminders ${error}` });
-        });
+        .catch(() => {});
     });
 };
 
