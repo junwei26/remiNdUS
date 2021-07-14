@@ -45,10 +45,9 @@ const getActivitiesById = (userDoc, activityIds, activityCollection) => {
   });
 };
 
-exports.getAllActivitiesExport = (userQuerySnapshot) => {
-  return getAllActivities(userQuerySnapshot);
+exports.getAllActivitiesExport = (userQuerySnapshot, plannedActivityQuery) => {
+  return getAllActivities(userQuerySnapshot, plannedActivityQuery);
 };
-
 const getAllActivities = (
   userQuerySnapshot,
   plannedActivityQuery = (x) => x,

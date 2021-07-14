@@ -66,25 +66,50 @@ const retrieveDaily = (chatId) => {
 
       Promise.all(promises)
         .then((results) => {
-          const activityArr = results[0].map(
-            (activity) =>
-              ` ${activity.name} : ${activity.startDateTime.slice(
+          const activityArr = results[0].map((activity) => {
+            if (activity.activityType === "planned") {
+              return `${activity.name} : ${activity.startDateTime.slice(
                 8,
                 12
-              )} - ${activity.endDateTime.slice(8, 12)}`
-          );
-          const reminderArr = results[1].map(
-            (reminder) => ` ${reminder.name} : ${reminder.endDateTime.slice(8, 12)}`
-          );
+              )} - ${activity.endDateTime.slice(8, 12)}`;
+            } else {
+              if (activity.frequency === "monthly" && activity.date === currentDate.getDate()) {
+                return `${activity.name} : ${activity.startTime} - ${activity.endTime}`;
+              }
+
+              if (activity.frequency === "weekly" && currentDate.getDay() === activity.date) {
+                return `${activity.name} : ${activity.startTime} - ${activity.endTime}`;
+              }
+
+              return "";
+            }
+          });
+          const reminderArr = results[1].map((reminder) => {
+            if (reminder.reminderType === "planned") {
+              return `${reminder.name} : ${reminder.endDateTime.slice(8, 12)}`;
+            } else {
+              if (reminder.frequency === "monthly" && reminder.date === currentDate.getDate()) {
+                return `${reminder.name} : ${reminder.endTime}`;
+              }
+
+              if (reminder.frequency === "weekly" && currentDate.getDay() === reminder.date) {
+                return `${reminder.name} : ${reminder.endTime}`;
+              }
+
+              return "";
+            }
+          });
           bot.telegram.sendMessage(
             chatId,
             "Here are your activities for the day.\n" +
-              activityArr.join("\n") +
+              activityArr.filter((str) => str !== "").join("\n") +
               "\n Here are your reminders for the day.\n" +
-              reminderArr.join("\n")
+              reminderArr.filter((str) => str !== "").join("\n")
           );
         })
-        .catch(() => {});
+        .catch((e) => {
+          bot.telegram.sendMessage(chatId, e.toString());
+        });
     });
 };
 

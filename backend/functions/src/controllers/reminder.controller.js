@@ -78,8 +78,8 @@ const getRemindersByIds = (uid, plannedReminderIds, recurringReminderIds, subscr
     });
 };
 
-exports.getAllRemindersExport = (userQuerySnapshot) => {
-  return getAllReminders(userQuerySnapshot);
+exports.getAllRemindersExport = (userQuerySnapshot, plannedReminderQuery) => {
+  return getAllReminders(userQuerySnapshot, plannedReminderQuery);
 };
 
 const getAllReminders = (
