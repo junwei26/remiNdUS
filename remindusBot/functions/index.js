@@ -200,8 +200,8 @@ bot.command("/retrieve", async (ctx) => {
         })
         .then((response) => {
           const reminderArr = response.data.map((reminder) => {
-            if (reminder.activityType === "planned") {
-              return ` ${reminder.name} : ${reminder.dateTime.slice(8, 12)}`;
+            if (reminder.reminderType === "planned") {
+              return ` ${reminder.name} : ${reminder.endDateTime.slice(8, 12)}`;
             } else {
               if (reminder.frequency === "monthly" && reminder.date === currentDate.getDate()) {
                 return `${reminder.name} : ${reminder.endTime}`;
@@ -221,7 +221,7 @@ bot.command("/retrieve", async (ctx) => {
               reminderArr.filter((str) => str !== "").join("\n")
           );
         })
-        .catch(() => ctx.reply("Error retrieving reminders from database."));
+        .catch((e) => ctx.reply(`Error retrieving reminders from database. ${e}`));
     })
     .catch(() => ctx.reply("Error retrieving activities from database."));
 });
