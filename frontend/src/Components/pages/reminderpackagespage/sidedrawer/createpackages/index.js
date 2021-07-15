@@ -73,12 +73,21 @@ const CreatePackages = (props) => {
           : localService.parseTimeToString(params.getValue(params.id, "endDateTime"));
       },
       sortComparator: (v1, v2) => {
-        if (v1.length < v2) {
-          return -1;
-        } else if (v1.length > v2) {
+        if (v1.length > 5) {
+          if (v2.length > 5) {
+            const left = new Date(v1);
+            const right = new Date(v2);
+
+            return left.getTime() < right.getTime() ? -1 : left.getTime() > right.getTime() ? 1 : 0;
+          }
+
           return 1;
         } else {
-          return parseInt(v1) > parseInt(v2);
+          if (v2.length > 5) {
+            return -1;
+          } else {
+            return v1 < v2 ? -1 : v1 > v2 ? 1 : 0;
+          }
         }
       },
     },

@@ -111,7 +111,7 @@ const SearchPackages = () => {
 
   const getReminderPackages = () => {
     let tempPackageList = [];
-    reminderPackageService
+    return reminderPackageService
       .getPublicReminderPackages()
       .then((response) => {
         tempPackageList = response.data;
@@ -143,7 +143,7 @@ const SearchPackages = () => {
       reminderPackageIds.push(selectedRows[i].reminderPackageId);
     }
 
-    reminderPackageService
+    return reminderPackageService
       .subscribeReminderPackages(ownerUids, reminderPackageIds)
       .then(() => {
         alert("Successfully subscribed to reminder packages");
@@ -159,6 +159,7 @@ const SearchPackages = () => {
     // get reminder packages on load up
     getReminderPackages();
   }, []);
+
   return (
     <>
       <Typography>Search Public Packages</Typography>

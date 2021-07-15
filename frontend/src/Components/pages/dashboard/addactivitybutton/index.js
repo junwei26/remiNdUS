@@ -33,7 +33,6 @@ const AddActivityButton = () => {
   const classes = useStyles();
 
   const nearestTime = 1000 * 60 * 15; // round up to nearest 15 minutes
-  // const nearestMinutes = nearestTime / 1000 / 60;
 
   const roundUpDateTime = (date) => {
     return new Date(Math.ceil(date.getTime() / nearestTime) * nearestTime);
@@ -45,11 +44,11 @@ const AddActivityButton = () => {
   const [endDateTime, setEndDateTime] = useState(
     roundUpDateTime(new Date(currentDateTime.getTime() + 1))
   );
-  const [recurring, setRecurring] = useState(false);
-  const [dialogOpen, setDialogOpen] = useState(false);
   const [activityName, setActivityName] = useState("");
   const [description, setDescription] = useState("");
   const [activityTag, setActivityTag] = useState("");
+  const [recurring, setRecurring] = useState(false);
+  const [dialogOpen, setDialogOpen] = useState(false);
 
   const [templateActivities, setTemplateActivities] = useState([]);
   const [chosenTemplateActivity, setChosenTemplateActivity] = useState(-1);

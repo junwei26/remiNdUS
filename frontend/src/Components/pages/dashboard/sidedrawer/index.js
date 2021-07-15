@@ -9,6 +9,7 @@ import ListItemText from "@material-ui/core/ListItemText";
 import Planner from "./planner";
 import AddActivityButton from "../addactivitybutton";
 import AddReminderButton from "../addreminderbutton";
+import SearchActivities from "../searchactivities";
 const drawerWidth = 240;
 
 const useStyles = makeStyles((theme) => ({
@@ -35,10 +36,6 @@ const useStyles = makeStyles((theme) => ({
   },
 }));
 
-const SearchActivities = () => {
-  return <div> Search activities </div>;
-};
-
 const SearchReminders = () => {
   return <div> Search reminders </div>;
 };
@@ -51,8 +48,6 @@ const Sidedrawer = () => {
 
   const ActiveView = () => {
     switch (active) {
-      case "Search activities":
-        return <SearchActivities />;
       case "Search reminders":
         return <SearchReminders />;
       default:
@@ -77,12 +72,7 @@ const Sidedrawer = () => {
         <List>
           <AddActivityButton />
           <AddReminderButton />
-          <ListItem button key="Search activities">
-            <ListItemText
-              primary="Search activities"
-              onClick={() => SetView("Search activities")}
-            />
-          </ListItem>
+          <SearchActivities />
           <ListItem button key="Search reminders">
             <ListItemText primary="Search reminders" onClick={() => SetView("Search reminders")} />
           </ListItem>

@@ -27,6 +27,54 @@ const updateActivity = (startDateTime, endDateTime, name, description, activityI
   });
 };
 
+const updatePlannedActivity = (
+  startDateTime,
+  endDateTime,
+  activityTag,
+  name,
+  description,
+  templateActivityId,
+  activityId
+) => {
+  return axios.post(ACTIVITY_API_URL + "/update", {
+    uid: firebaseAuth.currentUser.uid,
+    name,
+    description,
+    startDateTime,
+    endDateTime,
+    templateActivityId,
+    activityTag,
+    activityId,
+    updateTemplate: true,
+  });
+};
+
+const updatedRecurringActivity = (
+  frequency,
+  startTime,
+  endTime,
+  date,
+  activityTag,
+  name,
+  description,
+  templateActivityId,
+  activityId
+) => {
+  return axios.post(ACTIVITY_API_URL + "/update", {
+    uid: firebaseAuth.currentUser.uid,
+    name,
+    description,
+    frequency,
+    startTime,
+    endTime,
+    date,
+    templateActivityId,
+    activityTag,
+    activityId,
+    updateTemplate: true,
+  });
+};
+
 const deleteActivity = (activityId) => {
   return axios.delete(ACTIVITY_API_URL + "/", {
     params: { uid: firebaseAuth.currentUser.uid, activityId },
@@ -92,5 +140,7 @@ export default {
   deleteActivity,
   addPlannedActivity,
   addRecurringActivity,
+  updatePlannedActivity,
+  updatedRecurringActivity,
   getRangeActivity,
 };
