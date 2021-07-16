@@ -19,6 +19,7 @@ import reminderService from "../../services/reminderService";
 import localService from "../../services/localService";
 import RefreshIcon from "@material-ui/icons/Refresh";
 import EditIcon from "@material-ui/icons/Edit";
+import DeleteForeverIcon from "@material-ui/icons/Delete";
 import EditReminderDisplay from "./editreminderdisplay";
 
 const useStyles = makeStyles(() => ({
@@ -81,12 +82,17 @@ const SearchReminders = () => {
     {
       field: "frequency",
       headerName: "Frequency",
-      flex: 0.8,
+      flex: 1.0,
     },
     {
       field: "reminderType",
       headerName: "Reminder Type",
-      flex: 1.3,
+      flex: 1.1,
+    },
+    {
+      field: "subscribed",
+      headerName: "Subscribed",
+      flex: 1,
     },
   ];
 
@@ -181,6 +187,32 @@ const SearchReminders = () => {
     }
   };
 
+  const handleDeleteReminder = () => {
+    if (!selectedRow) {
+      alert("Please select an reminder to delete");
+      return;
+    } else if (selectedRow.subscribed === true) {
+      alert(
+        "You cannot delete a reminder from a reminder package that you are subscribed. Please unsubscribe from the respective reminder package instead."
+      );
+      return;
+    } else {
+      reminderService
+        .deleteReminder(
+          selectedRow.reminderId,
+          selectedRow.reminderType === "planned" ? "plannedReminders" : "recurringReminders"
+        )
+        .then(() => {
+          alert("Successfully deleted reminder");
+        })
+        .catch((error) => {
+          alert(
+            `Issue deleting reminder. Error status code: ${error.response.status}. ${error.response.data.message}`
+          );
+        });
+    }
+  };
+
   return (
     <>
       <ListItem button onClick={handleDialogClickOpen} key="Search Reminder">
@@ -259,12 +291,37 @@ const SearchReminders = () => {
                       </IconButton>
                     </Tooltip>
                   </Grid>
-                  <Grid item>
-                    <Tooltip title="Edit" aria-label="edit">
-                      <IconButton onClick={handleEditReminders} variant="contained" color="primary">
-                        <EditIcon />
-                      </IconButton>
-                    </Tooltip>
+                  <Grid
+                    container
+                    item
+                    direction="row"
+                    justify="center"
+                    alignItems="center"
+                    style={{ width: "auto", height: "100%" }}
+                    spacing={2}
+                  >
+                    <Grid item>
+                      <Tooltip title="Delete" aria-label="delete">
+                        <IconButton
+                          onClick={handleDeleteReminder}
+                          variant="contained"
+                          color="primary"
+                        >
+                          <DeleteForeverIcon />
+                        </IconButton>
+                      </Tooltip>
+                    </Grid>
+                    <Grid item>
+                      <Tooltip title="Edit" aria-label="edit">
+                        <IconButton
+                          onClick={handleEditReminders}
+                          variant="contained"
+                          color="primary"
+                        >
+                          <EditIcon />
+                        </IconButton>
+                      </Tooltip>
+                    </Grid>
                   </Grid>
                 </Grid>
               </Grid>

@@ -49,9 +49,13 @@ const getRangeReminder = (currentDateTime, endDateTime) => {
   });
 };
 
-const deleteReminder = (reminderId) => {
+const deleteReminder = (reminderId, reminderCollection) => {
   return axios.delete(REMINDER_API_URL + "/", {
-    params: { uid: firebaseAuth.currentUser.uid, reminderId },
+    data: {
+      uid: firebaseAuth.currentUser.uid,
+      reminderId,
+      reminderCollection,
+    },
   });
 };
 

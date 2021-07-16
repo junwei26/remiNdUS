@@ -77,9 +77,13 @@ const updatedRecurringActivity = (
   });
 };
 
-const deleteActivity = (activityId) => {
+const deleteActivity = (activityId, activityCollection) => {
   return axios.delete(ACTIVITY_API_URL + "/", {
-    params: { uid: firebaseAuth.currentUser.uid, activityId },
+    data: {
+      uid: firebaseAuth.currentUser.uid,
+      activityId,
+      activityCollection,
+    },
   });
 };
 

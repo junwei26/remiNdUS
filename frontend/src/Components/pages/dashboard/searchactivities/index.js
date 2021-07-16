@@ -19,6 +19,7 @@ import activityService from "../../services/activityService";
 import localService from "../../services/localService";
 import RefreshIcon from "@material-ui/icons/Refresh";
 import EditIcon from "@material-ui/icons/Edit";
+import DeleteForeverIcon from "@material-ui/icons/Delete";
 import EditActivityDisplay from "./editactivitydisplay";
 
 const useStyles = makeStyles(() => ({
@@ -116,12 +117,12 @@ const SearchActivities = () => {
     {
       field: "frequency",
       headerName: "Frequency",
-      flex: 0.8,
+      flex: 1,
     },
     {
       field: "activityType",
       headerName: "Activity Type",
-      flex: 1.3,
+      flex: 1.1,
     },
   ];
 
@@ -205,7 +206,7 @@ const SearchActivities = () => {
     getAllActivities();
   }, []);
 
-  const handleEditActivities = () => {
+  const handleEditActivity = () => {
     if (!selectedRow) {
       alert("Please select an activity to edit");
       return;
@@ -213,6 +214,27 @@ const SearchActivities = () => {
       setDialogMaxWidth("xs");
       setEditingActivity(true);
       clearAllFields();
+    }
+  };
+
+  const handleDeleteActivity = () => {
+    if (!selectedRow) {
+      alert("Please select an activity to delete");
+      return;
+    } else {
+      activityService
+        .deleteActivity(
+          selectedRow.activityId,
+          selectedRow.activityType === "planned" ? "plannedActivities" : "recurringActivities"
+        )
+        .then(() => {
+          alert("Successfully deleted activity");
+        })
+        .catch((error) => {
+          alert(
+            `Issue deleting activity. Error status code: ${error.response.status}. ${error.response.data.message}`
+          );
+        });
     }
   };
 
@@ -294,16 +316,37 @@ const SearchActivities = () => {
                       </IconButton>
                     </Tooltip>
                   </Grid>
-                  <Grid item>
-                    <Tooltip title="Edit" aria-label="edit">
-                      <IconButton
-                        onClick={handleEditActivities}
-                        variant="contained"
-                        color="primary"
-                      >
-                        <EditIcon />
-                      </IconButton>
-                    </Tooltip>
+                  <Grid
+                    container
+                    item
+                    direction="row"
+                    justify="center"
+                    alignItems="center"
+                    style={{ width: "auto", height: "100%" }}
+                    spacing={2}
+                  >
+                    <Grid item>
+                      <Tooltip title="Delete" aria-label="delete">
+                        <IconButton
+                          onClick={handleDeleteActivity}
+                          variant="contained"
+                          color="primary"
+                        >
+                          <DeleteForeverIcon />
+                        </IconButton>
+                      </Tooltip>
+                    </Grid>
+                    <Grid item>
+                      <Tooltip title="Edit" aria-label="edit">
+                        <IconButton
+                          onClick={handleEditActivity}
+                          variant="contained"
+                          color="primary"
+                        >
+                          <EditIcon />
+                        </IconButton>
+                      </Tooltip>
+                    </Grid>
                   </Grid>
                 </Grid>
               </Grid>
