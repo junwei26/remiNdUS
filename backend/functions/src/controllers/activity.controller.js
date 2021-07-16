@@ -543,10 +543,10 @@ exports.update = (req, res) => {
 
   Promise.all(promises)
     .then(() => {
-      return res.status(200).send({ message: "Successfully updated reminder!" });
+      return res.status(200).send({ message: "Successfully updated activity!" });
     })
     .catch((error) => {
-      return res.status(404).send({ message: `Error updating reminder. ${error}` });
+      return res.status(404).send({ message: `Error updating activity. ${error}` });
     });
 };
 

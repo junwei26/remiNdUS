@@ -120,6 +120,7 @@ const EditActivityDisplay = (props) => {
 
   const handleDialogBack = () => {
     props.setEditingActivity(false);
+    props.setSelectedRow(null);
     props.setDialogMaxWidth("lg");
   };
 
@@ -159,7 +160,7 @@ const EditActivityDisplay = (props) => {
             props.activity.activityId
           )
           .then(() => {
-            alert("Succesfully updated activity");
+            alert("Successfully updated activity");
             handleDialogBack();
             return;
           })
@@ -189,6 +190,7 @@ const EditActivityDisplay = (props) => {
           )
           .then(() => {
             alert("Succesfully updated activity");
+            alert("Successfully updated activity");
             handleDialogBack();
             return;
           })
@@ -240,6 +242,7 @@ const EditActivityDisplay = (props) => {
     getActivityTags().then((activityTags) => {
       setActivityName(props.activity.name);
       setDescription(props.activity.description);
+      setActivityTag(props.activity.activityTag);
       setChosenActivityTag(activityTags.indexOf(props.activity.activityTag));
 
       if (props.activity.activityType === "planned") {
@@ -465,7 +468,7 @@ const EditActivityDisplay = (props) => {
           Back
         </Button>
         <Button onClick={closeDialogUpdateActivity} color="primary">
-          Add Activity
+          Update Activity
         </Button>
       </DialogActions>
     </>
@@ -476,6 +479,7 @@ EditActivityDisplay.propTypes = {
   activity: PropTypes.object,
   setEditingActivity: PropTypes.func,
   setDialogMaxWidth: PropTypes.func,
+  setSelectedRow: PropTypes.func,
 };
 
 export default EditActivityDisplay;

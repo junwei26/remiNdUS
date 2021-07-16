@@ -46,6 +46,7 @@ const updatePlannedActivity = (
     activityTag,
     activityId,
     updateTemplate: true,
+    activityCollection: "plannedActivities",
   });
 };
 
@@ -72,6 +73,7 @@ const updatedRecurringActivity = (
     activityTag,
     activityId,
     updateTemplate: true,
+    activityCollection: "recurringActivities",
   });
 };
 

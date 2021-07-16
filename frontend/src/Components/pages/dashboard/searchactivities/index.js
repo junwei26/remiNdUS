@@ -205,10 +205,6 @@ const SearchActivities = () => {
     getAllActivities();
   }, []);
 
-  useEffect(() => {
-    setSelectedRow(null);
-  }, [editingActivity]);
-
   const handleEditActivities = () => {
     if (!selectedRow) {
       alert("Please select an activity to edit");
@@ -240,6 +236,7 @@ const SearchActivities = () => {
             activity={selectedRow}
             setEditingActivity={setEditingActivity}
             setDialogMaxWidth={setDialogMaxWidth}
+            setSelectedRow={setSelectedRow}
           />
         ) : (
           <>
