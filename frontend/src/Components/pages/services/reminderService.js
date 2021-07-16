@@ -104,6 +104,42 @@ const addRecurringReminder = (
   });
 };
 
+const updatePlannedReminder = (endDateTime, name, description, templateReminderId, reminderId) => {
+  return axios.post(REMINDER_API_URL + "/update", {
+    uid: firebaseAuth.currentUser.uid,
+    endDateTime,
+    name,
+    description,
+    templateReminderId,
+    reminderId,
+    updateTemplate: true,
+    reminderCollection: "plannedReminders",
+  });
+};
+
+const updateRecurringReminder = (
+  frequency,
+  endTime,
+  date,
+  name,
+  description,
+  templateReminderId,
+  reminderId
+) => {
+  return axios.post(REMINDER_API_URL + "/update", {
+    uid: firebaseAuth.currentUser.uid,
+    frequency,
+    endTime,
+    date,
+    name,
+    description,
+    templateReminderId,
+    reminderId,
+    updateTemplate: true,
+    reminderCollection: "plannedReminders",
+  });
+};
+
 export default {
   getAllReminders,
   getAllLocalReminders,
@@ -115,4 +151,6 @@ export default {
   getTemplateReminders,
   addPlannedReminder,
   addRecurringReminder,
+  updatePlannedReminder,
+  updateRecurringReminder,
 };

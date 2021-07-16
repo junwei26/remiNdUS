@@ -110,14 +110,6 @@ const EditActivityDisplay = (props) => {
     setEndDateTime(currentDateTime);
   };
 
-  // const handleDialogClickOpen = () => {
-  //   setDialogOpen(true);
-  // };
-
-  // const handleDialogClose = () => {
-  //   setDialogOpen(false);
-  // };
-
   const handleDialogBack = () => {
     props.setEditingActivity(false);
     props.setSelectedRow(null);
@@ -160,7 +152,9 @@ const EditActivityDisplay = (props) => {
             props.activity.activityId
           )
           .then(() => {
-            alert("Successfully updated activity");
+            alert(
+              "Successfully updated activity. It may take up to a minute for changes to be reflected."
+            );
             handleDialogBack();
             return;
           })
@@ -189,7 +183,6 @@ const EditActivityDisplay = (props) => {
             props.activity.activityId
           )
           .then(() => {
-            alert("Succesfully updated activity");
             alert("Successfully updated activity");
             handleDialogBack();
             return;

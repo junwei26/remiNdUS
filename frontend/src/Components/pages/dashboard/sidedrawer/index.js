@@ -1,15 +1,14 @@
-import React, { useState } from "react";
+import React from "react";
 import { makeStyles } from "@material-ui/core/styles";
 import Drawer from "@material-ui/core/Drawer";
 import CssBaseline from "@material-ui/core/CssBaseline";
 import List from "@material-ui/core/List";
 import Divider from "@material-ui/core/Divider";
-import ListItem from "@material-ui/core/ListItem";
-import ListItemText from "@material-ui/core/ListItemText";
 import Planner from "./planner";
 import AddActivityButton from "../addactivitybutton";
 import AddReminderButton from "../addreminderbutton";
 import SearchActivities from "../searchactivities";
+import SearchReminders from "../searchreminders";
 const drawerWidth = 240;
 
 const useStyles = makeStyles((theme) => ({
@@ -36,24 +35,7 @@ const useStyles = makeStyles((theme) => ({
   },
 }));
 
-const SearchReminders = () => {
-  return <div> Search reminders </div>;
-};
-
 const Sidedrawer = () => {
-  const [active, setActive] = useState(1);
-  const SetView = (active) => {
-    setActive(active);
-  };
-
-  const ActiveView = () => {
-    switch (active) {
-      case "Search reminders":
-        return <SearchReminders />;
-      default:
-        return <Planner />;
-    }
-  };
   const classes = useStyles();
 
   return (
@@ -73,13 +55,11 @@ const Sidedrawer = () => {
           <AddActivityButton />
           <AddReminderButton />
           <SearchActivities />
-          <ListItem button key="Search reminders">
-            <ListItemText primary="Search reminders" onClick={() => SetView("Search reminders")} />
-          </ListItem>
+          <SearchReminders />
         </List>
       </Drawer>
       <main className={classes.content}>
-        <ActiveView />
+        <Planner />
       </main>
     </div>
   );
