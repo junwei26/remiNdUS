@@ -14,13 +14,15 @@ import {
   InputLabel,
   Select,
   MenuItem,
+  ListItem,
+  ListItemIcon,
+  ListItemText,
 } from "@material-ui/core";
-import ListItem from "@material-ui/core/ListItem";
-import ListItemText from "@material-ui/core/ListItemText";
 import DateFnsUtils from "@date-io/date-fns";
 import { MuiPickersUtilsProvider, DateTimePicker, TimePicker } from "@material-ui/pickers";
 import reminderService from "../../services/reminderService";
 import localService from "../../services/localService";
+import AddIcon from "@material-ui/icons/Add";
 
 const useStyles = makeStyles(() => ({
   card: {
@@ -215,7 +217,10 @@ const addReminderButton = () => {
   return (
     <>
       <ListItem button onClick={handleDialogClickOpen} key="Add Reminder">
-        <ListItemText primary="Add Reminder" />
+        <ListItemIcon>
+          <AddIcon />
+        </ListItemIcon>
+        <ListItemText primary="Reminder" />
       </ListItem>
       <Dialog
         open={dialogOpen}

@@ -53,8 +53,8 @@ const Sidedrawer = () => {
         <Divider />
         <List>
           <AddActivityButton />
-          <AddReminderButton />
           <SearchActivities />
+          <AddReminderButton />
           <SearchReminders />
         </List>
       </Drawer>

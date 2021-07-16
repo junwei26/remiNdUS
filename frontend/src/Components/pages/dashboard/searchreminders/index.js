@@ -11,16 +11,18 @@ import {
   Typography,
   IconButton,
   Tooltip,
+  ListItem,
+  ListItemIcon,
+  ListItemText,
 } from "@material-ui/core";
 import { DataGrid, GridToolbar } from "@material-ui/data-grid";
-import ListItem from "@material-ui/core/ListItem";
-import ListItemText from "@material-ui/core/ListItemText";
 import reminderService from "../../services/reminderService";
 import localService from "../../services/localService";
 import RefreshIcon from "@material-ui/icons/Refresh";
 import EditIcon from "@material-ui/icons/Edit";
 import DeleteForeverIcon from "@material-ui/icons/Delete";
 import EditReminderDisplay from "./editreminderdisplay";
+import SearchIcon from "@material-ui/icons/Search";
 
 const useStyles = makeStyles(() => ({
   root: {
@@ -216,7 +218,10 @@ const SearchReminders = () => {
   return (
     <>
       <ListItem button onClick={handleDialogClickOpen} key="Search Reminder">
-        <ListItemText primary="Search Reminder" />
+        <ListItemIcon>
+          <SearchIcon />
+        </ListItemIcon>
+        <ListItemText primary="Reminders" />
       </ListItem>
       <Dialog
         open={dialogOpen}

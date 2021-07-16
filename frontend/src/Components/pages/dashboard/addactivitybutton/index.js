@@ -14,14 +14,16 @@ import {
   InputLabel,
   Select,
   MenuItem,
+  ListItem,
+  ListItemIcon,
+  ListItemText,
 } from "@material-ui/core";
-import ListItem from "@material-ui/core/ListItem";
-import ListItemText from "@material-ui/core/ListItemText";
 import DateFnsUtils from "@date-io/date-fns";
 import { MuiPickersUtilsProvider, DateTimePicker, TimePicker } from "@material-ui/pickers";
 import activityService from "../../services/activityService";
 import localService from "../../services/localService";
 import userService from "../../services/userService";
+import AddIcon from "@material-ui/icons/Add";
 
 const useStyles = makeStyles(() => ({
   card: {
@@ -314,7 +316,10 @@ const AddActivityButton = () => {
   return (
     <>
       <ListItem button onClick={handleDialogClickOpen} key="Add Activity">
-        <ListItemText primary="Add Activity" />
+        <ListItemIcon>
+          <AddIcon />
+        </ListItemIcon>
+        <ListItemText primary="Activity" />
       </ListItem>
       <Dialog
         open={dialogOpen}
