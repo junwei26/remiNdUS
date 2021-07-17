@@ -45,10 +45,9 @@ const getActivitiesById = (userDoc, activityIds, activityCollection) => {
   });
 };
 
-exports.getAllActivitiesExport = (userQuerySnapshot) => {
-  return getAllActivities(userQuerySnapshot);
+exports.getAllActivitiesExport = (userQuerySnapshot, plannedActivityQuery) => {
+  return getAllActivities(userQuerySnapshot, plannedActivityQuery);
 };
-
 const getAllActivities = (
   userQuerySnapshot,
   plannedActivityQuery = (x) => x,
@@ -196,10 +195,6 @@ exports.getByTelegram = (req, res) => {
     .limit(1)
     .get()
     .then((querySnapshot) => {
-      if (querySnapshot.empty) {
-        return res.status(404).send({ message: "No activities found." });
-      }
-
       let activities = [];
 
       const plannedActivityQuery = (plannedActivitiesCollection) => {
@@ -254,53 +249,41 @@ exports.range = (req, res) => {
       });
     });
 
-  // userDoc.collection("recurringActivities").where("")
-
   // generate recurring activities
 };
 
 // access the new document by using createTemplate(...).then((templateReminderDoc) => {...})
-const createTemplate = (uid, name, description, defaultLength, activityTag) => {
+const createTemplate = (uid, name, description, activityTag) => {
   return db
     .collection("users")
     .doc(uid)
     .collection("templateActivities")
-    .add({ name, description, defaultLength, activityTag, eventType: "1" });
+    .add({ name, description, activityTag, eventType: "1" });
 };
 
 // access the new document by using createPlannedReminder(...).then((plannedReminderDoc) => {...})
-const createPlannedActivity = (uid, templateActivityId, startDateTime, endDateTime, active) => {
+const createPlannedActivity = (uid, templateActivityId, startDateTime, endDateTime) => {
   return db
     .collection("users")
     .doc(uid)
     .collection("plannedActivities")
-    .add({ templateActivityId, startDateTime, endDateTime, active });
+    .add({ templateActivityId, startDateTime, endDateTime });
 };
 
 // If frequency is weekly, take date as 1-7 (Mon, Tue, ..., Sun). If frequency is monthly, take date as 1-31
-const createRecurringActivity = (
-  uid,
-  templateActivityId,
-  frequency,
-  startTime,
-  endTime,
-  date,
-  active
-) => {
+const createRecurringActivity = (uid, templateActivityId, frequency, startTime, endTime, date) => {
   return db
     .collection("users")
     .doc(uid)
     .collection("recurringActivities")
-    .add({ templateActivityId, frequency, startTime, endTime, date, active });
+    .add({ templateActivityId, frequency, startTime, endTime, date });
 };
 
 /*
 uid: mandatory
-active: mandatory
 templateActivityId: required if not creating new templateActivity
 name: required if creating new templateActivity
 description: required if creating new templateActivity
-defaultLength: required if creating new templateActivity
 frequency: required if creating recurringActivity
 startTime: required if creating recurringActivity
 endTime: required if creating recurringActivity
@@ -320,9 +303,6 @@ exports.create = (req, res) => {
     }
     if (!req.body.description) {
       return res.status(400).send({ message: "Activities must have a description!" });
-    }
-    if (!req.body.defaultLength) {
-      return res.status(400).send({ message: "Activities must have a default length" });
     }
     if (!req.body.activityTag) {
       return res.status(400).send({ message: "Activities must have an activity tag" });
@@ -344,20 +324,13 @@ exports.create = (req, res) => {
           .status(400)
           .send({ message: "Activity start time must be before activity end time!" });
       }
-      createTemplate(
-        req.body.uid,
-        req.body.name,
-        req.body.description,
-        req.body.defaultLength,
-        req.body.activityTag
-      )
+      createTemplate(req.body.uid, req.body.name, req.body.description, req.body.activityTag)
         .then((templateActivityDoc) => {
           createPlannedActivity(
             req.body.uid,
             templateActivityDoc.id,
             req.body.startDateTime,
-            req.body.endDateTime,
-            req.body.active
+            req.body.endDateTime
           )
             .then(() => {
               return res.status(200).send({ message: "Planned activity created successfully!" });
@@ -379,13 +352,7 @@ exports.create = (req, res) => {
       if (!req.body.date) {
         return res.status(400).send({ message: "Recurring activity must have a date" });
       }
-      createTemplate(
-        req.body.uid,
-        req.body.name,
-        req.body.description,
-        req.body.defaultLength,
-        req.body.activityTag
-      )
+      createTemplate(req.body.uid, req.body.name, req.body.description, req.body.activityTag)
         .then((templateActivityDoc) => {
           createRecurringActivity(
             req.body.uid,
@@ -393,8 +360,7 @@ exports.create = (req, res) => {
             req.body.frequency,
             req.body.startTime,
             req.body.endTime,
-            req.body.date,
-            req.body.active
+            req.body.date
           )
             .then(() => {
               return res.status(200).send({ message: "Recurring activity created successfully!" });
@@ -424,8 +390,7 @@ exports.create = (req, res) => {
         req.body.uid,
         req.body.templateActivityId,
         req.body.startDateTime,
-        req.body.endDateTime,
-        req.body.active
+        req.body.endDateTime
       )
         .then(() => {
           return res.status(200).send({ message: "Planned activity created successfully!" });
@@ -449,8 +414,7 @@ exports.create = (req, res) => {
         req.body.frequency,
         req.body.startTime,
         req.body.endTime,
-        req.body.date,
-        req.body.active
+        req.body.date
       )
         .then(() => {
           return res.status(200).send({ message: "Recurring activity created successfully!" });
@@ -495,7 +459,6 @@ exports.update = (req, res) => {
       templateActivityId: req.body.templateActivityId,
       startDateTime: req.body.startDateTime,
       endDateTime: req.body.endDateTime,
-      active: req.body.active,
     };
   } else if (req.body.activityCollection === "recurringActivities") {
     if (!req.body.startTime) {
@@ -517,7 +480,6 @@ exports.update = (req, res) => {
       startTime: req.body.startTime,
       endTime: req.body.endTime,
       date: req.body.date,
-      active: req.body.active,
     };
   }
 
@@ -576,10 +538,10 @@ exports.update = (req, res) => {
 
   Promise.all(promises)
     .then(() => {
-      return res.status(200).send({ message: "Successfully updated reminder!" });
+      return res.status(200).send({ message: "Successfully updated activity!" });
     })
     .catch((error) => {
-      return res.status(404).send({ message: `Error updating reminder. ${error}` });
+      return res.status(404).send({ message: `Error updating activity. ${error}` });
     });
 };
 
@@ -625,7 +587,7 @@ exports.createByTelegram = (req, res) => {
   if (!req.body.description) {
     return res.status(400).send({ message: "Activity must have a description!" });
   }
-  if (!req.body.tag) {
+  if (!req.body.activityTag) {
     return res.status(400).send({ message: "Activity must have an activity tag!" });
   }
   if (!req.body.startDateTime) {
@@ -648,7 +610,7 @@ exports.createByTelegram = (req, res) => {
       querySnapshot.forEach((queryDocumentSnapshot) => {
         const userDoc = queryDocumentSnapshot.ref;
 
-        createTemplate(userDoc.id, req.body.name, req.body.description, "02:00", req.body.tag)
+        createTemplate(userDoc.id, req.body.name, req.body.description, req.body.activityTag)
           .then((templateActivityDoc) => {
             createPlannedActivity(
               userDoc.id,
@@ -659,7 +621,7 @@ exports.createByTelegram = (req, res) => {
             )
               .then(() => {
                 userDoc.update({
-                  tags: admin.firestore.FieldValue.arrayUnion(req.body.tag),
+                  tags: admin.firestore.FieldValue.arrayUnion(req.body.activityTag),
                 });
                 return res.status(200).send({ message: "Planned activity created successfully!" });
               })

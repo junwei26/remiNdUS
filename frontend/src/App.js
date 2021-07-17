@@ -11,10 +11,10 @@ import Analytics from "./Components/pages/analytics";
 const App = () => {
   return (
     <Grid container direction="column" justify="space-between" alignItems="stretch" spacing={2}>
-      <Grid item>
+      <Grid item style={{ width: "100%" }}>
         <NavigationBar />
       </Grid>
-      <Grid item>
+      <Grid item style={{ width: "100%" }}>
         <Switch>
           <Route path="/" exact component={LandingPage} />
           <ProtectedRoute path="/analytics" exact component={Analytics} />

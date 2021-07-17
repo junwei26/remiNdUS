@@ -49,9 +49,13 @@ const getRangeReminder = (currentDateTime, endDateTime) => {
   });
 };
 
-const deleteReminder = (reminderId) => {
+const deleteReminder = (reminderId, reminderCollection) => {
   return axios.delete(REMINDER_API_URL + "/", {
-    params: { uid: firebaseAuth.currentUser.uid, reminderId },
+    data: {
+      uid: firebaseAuth.currentUser.uid,
+      reminderId,
+      reminderCollection,
+    },
   });
 };
 
@@ -72,8 +76,6 @@ const getTemplateReminders = () => {
 
 const addPlannedReminder = (
   endDateTime,
-  active,
-  defaultLength,
   name = null,
   description = null,
   templateReminderId = null
@@ -81,8 +83,6 @@ const addPlannedReminder = (
   return axios.post(REMINDER_API_URL + "/create", {
     uid: firebaseAuth.currentUser.uid,
     endDateTime,
-    active,
-    defaultLength,
     name,
     description,
     templateReminderId,
@@ -93,8 +93,6 @@ const addRecurringReminder = (
   frequency,
   endTime,
   date,
-  active,
-  defaultLength,
   name = null,
   description = null,
   templateReminderId = null
@@ -104,11 +102,45 @@ const addRecurringReminder = (
     frequency,
     endTime,
     date,
-    active,
-    defaultLength,
     name,
     description,
     templateReminderId,
+  });
+};
+
+const updatePlannedReminder = (endDateTime, name, description, templateReminderId, reminderId) => {
+  return axios.post(REMINDER_API_URL + "/update", {
+    uid: firebaseAuth.currentUser.uid,
+    endDateTime,
+    name,
+    description,
+    templateReminderId,
+    reminderId,
+    updateTemplate: true,
+    reminderCollection: "plannedReminders",
+  });
+};
+
+const updateRecurringReminder = (
+  frequency,
+  endTime,
+  date,
+  name,
+  description,
+  templateReminderId,
+  reminderId
+) => {
+  return axios.post(REMINDER_API_URL + "/update", {
+    uid: firebaseAuth.currentUser.uid,
+    frequency,
+    endTime,
+    date,
+    name,
+    description,
+    templateReminderId,
+    reminderId,
+    updateTemplate: true,
+    reminderCollection: "recurringReminders",
   });
 };
 
@@ -123,4 +155,6 @@ export default {
   getTemplateReminders,
   addPlannedReminder,
   addRecurringReminder,
+  updatePlannedReminder,
+  updateRecurringReminder,
 };

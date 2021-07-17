@@ -78,8 +78,8 @@ const getRemindersByIds = (uid, plannedReminderIds, recurringReminderIds, subscr
     });
 };
 
-exports.getAllRemindersExport = (userQuerySnapshot) => {
-  return getAllReminders(userQuerySnapshot);
+exports.getAllRemindersExport = (userQuerySnapshot, plannedReminderQuery) => {
+  return getAllReminders(userQuerySnapshot, plannedReminderQuery);
 };
 
 const getAllReminders = (
@@ -427,35 +427,34 @@ exports.range = (req, res) => {
 };
 
 // access the new document by using createTemplate(...).then((templateReminderDoc) => {...})
-const createTemplate = (uid, name, description, defaultLength) => {
+const createTemplate = (uid, name, description) => {
   return db
     .collection("users")
     .doc(uid)
     .collection("templateReminders")
-    .add({ name, description, defaultLength, eventType: "2" });
+    .add({ name, description, eventType: "2" });
 };
 
 // access the new document by using createPlannedReminder(...).then((plannedReminderDoc) => {...})
-const createPlannedReminder = (uid, templateReminderId, endDateTime, active) => {
+const createPlannedReminder = (uid, templateReminderId, endDateTime) => {
   return db
     .collection("users")
     .doc(uid)
     .collection("plannedReminders")
-    .add({ templateReminderId, endDateTime, active });
+    .add({ templateReminderId, endDateTime });
 };
 
 // If frequency is weekly, take date as 1-7 (Mon, Tue, ..., Sun). If frequency is monthly, take date as 1-31
-const createRecurringReminder = (uid, templateReminderId, frequency, endTime, date, active) => {
+const createRecurringReminder = (uid, templateReminderId, frequency, endTime, date) => {
   return db
     .collection("users")
     .doc(uid)
     .collection("recurringReminders")
-    .add({ templateReminderId, frequency, endTime, date, active });
+    .add({ templateReminderId, frequency, endTime, date });
 };
 
 /*
 uid: mandatory
-active: mandatory
 templateReminderId: required if not creating new templateReminder
 name: required if creating new templateReminder
 description: required if creating new templateReminder
@@ -468,9 +467,6 @@ exports.create = (req, res) => {
   if (!req.body.uid) {
     return res.status(400).send({ message: "You must be logged in to make this operation!" });
   }
-  if (!req.body.active) {
-    return res.status(400).send({ message: "Reminder must have an active setting" });
-  }
   // If no templateReminderId provided, assume creating a brand new reminder
   if (!req.body.templateReminderId) {
     if (!req.body.name) {
@@ -479,23 +475,15 @@ exports.create = (req, res) => {
     if (!req.body.description) {
       return res.status(400).send({ message: "Reminders must have a description!" });
     }
-    if (!req.body.defaultLength) {
-      return res.status(400).send({ message: "Reminders must have a default length" });
-    }
 
     // If there is no frequency specified, it is a planned reminder, not recurring
     if (!req.body.frequency) {
       if (!req.body.endDateTime) {
         return res.status(400).send({ message: "Planned reminder must have an end date and time" });
       }
-      createTemplate(req.body.uid, req.body.name, req.body.description, req.body.defaultLength)
+      createTemplate(req.body.uid, req.body.name, req.body.description)
         .then((templateReminderDoc) => {
-          createPlannedReminder(
-            req.body.uid,
-            templateReminderDoc.id,
-            req.body.endDateTime,
-            req.body.active
-          )
+          createPlannedReminder(req.body.uid, templateReminderDoc.id, req.body.endDateTime)
             .then(() => {
               return res.status(200).send({ message: "Planned reminder created successfully!" });
             })
@@ -513,15 +501,14 @@ exports.create = (req, res) => {
       if (!req.body.date) {
         return res.status(400).send({ message: "Recurring reminder must have a date" });
       }
-      createTemplate(req.body.uid, req.body.name, req.body.description, req.body.defaultLength)
+      createTemplate(req.body.uid, req.body.name, req.body.description)
         .then((templateReminderDoc) => {
           createRecurringReminder(
             req.body.uid,
             templateReminderDoc.id,
             req.body.frequency,
             req.body.endTime,
-            req.body.date,
-            req.body.active
+            req.body.date
           )
             .then(() => {
               return res.status(200).send({ message: "Recurring reminder created successfully!" });
@@ -542,12 +529,7 @@ exports.create = (req, res) => {
       if (!req.body.endDateTime) {
         return res.status(400).send({ message: "Planned reminder must have an end date and time" });
       }
-      createPlannedReminder(
-        req.body.uid,
-        req.body.templateReminderId,
-        req.body.endDateTime,
-        req.body.active
-      )
+      createPlannedReminder(req.body.uid, req.body.templateReminderId, req.body.endDateTime)
         .then(() => {
           return res.status(200).send({ message: "Planned reminder created successfully!" });
         })
@@ -556,7 +538,7 @@ exports.create = (req, res) => {
         });
     } else {
       if (!req.body.endTime) {
-        return res.status(400).send({ message: "Recurring reminder must have an active setting" });
+        return res.status(400).send({ message: "Recurring reminder must have an end time" });
       }
       if (!req.body.date) {
         return res.status(400).send({ message: "Recurring reminder must have a date" });
@@ -566,8 +548,7 @@ exports.create = (req, res) => {
         req.body.templateReminderId,
         req.body.frequency,
         req.body.endTime,
-        req.body.date,
-        req.body.active
+        req.body.date
       )
         .then(() => {
           return res.status(200).send({ message: "Recurring reminder created successfully!" });
@@ -602,14 +583,13 @@ exports.update = (req, res) => {
     updatedReminder = {
       templateReminderId: req.body.templateReminderId,
       endDateTime: req.body.endDateTime,
-      active: req.body.active,
     };
   } else if (req.body.reminderCollection === "recurringReminders") {
     if (!req.body.frequency) {
       return res.status(400).send({ message: "Recurring reminder must have a set frequency" });
     }
     if (!req.body.endTime) {
-      return res.status(400).send({ message: "Recurring reminder must have an active setting" });
+      return res.status(400).send({ message: "Recurring reminder must have an end time" });
     }
     if (!req.body.date) {
       return res.status(400).send({ message: "Recurring reminder must have a date" });
@@ -620,7 +600,6 @@ exports.update = (req, res) => {
       frequency: req.body.frequency,
       endTime: req.body.endTime,
       date: req.body.date,
-      active: req.body.active,
     };
   }
 
@@ -633,16 +612,10 @@ exports.update = (req, res) => {
     if (!req.body.description) {
       return res.status(400).send({ message: "Template reminder must have a description!" });
     }
-    if (!req.body.defaultLength) {
-      return res
-        .status(400)
-        .send({ message: "Template reminder must have an associated default length!" });
-    }
 
     const updatedTemplateReminder = {
       name: req.body.name,
       description: req.body.description,
-      defaultLength: req.body.defaultLength,
       eventType: "2",
     };
 
@@ -738,10 +711,6 @@ exports.getByTelegram = (req, res) => {
     .limit(1)
     .get()
     .then((querySnapshot) => {
-      if (querySnapshot.empty) {
-        return res.status(404).send({ message: "No reminders found." });
-      }
-
       let reminders = [];
 
       const userDoc = querySnapshot.docs[0].ref;
@@ -780,7 +749,7 @@ exports.createByTelegram = (req, res) => {
       querySnapshot.forEach((queryDocumentSnapshot) => {
         const userDoc = queryDocumentSnapshot.ref;
 
-        createTemplate(userDoc.id, req.body.name, req.body.description, "02:00")
+        createTemplate(userDoc.id, req.body.name, req.body.description)
           .then((templateReminderDoc) => {
             createPlannedReminder(userDoc.id, templateReminderDoc.id, req.body.endDateTime, true)
               .then(() => {

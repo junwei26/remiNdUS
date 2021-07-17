@@ -6,12 +6,12 @@ import TimeTracker from "./timetracker";
 
 const Dashboard = () => {
   return (
-    <Grid container direction="row" justify="top" alignItems="top" spacing={2}>
+    <Grid container direction="row" justify="flex-start" alignItems="flex-start" spacing={2}>
       <Grid item xs>
         <Sidedrawer />
       </Grid>
       <Grid item xs={2}>
-        <Grid container direction="column" justify="top" alighnItems="right" spacing={3}>
+        <Grid container direction="column" justify="flex-start" alignItems="flex-end" spacing={3}>
           <Grid item xs>
             <ReminderList />
           </Grid>

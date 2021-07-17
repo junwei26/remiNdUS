@@ -1,9 +1,13 @@
 import React, { useState, useEffect } from "react";
 import { makeStyles } from "@material-ui/core/styles";
-import { Grid, Typography, TextField, Paper, Button } from "@material-ui/core";
-import { DataGrid } from "@material-ui/data-grid";
+import { Grid, Typography, TextField, Paper, Button, Tooltip, IconButton } from "@material-ui/core";
+import { DataGrid, GridToolbar } from "@material-ui/data-grid";
+import PropTypes from "prop-types";
+import RefreshIcon from "@material-ui/icons/Refresh";
+import AddBoxIcon from "@material-ui/icons/AddBox";
 import reminderService from "../../../services/reminderService";
 import reminderPackageService from "../../../services/reminderPackageService";
+import localService from "../../../services/localService";
 
 const useStyles = makeStyles(() => ({
   root: {
@@ -16,11 +20,11 @@ const useStyles = makeStyles(() => ({
   },
   dataGrid: {
     width: "90%",
-    height: "410px",
+    height: "400px",
   },
 }));
 
-const SubscribedPackages = () => {
+const CreatePackages = (props) => {
   const classes = useStyles();
 
   const [packageName, setPackageName] = useState("");
@@ -44,6 +48,7 @@ const SubscribedPackages = () => {
     },
   ];
   const [reminderList, setReminderList] = useState(loadingReminderList);
+  const [editingPackage, setEditingPackage] = useState(Boolean(props.reminderPackage));
 
   const reminderColumns = [
     {
@@ -57,43 +62,39 @@ const SubscribedPackages = () => {
       flex: 2,
     },
     {
-      field: "defaultLength",
-      headerName: "Time required",
+      field: "endDateAndTime",
+      headerName: "End Date/Time",
       flex: 1,
+      valueGetter: (params) => {
+        return params.getValue(params.id, "reminderType") === "recurring"
+          ? `${params.getValue(params.id, "endTime").slice(0, 2)}:${params
+              .getValue(params.id, "endTime")
+              .slice(2, 4)}`
+          : localService.parseTimeToString(params.getValue(params.id, "endDateTime"));
+      },
+      sortComparator: (v1, v2) => {
+        if (v1.length > 5) {
+          if (v2.length > 5) {
+            const left = new Date(v1);
+            const right = new Date(v2);
+
+            return left.getTime() < right.getTime() ? -1 : left.getTime() > right.getTime() ? 1 : 0;
+          }
+
+          return 1;
+        } else {
+          if (v2.length > 5) {
+            return -1;
+          } else {
+            return v1 < v2 ? -1 : v1 > v2 ? 1 : 0;
+          }
+        }
+      },
     },
-    {
-      field: "endTime",
-      headerName: "End Time",
-      flex: 1,
-    },
-    {
-      field: "endDateTime",
-      headerName: "End Datetime",
-      flex: 1,
-    },
-    // {
-    //   field: "endTime",
-    //   headerName: "End Date/Time",
-    //   flex: 1,
-    //   valueGetter: (params) => {
-    //     return params.getValue(params.id, "reminderType") === "recurring"
-    //       ? params.getValue(params.id, "endTime")
-    //       : params.getValue(params.id, "endDateTime");
-    //   },
-    //   sortComparator: (v1, v2) => {
-    //     if (v1.length < v2) {
-    //       return -1;
-    //     } else if (v1.length > v2) {
-    //       return 1;
-    //     } else {
-    //       return parseInt(v1) - parseInt(v2);
-    //     }
-    //   },
-    // },
     {
       field: "reminderType",
       headerName: "Reminder Type",
-      flex: 1.3,
+      flex: 1,
       valueFormatter: (params) => {
         return `${
           String(params.value).charAt(0).toUpperCase() + String(params.value).substring(1)
@@ -146,10 +147,27 @@ const SubscribedPackages = () => {
     setPackageTag("");
     setSearchRemindersText("");
     clearSelectionModel();
+    setEditingPackage(false);
+    props.setSelectedReminderPackage(null);
   };
 
   const refreshPackages = () => {
-    clearAllFields();
+    setSearchRemindersText("");
+    if (editingPackage) {
+      const selectedRowIds = reminderList
+        .filter((reminder) => {
+          if (reminder.reminderType === "planned") {
+            return props.reminderPackage.plannedReminderIds.includes(reminder.reminderId);
+          } else {
+            return props.reminderPackage.recurringReminderIds.includes(reminder.reminderId);
+          }
+        })
+        .map((reminder) => reminder.id);
+
+      setSelectionModel(selectedRowIds);
+    } else {
+      clearSelectionModel();
+    }
     setReminderList(loadingReminderList);
     getReminders();
   };
@@ -168,20 +186,43 @@ const SubscribedPackages = () => {
       }
     }
 
-    reminderPackageService
-      .addReminderPackage(packageName, description, packageTag, {
-        plannedReminderIds,
-        recurringReminderIds,
-      })
-      .then(() => {
-        alert("Successfully created reminder package!");
-        clearAllFields();
-      })
-      .catch((error) => {
-        alert(
-          `Issue creating new reminder package. Error status code: ${error.response.status}. ${error.response.data.message}`
-        );
-      });
+    if (editingPackage) {
+      reminderPackageService
+        .updateReminderPackage(
+          props.reminderPackage.reminderPackageId,
+          packageName,
+          description,
+          packageTag,
+          {
+            plannedReminderIds,
+            recurringReminderIds,
+          },
+          props.reminderPackage.public
+        )
+        .then(() => {
+          alert("Successfully updated reminder package!");
+        })
+        .catch((error) => {
+          alert(
+            `Issue updating reminder package. Error status code: ${error.response.status}. ${error.response.data.message}`
+          );
+        });
+    } else {
+      reminderPackageService
+        .addReminderPackage(packageName, description, packageTag, {
+          plannedReminderIds,
+          recurringReminderIds,
+        })
+        .then(() => {
+          alert("Successfully created reminder package!");
+          clearAllFields();
+        })
+        .catch((error) => {
+          alert(
+            `Issue creating new reminder package. Error status code: ${error.response.status}. ${error.response.data.message}`
+          );
+        });
+    }
   };
 
   const handleDataGridSelectionChange = (e) => {
@@ -191,7 +232,7 @@ const SubscribedPackages = () => {
 
   const getReminders = () => {
     let tempReminderList = [];
-    reminderService
+    return reminderService
       .getAllLocalReminders()
       .then((response) => {
         tempReminderList = response.data;
@@ -199,6 +240,7 @@ const SubscribedPackages = () => {
           tempReminderList[i].id = i + 1;
         }
         setReminderList(tempReminderList);
+        return tempReminderList;
       })
       .catch((error) => {
         alert(
@@ -208,12 +250,31 @@ const SubscribedPackages = () => {
   };
 
   useEffect(() => {
-    getReminders();
+    getReminders().then((reminderList) => {
+      if (editingPackage) {
+        setPackageName(props.reminderPackage.name);
+        setDescription(props.reminderPackage.description);
+        setPackageTag(props.reminderPackage.packageTag);
+        const selectedRowIds = reminderList
+          .filter((reminder) => {
+            if (reminder.reminderType === "planned") {
+              return props.reminderPackage.plannedReminderIds.includes(reminder.reminderId);
+            } else {
+              return props.reminderPackage.recurringReminderIds.includes(reminder.reminderId);
+            }
+          })
+          .map((reminder) => reminder.id);
+
+        setSelectionModel(selectedRowIds);
+      }
+    });
   }, []);
 
   return (
     <>
-      <Typography>Create Reminder Packages</Typography>
+      <Typography>
+        {editingPackage ? "Edit Reminder Package" : "Create Reminder Packages"}
+      </Typography>
       <Paper elevation={2} variant="outlined" style={{ height: "780px" }}>
         <form
           noValidate
@@ -234,6 +295,7 @@ const SubscribedPackages = () => {
                 label="Package Name"
                 value={packageName}
                 onChange={updatePackageName}
+                disabled={editingPackage}
                 required
                 fullWidth
               />
@@ -244,6 +306,7 @@ const SubscribedPackages = () => {
                 label="Description"
                 value={description}
                 onChange={updateDescription}
+                disabled={editingPackage}
                 required
                 fullWidth
               />
@@ -254,6 +317,7 @@ const SubscribedPackages = () => {
                 label="Package Tag (Optional)"
                 value={packageTag}
                 onChange={updatePackageTag}
+                disabled={editingPackage}
                 fullWidth
               />
             </Grid>
@@ -302,6 +366,7 @@ const SubscribedPackages = () => {
                 }}
                 onSelectionModelChange={handleDataGridSelectionChange}
                 selectionModel={selectionModel}
+                components={{ Toolbar: GridToolbar }}
               />
             </Grid>
             <Grid
@@ -322,20 +387,29 @@ const SubscribedPackages = () => {
                 spacing={2}
               >
                 <Grid item>
-                  <Button onClick={clearAllFields} variant="contained" color="primary">
-                    Clear
-                  </Button>
+                  <Tooltip title="Clear" aria-label="clear">
+                    <Button onClick={clearAllFields} color="primary">
+                      Clear
+                    </Button>
+                  </Tooltip>
                 </Grid>
                 <Grid item>
-                  <Button onClick={refreshPackages} variant="contained" color="primary">
-                    Refresh
-                  </Button>
+                  <Tooltip title="Refresh" aria-label="refresh">
+                    <IconButton onClick={refreshPackages} variant="contained" color="primary">
+                      <RefreshIcon />
+                    </IconButton>
+                  </Tooltip>
                 </Grid>
               </Grid>
               <Grid item>
-                <Button type="submit" variant="contained" color="primary">
-                  Create
-                </Button>
+                <Tooltip
+                  title={editingPackage ? "Update" : "Create"}
+                  aria-label={editingPackage ? "update" : "create"}
+                >
+                  <IconButton type="submit" variant="contained" color="primary">
+                    <AddBoxIcon />
+                  </IconButton>
+                </Tooltip>
               </Grid>
             </Grid>
           </Grid>
@@ -345,4 +419,9 @@ const SubscribedPackages = () => {
   );
 };
 
-export default SubscribedPackages;
+CreatePackages.propTypes = {
+  reminderPackage: PropTypes.object,
+  setSelectedReminderPackage: PropTypes.func,
+};
+
+export default CreatePackages;

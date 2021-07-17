@@ -1,4 +1,4 @@
-const parseTime = (dateTime) => {
+const parseTimeToString = (dateTime) => {
   if (dateTime) {
     return new Date(
       dateTime.slice(0, 4),
@@ -11,14 +11,24 @@ const parseTime = (dateTime) => {
   return "";
 };
 
+const parseTimeToDate = (dateTime) => {
+  return new Date(
+    dateTime.slice(0, 4),
+    dateTime.slice(4, 6) - 1,
+    dateTime.slice(6, 8),
+    dateTime.slice(8, 10),
+    dateTime.slice(10, 12)
+  );
+};
+
 const dates = ["Jan", "Feb", "Mar", "Apr", "May", "Jun", "Jul", "Aug", "Sep", "Oct", "Nov", "Dev"];
 
-const parseTimeShorter = (dateTime) => {
-  if (dateTime) {
-    return `${dateTime.getDate().padStart(2, "0")} ${dates[dateTime.getMonth() + 1]} ${dateTime
+const convertDateToShorterString = (date) => {
+  if (date) {
+    return `${date.getDate().toString().padStart(2, "0")} ${dates[date.getMonth() + 1]} ${date
       .getHours()
       .toString()
-      .padStart(2, "0")}:${dateTime.getMinutes().toString.padStart(2, "0")}`;
+      .padStart(2, "0")}:${date.getMinutes().toString().padStart(2, "0")}`;
   }
   return "";
 };
@@ -32,4 +42,9 @@ const convertDateToString = (date) => {
     .padStart(2, "0")}${date.getMinutes().toString().padStart(2, "0")}`;
 };
 
-export default { parseTime, parseTimeShorter, convertDateToString };
+export default {
+  parseTimeToString,
+  parseTimeToDate,
+  convertDateToShorterString,
+  convertDateToString,
+};
