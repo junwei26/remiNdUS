@@ -42,6 +42,9 @@ const NavigationBar = () => {
     window.location.replace(REACT_APP_URL + "/reminderpackages");
   };
 
+  const handleClickAnalytics = () => {
+    window.location.replace(REACT_APP_URL + "/analytics");
+  };
   return (
     <AppBar position="static" className={classes.appbar}>
       <Toolbar>
@@ -65,6 +68,11 @@ const NavigationBar = () => {
         {isLoggedIn ? (
           <div>
             <Grid container direction="row" justify="center" alignItems="center">
+              <Grid item>
+                <Button color="inherit" onClick={handleClickAnalytics}>
+                  Analytics
+                </Button>
+              </Grid>
               <Grid item>
                 <Button color="inherit" onClick={handleClickReminderPackages}>
                   Reminder Packages
