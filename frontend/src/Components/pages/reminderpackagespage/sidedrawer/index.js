@@ -34,20 +34,36 @@ const useStyles = makeStyles((theme) => ({
 
 const Sidedrawer = () => {
   const [active, setActive] = useState(1);
-  const SetView = (active) => {
+  const [selectedReminderPackage, setSelectedReminderPackage] = useState(null);
+  const setView = (active) => {
     setActive(active);
   };
 
   const ActiveView = () => {
     switch (active) {
       case "Subscribed Packages":
-        return <SubscribedPackages />;
+        return (
+          <SubscribedPackages
+            setSelectedReminderPackage={setSelectedReminderPackage}
+            setView={setView}
+          />
+        );
       case "Search Packages":
         return <SearchPackages />;
       case "Create Packages":
-        return <CreatePackages />;
+        return (
+          <CreatePackages
+            reminderPackage={selectedReminderPackage}
+            setSelectedReminderPackage={setSelectedReminderPackage}
+          />
+        );
       default:
-        return <SubscribedPackages />;
+        return (
+          <SubscribedPackages
+            setSelectedReminderPackage={setSelectedReminderPackage}
+            setView={setView}
+          />
+        );
     }
   };
   const classes = useStyles();
@@ -69,14 +85,14 @@ const Sidedrawer = () => {
           <ListItem button key="Subscribed Packages">
             <ListItemText
               primary="Subscribed Packages"
-              onClick={() => SetView("Subscribed Packages")}
+              onClick={() => setView("Subscribed Packages")}
             />
           </ListItem>
           <ListItem button key="Search Packages">
-            <ListItemText primary="Search Packages" onClick={() => SetView("Search Packages")} />
+            <ListItemText primary="Search Packages" onClick={() => setView("Search Packages")} />
           </ListItem>
           <ListItem button key="Create Packages">
-            <ListItemText primary="Create Packages" onClick={() => SetView("Create Packages")} />
+            <ListItemText primary="Create Packages" onClick={() => setView("Create Packages")} />
           </ListItem>
         </List>
       </Drawer>

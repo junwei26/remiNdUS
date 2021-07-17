@@ -1,7 +1,12 @@
 import React, { useEffect, useState } from "react";
 import { makeStyles } from "@material-ui/core/styles";
-import { Grid, Typography, TextField, Paper, Button } from "@material-ui/core";
+import { Grid, Typography, TextField, Paper, Button, IconButton, Tooltip } from "@material-ui/core";
 import { DataGrid, GridToolbar } from "@material-ui/data-grid";
+import PropTypes from "prop-types";
+import RefreshIcon from "@material-ui/icons/Refresh";
+import EditIcon from "@material-ui/icons/Edit";
+import ShareIcon from "@material-ui/icons/Share";
+import DeleteForeverIcon from "@material-ui/icons/DeleteForever";
 import reminderPackageService from "../../../services/reminderPackageService";
 import localService from "../../../services/localService";
 
@@ -20,7 +25,7 @@ const useStyles = makeStyles(() => ({
   },
 }));
 
-const SubscribedPackages = () => {
+const SubscribedPackages = (props) => {
   const classes = useStyles();
 
   const [searchText, setSearchText] = useState("");
@@ -79,7 +84,7 @@ const SubscribedPackages = () => {
       headerName: "Last Modified",
       flex: 1,
       valueFormatter: (params) => {
-        return `${localService.parseTime(params.value)}`;
+        return `${localService.parseTimeToString(params.value)}`;
       },
     },
     {
@@ -137,6 +142,22 @@ const SubscribedPackages = () => {
     getReminderPackages();
   };
 
+  const handleSubmitEditPackage = (e) => {
+    e.preventDefault();
+    if (selectedRows.length !== 1) {
+      alert("Please select only one reminder package when choosing to edit");
+      return;
+    } else {
+      props.setSelectedReminderPackage(selectedRows[0]);
+      props.setView("Create Packages");
+    }
+  };
+
+  const handleSubmitDeletePackage = (e) => {
+    e.preventDefault();
+    deleteReminderPackages();
+  };
+
   const deleteReminderPackages = () => {
     const reminderPackageIds = [];
     for (let i = 0; i < selectedRows.length; ++i) {
@@ -154,11 +175,6 @@ const SubscribedPackages = () => {
           `Issue deleting reminder package. Error status code: ${error.response.status}. ${error.response.data.message}`
         );
       });
-  };
-
-  const handleSubmitDeletePackage = (e) => {
-    e.preventDefault();
-    deleteReminderPackages();
   };
 
   const shareReminderPackages = () => {
@@ -233,7 +249,7 @@ const SubscribedPackages = () => {
                 onSelectionModelChange={handleDataGridSelectionChange}
                 selectionModel={selectionModel}
                 isRowSelectable={(params) => {
-                  return !params.getValue(params.id, "subscribed");
+                  return !params.row.subscribed;
                 }}
                 style={{ overflowX: "auto" }}
                 components={{ Toolbar: GridToolbar }}
@@ -257,14 +273,18 @@ const SubscribedPackages = () => {
                 spacing={2}
               >
                 <Grid item>
-                  <Button onClick={clearAllFields} variant="contained" color="primary">
-                    Clear
-                  </Button>
+                  <Tooltip title="Clear" aria-label="clear">
+                    <Button onClick={clearAllFields} color="primary">
+                      Clear
+                    </Button>
+                  </Tooltip>
                 </Grid>
                 <Grid item>
-                  <Button onClick={refreshPackages} variant="contained" color="primary">
-                    Refresh
-                  </Button>
+                  <Tooltip title="Refresh" aria-label="refresh">
+                    <IconButton onClick={refreshPackages} variant="contained" color="primary">
+                      <RefreshIcon />
+                    </IconButton>
+                  </Tooltip>
                 </Grid>
               </Grid>
 
@@ -278,14 +298,33 @@ const SubscribedPackages = () => {
                 spacing={2}
               >
                 <Grid item>
-                  <Button onClick={handleSubmitSharePackages} variant="contained" color="primary">
-                    Share
-                  </Button>
+                  <Tooltip title="Edit" aria-label="edit">
+                    <IconButton
+                      onClick={handleSubmitEditPackage}
+                      variant="contained"
+                      color="primary"
+                    >
+                      <EditIcon />
+                    </IconButton>
+                  </Tooltip>
                 </Grid>
                 <Grid item>
-                  <Button type="submit" variant="contained" color="primary">
-                    Delete
-                  </Button>
+                  <Tooltip title="Share" aria-label="share">
+                    <IconButton
+                      onClick={handleSubmitSharePackages}
+                      variant="contained"
+                      color="primary"
+                    >
+                      <ShareIcon />
+                    </IconButton>
+                  </Tooltip>
+                </Grid>
+                <Grid item>
+                  <Tooltip title="Delete" aria-label="delete">
+                    <IconButton type="submit" variant="contained" color="primary">
+                      <DeleteForeverIcon />
+                    </IconButton>
+                  </Tooltip>
                 </Grid>
               </Grid>
             </Grid>
@@ -294,6 +333,11 @@ const SubscribedPackages = () => {
       </Paper>
     </>
   );
+};
+
+SubscribedPackages.propTypes = {
+  setSelectedReminderPackage: PropTypes.func,
+  setView: PropTypes.func,
 };
 
 export default SubscribedPackages;

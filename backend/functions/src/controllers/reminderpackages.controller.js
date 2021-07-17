@@ -157,13 +157,13 @@ exports.create = (req, res) => {
     return res.status(400).send({ message: "You must be logged in to make this operation!" });
   }
   if (!req.body.name) {
-    return res.status(400).send({ message: "Error! Missing name for reminder package" });
+    return res.status(400).send({ message: "Error! Missing name for reminder package!" });
   }
   if (!req.body.description) {
-    return res.status(400).send({ message: "Error! Missing description for reminder package" });
+    return res.status(400).send({ message: "Error! Missing description for reminder package!" });
   }
   if (!req.body.reminderIds) {
-    return res.status(400).send({ message: "Error! Missing reminders for reminder package" });
+    return res.status(400).send({ message: "Error! Missing reminders for reminder package!" });
   }
 
   db.collection("users")
@@ -210,6 +210,72 @@ exports.create = (req, res) => {
     .catch((error) => {
       return res.status(400).send({
         message: `Error retrieving user database. ${error}`,
+      });
+    });
+};
+
+exports.update = (req, res) => {
+  if (!req.body.uid) {
+    return res.status(400).send({ message: "You must be logged in to make this operation!" });
+  }
+  if (!req.body.name) {
+    return res.status(400).send({ message: "Error! Missing name for reminder package!" });
+  }
+  if (!req.body.description) {
+    return res.status(400).send({ message: "Error! Missing description for reminder package!" });
+  }
+  if (!req.body.reminderIds) {
+    return res.status(400).send({ message: "Error! Missing reminders for reminder package!" });
+  }
+  if (!req.body.reminderPackageId) {
+    return res.status(400).send({ message: "Error! Missing ID for reminder package!" });
+  }
+
+  db.collection("users")
+    .where("uid", "==", req.body.uid)
+    .limit(1)
+    .get()
+    .then((querySnapshot) => {
+      if (querySnapshot.empty) {
+        return res.status(404).send({ message: "No user found. Please contact the administrator" });
+      }
+
+      const userDoc = querySnapshot.docs[0].ref;
+
+      userDoc.get().then((documentSnapshot) => {
+        const updatedReminderPackage = {
+          name: req.body.name,
+          description: req.body.description,
+          lastModified: convertDateToString(new Date()),
+          numberOfReminders:
+            req.body.reminderIds.plannedReminderIds.length +
+            req.body.reminderIds.recurringReminderIds.length,
+          plannedReminderIds: req.body.reminderIds.plannedReminderIds,
+          recurringReminderIds: req.body.reminderIds.recurringReminderIds,
+          packageTag: req.body.packageTag,
+          ownerUid: req.body.uid,
+          ownerName: documentSnapshot.get("username"),
+          verified: documentSnapshot.get("verified"),
+          public: req.body.public,
+        };
+
+        userDoc
+          .collection("reminderPackages")
+          .doc(req.body.reminderPackageId)
+          .update(updatedReminderPackage)
+          .then(() => {
+            return res.status(200).send({ message: "Successfully updated reminder package!" });
+          })
+          .catch((error) => {
+            return res.status(400).send({
+              message: `Error updating reminder package. ${error}`,
+            });
+          });
+      });
+    })
+    .catch((error) => {
+      return res.status(400).send({
+        message: `Error retrieving user database when updating reminder package. ${error}`,
       });
     });
 };

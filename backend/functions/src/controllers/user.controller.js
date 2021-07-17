@@ -261,9 +261,12 @@ exports.addTag = (req, res) => {
   db.collection("users")
     .doc(req.body.uid)
     .update({
-      tags: admin.firestore.FieldValue.arrayUnion(req.body.tag),
+      tags: admin.firestore.FieldValue.arrayUnion(req.body.activityTag),
     })
-    .then(() => res.status(200).send({ message: "Tag added successfully" }));
+    .then(() => res.status(200).send({ message: "Tag added successfully" }))
+    .catch((error) => {
+      return res.status(404).send({ message: `Adding of tag unsuccessful. ${error}` });
+    });
 };
 
 exports.setChatId = (req, res) => {
