@@ -119,8 +119,8 @@ const Planner = () => {
   const [currentAlert, setCurrentAlert] = useState({ severity: "", message: "" });
   const [resources, setResources] = useState([
     {
-      fieldName: "tag",
-      title: "Tag",
+      fieldName: "activityTag",
+      title: "Activity Tag",
       instances: [],
     },
   ]);
@@ -135,19 +135,34 @@ const Planner = () => {
   useEffect(() => {
     userService.getUserInfo().then((response) => {
       const instances = response.data.tags
-        .map((tag) => {
-          return { id: tag, text: tag, fieldName: "tag" };
+        .map((activityTag) => {
+          return { id: activityTag, text: activityTag, fieldName: "activityTag" };
         })
-        .concat({ id: "Reminder", text: "Reminder", fieldName: "tag", color: "#d50000" });
+        .concat({ id: "Reminder", text: "Reminder", fieldName: "activityTag", color: "#d50000" });
       setResources([
         {
-          fieldName: "tag",
-          title: "Tag",
+          fieldName: "activityTag",
+          title: "Activity Tag",
           instances,
         },
       ]);
     });
   }, [data]);
+
+  useEffect(() => {
+    activityService.getTemplateActivities().then((response) => {
+      const instances = response.data
+        .map((activityTemplate) => {
+          return {
+            id: activityTemplate.templateActivityId,
+            text: activityTemplate.name,
+            fieldName: "activityTemplate",
+          };
+        })
+        .concat({});
+      setTemplate;
+    });
+  });
 
   const setCurrentViewName = useCallback(
     (nextViewName) =>
@@ -188,7 +203,7 @@ const Planner = () => {
 
   const handleChange = ({ added, changed, deleted }) => {
     if (added) {
-      const addedActivityTag = added.newTag == undefined ? added.tag : added.newTag;
+      const addedActivityTag = added.newTag == undefined ? added.activityTag : added.newTag;
       userService
         .addTag(addedActivityTag)
         .then(() => {
@@ -211,7 +226,7 @@ const Planner = () => {
             });
         })
         .catch(() => {
-          setCurrentAlert({ severity: "error", message: "Error creating new tag!" });
+          setCurrentAlert({ severity: "error", message: "Error creating new activity tag!" });
           setSnackbarOpen(true);
         });
     }
@@ -220,7 +235,7 @@ const Planner = () => {
         if (changed[event.id]) {
           const updatedEvent = { ...event, ...changed[event.id] };
           if (event.eventType === "1") {
-            if (updatedEvent.tag !== "New Tag") {
+            if (updatedEvent.activityTag !== "New Tag") {
               activityService
                 .updateActivity(
                   updatedEvent.startDate,
@@ -228,7 +243,7 @@ const Planner = () => {
                   updatedEvent.title,
                   updatedEvent.description,
                   event.id,
-                  updatedEvent.tag
+                  updatedEvent.activityTag
                 )
                 .then(() => {
                   getData(setData, setLoading);
@@ -241,7 +256,10 @@ const Planner = () => {
                 });
             } else {
               if (updatedEvent.newTag === undefined) {
-                setCurrentAlert({ severity: "error", message: "New tag cannot be empty!" });
+                setCurrentAlert({
+                  severity: "error",
+                  message: "New activity tag cannot be empty!",
+                });
                 setSnackbarOpen(true);
               } else {
                 userService
@@ -267,7 +285,10 @@ const Planner = () => {
                       });
                   })
                   .catch(() => {
-                    setCurrentAlert({ severity: "error", message: "Error creating new tag!" });
+                    setCurrentAlert({
+                      severity: "error",
+                      message: "Error creating new activity tag!",
+                    });
                     setSnackbarOpen(true);
                   });
               }
@@ -315,13 +336,13 @@ const Planner = () => {
   };
 
   const BasicLayout = ({ onFieldChange, appointmentData }) => {
-    const onDescriptionFieldChange = (nextValue) => {
-      onFieldChange({ description: nextValue });
-    };
     const onNameFieldChange = (nextValue) => {
       onFieldChange({ title: nextValue });
     };
 
+    const onDescriptionFieldChange = (nextValue) => {
+      onFieldChange({ description: nextValue });
+    };
     const onStartFieldChange = (nextValue) => {
       onFieldChange({ startDate: nextValue });
     };
@@ -331,12 +352,63 @@ const Planner = () => {
     };
 
     const onTagFieldChange = (nextValue) => {
-      onFieldChange({ tag: nextValue });
+      onFieldChange({ activityTag: nextValue });
     };
 
     const onCreateTagFieldChange = (nextValue) => {
       onFieldChange({ newTag: nextValue });
     };
+
+    const getTemplateActivities = () => {
+      activityService
+        .getTemplateActivities()
+        .then((response) => {
+          setTemplateActivities(response.data);
+        })
+        .catch((error) => {
+          alert(
+            error === undefined
+              ? "Error accessing API"
+              : `Issue retrieving template activities. Error status code ${error.response.status}. ${error.response.data.message}`
+          );
+        });
+    };
+
+    const handleChangeTemplateActivity = (e) => {
+      setChosenTemplateActivity(e.target.value);
+      if (e.target.value >= 0) {
+        onNameFieldChange(templateActivities[e.target.value].name);
+        onDescriptionFieldChange(templateActivities[e.target.value].description);
+        setActivityTag(templateActivities[e.target.value].activityTag);
+        setChosenActivityTag(-1);
+        setActivityTagMenuItemArray(
+          <MenuItem value={-1} key={-1}>
+            {templateActivities[e.target.value].activityTag}
+          </MenuItem>
+        );
+      } else {
+        setActivityName("");
+        setDescription("");
+        setActivityTag("");
+        setChosenActivityTag(-1);
+      }
+    };
+
+    useEffect(() => {
+      setTemplateActivitiesOptionsArray(
+        [
+          <MenuItem value={-1} key={-1}>
+            Create new activity
+          </MenuItem>,
+        ].concat(
+          templateActivities.map((templateActivity, index) => (
+            <MenuItem value={index} key={index}>
+              {templateActivity.name}
+            </MenuItem>
+          ))
+        )
+      );
+    }, [templateActivities]);
 
     return appointmentData.eventType == 2 ? (
       <Grid container direction="column" alignItems="left" alignContent="center">
@@ -372,6 +444,17 @@ const Planner = () => {
       </Grid>
     ) : (
       <Grid container direction="column" alignItems="left" alignContent="center">
+        <Grid item xs>
+          <AppointmentForm.Label text="Select Activity" type="title" />
+        </Grid>
+        <Grid item xs style={{ width: "90%" }}>
+          <AppointmentForm.Select
+            value={chosenTemplateActivity}
+            availableOptions={templateActivitiesMenuItemArray}
+            onValueChange={handleChangeTemplateActivity}
+            placeholder="Create an activity"
+          />
+        </Grid>
         <AppointmentForm.Label text="Activity" type="title" />
         <Grid item xs>
           <AppointmentForm.TextEditor
@@ -423,15 +506,15 @@ const Planner = () => {
         </Grid>
         <Grid item xs style={{ width: "90%" }}>
           <AppointmentForm.Select
-            value={appointmentData.tag}
+            value={appointmentData.activityTag}
             availableOptions={resources[0].instances
               .filter((resource) => resource.id != "Reminder")
-              .concat([{ id: "New Tag", text: "Add a new tag" }])}
+              .concat([{ id: "New Tag", text: "Add a new activity tag" }])}
             onValueChange={onTagFieldChange}
-            placeholder="Add a Tag"
+            placeholder="Add an activity tag"
           />
         </Grid>
-        {appointmentData.tag == "New Tag" ? (
+        {appointmentData.activityTag == "New Tag" ? (
           <>
             <Grid item xs>
               <AppointmentForm.Label text="Create a new Tag" type="title" />
@@ -474,7 +557,7 @@ const Planner = () => {
         <WeekView startDayHour={8} endDayHour={24} />
         <MonthView startDayHour={8} endDayHour={24} />
         <Appointments />
-        <Resources data={resources} mainResourceName="tag" />
+        <Resources data={resources} mainResourceName="activityTag" />
 
         <AppointmentTooltip showOpenButton showCloseButton showDeleteButton />
         <AppointmentForm basicLayoutComponent={BasicLayout} />

@@ -59,7 +59,7 @@ const AddActivityButton = () => {
   const [frequency, setFrequency] = useState("weekly");
   const [templateActivitiesMenuItemArray, setTemplateActivitiesMenuItemArray] = useState([
     <MenuItem value={-1} key={-1}>
-      Choose an existing activity...
+      Create new activity
     </MenuItem>,
   ]);
   const [activityTagMenuItemArray, setActivityTagMenuItemArray] = useState([
@@ -256,7 +256,7 @@ const AddActivityButton = () => {
     setTemplateActivitiesMenuItemArray(
       [
         <MenuItem value={-1} key={-1}>
-          Choose an existing activity...
+          Create new activity
         </MenuItem>,
       ].concat(
         templateActivities.map((templateActivity, index) => (
