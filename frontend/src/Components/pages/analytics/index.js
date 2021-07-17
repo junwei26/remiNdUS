@@ -1,38 +1,8 @@
 import PieChart from "./pieChart";
 import BarChart from "./barChart";
-import React, { useState } from "react";
-import { makeStyles } from "@material-ui/core/styles";
-import Drawer from "@material-ui/core/Drawer";
-import CssBaseline from "@material-ui/core/CssBaseline";
-import List from "@material-ui/core/List";
-import Divider from "@material-ui/core/Divider";
-import ListItem from "@material-ui/core/ListItem";
-import ListItemText from "@material-ui/core/ListItemText";
-const drawerWidth = 240;
-
-const useStyles = makeStyles((theme) => ({
-  root: {
-    display: "flex",
-  },
-  appBar: {
-    width: `calc(100% - ${drawerWidth}px)`,
-    marginLeft: drawerWidth,
-  },
-  drawer: {
-    width: drawerWidth,
-    flexShrink: 0,
-  },
-  drawerPaper: {
-    width: drawerWidth,
-  },
-  // necessary for content to be below app bar
-  toolbar: theme.mixins.toolbar,
-  content: {
-    flexGrow: 1,
-    backgroundColor: theme.palette.background.default,
-    padding: theme.spacing(3),
-  },
-}));
+import React from "react";
+import { Grid } from "@material-ui/core";
+import ActivityDurationRanking from "./activitydurationranking";
 
 const DummyData = [
   {
@@ -164,57 +134,23 @@ const DummyData = [
     actualEndDateTime: "202101010500",
   },
 ];
-
 const Analytics = () => {
-  const [active, setActive] = useState(1);
-  const SetView = (active) => {
-    setActive(active);
-  };
-
-  const ActiveView = () => {
-    switch (active) {
-      case "Activity breakdown by tag":
-        return <PieChart data={DummyData} />;
-      case "Productivity analysis":
-        return <BarChart data={DummyData} />;
-      default:
-        return <PieChart data={DummyData} />;
-    }
-  };
-  const classes = useStyles();
-
   return (
-    <div className={classes.root}>
-      <CssBaseline />
-      <Drawer
-        className={classes.drawer}
-        variant="permanent"
-        classes={{
-          paper: classes.drawerPaper,
-        }}
-        anchor="left"
-      >
-        <div className={classes.toolbar} />
-        <Divider />
-        <List>
-          <ListItem button key="Activity breakdown by tag">
-            <ListItemText
-              primary="Activity breakdown by tag"
-              onClick={() => SetView("Activity breakdown by tag")}
-            />
-          </ListItem>
-          <ListItem button key="Productivity analysis">
-            <ListItemText
-              primary="Productivity analysis"
-              onClick={() => SetView("Productivity analysis")}
-            />
-          </ListItem>
-        </List>
-      </Drawer>
-      <main className={classes.content}>
-        <ActiveView />
-      </main>
-    </div>
+    <Grid container direction="row" spacing={3}>
+      <Grid item xs>
+        <Grid container direction="column">
+          <Grid item>
+            <BarChart data={DummyData} />
+          </Grid>
+          <Grid item>
+            <PieChart data={DummyData} />
+          </Grid>
+        </Grid>
+      </Grid>
+      <Grid item xs={2}>
+        <ActivityDurationRanking data={DummyData} />
+      </Grid>
+    </Grid>
   );
 };
 
