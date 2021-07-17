@@ -58,38 +58,6 @@ const ToolbarWithLoading = withStyles(styles, { name: "Toolbar" })(
   )
 );
 
-const mapAppointmentData = (appointment) => {
-  if (appointment.eventType === "1") {
-    return {
-      id: appointment.activityId,
-      startDate: localService.parseTimeToString(appointment.startDateTime),
-      endDate: localService.parseTimeToString(appointment.endDateTime),
-      title: appointment.name,
-      description: appointment.description,
-      eventType: appointment.eventType,
-    };
-  } else {
-    return {
-      id: appointment.reminderId,
-      startDate: localService.parseTimeToString(appointment.endDateTime),
-      title: appointment.name,
-      description: appointment.description,
-      eventType: appointment.eventType,
-    };
-  }
-};
-
-const currentDate = () => {
-  var d = new Date(),
-    month = "" + (d.getMonth() + 1),
-    day = "" + d.getDate(),
-    year = d.getFullYear();
-
-  if (month.length < 2) month = "0" + month;
-  if (day.length < 2) day = "0" + day;
-  return [year, month, day].join("-");
-}
-
 const Planner = () => {
   const [currentDateObj, setCurrentDateObj] = useState(new Date());
   const generateDate = (dateObj) => {
@@ -99,167 +67,14 @@ const Planner = () => {
     const day = padZero(dateObj.getDate());
     return year + month + day;
   };
-  
-  const recurringActivitiesGenerator = (recurringActivity) => {
-    const generatedActivities = [];
-    let daysInMonths = [31, 28, 31, 30, 31, 30, 31, 31, 30, 31, 30, 31];
-    const year = currentDateObj.getFullYear();
-    if ((year % 4 === 0 && year % 100 !== 0) || year % 400 === 0) {
-      daysInMonths[1] = 29;
-    }
-    const weekMs = 6.048e8;
-    var monthMs = daysInMonths[currentDateObj.getMonth()] * 8.64e7;
-    var timeInterval = 0;
-    const endDateObj = new Date(currentDateObj.getTime());
-    const activityDay = new Date();
-    endDateObj.setDate(currentDateObj.getDate() + 7);
-    if (recurringActivity.frequency === "weekly") {
-      activityDay.setDate(
-        currentDateObj.getDate() + recurringActivity.date - currentDateObj.getDay()
-      );
-      timeInterval = weekMs;
-    } else {
-      activityDay.setDate(recurringActivity.date);
-      timeInterval = monthMs;
-    }
-    let startMs = activityDay.getTime();
-    const endMs = endDateObj.getTime();
-    while (startMs <= endMs) {
-      const activity = {
-        id: recurringActivity.activityId,
-        startDate: localService.parseTime(
-          generateDate(new Date(startMs)) + recurringActivity.startTime
-        ),
-        endDate: localService.parseTime(
-          generateDate(new Date(startMs)) + recurringActivity.endTime
-        ),
-        title: recurringActivity.name,
-        description: recurringActivity.description,
-        eventType: recurringActivity.eventType,
-        tag: recurringActivity.activityTag,
-      };
 
-  if (recurringActivity.frequency === "monthly") {
-    timeInterval = daysInMonths[new Date(startMs).getMonth()] * 8.64e7;
-  }
-  startMs += timeInterval;
-  generatedActivities.push(activity);
-}
-return generatedActivities;
-};
-const recurringRemindersGenerator = (recurringReminder) => {
-  const generatedReminders = [];
-  let daysInMonths = [31, 28, 31, 30, 31, 30, 31, 31, 30, 31, 30, 31];
-  const year = currentDateObj.getFullYear();
-  if ((year % 4 === 0 && year % 100 !== 0) || year % 400 === 0) {
-    daysInMonths[1] = 29;
-  }
-  const weekMs = 6.048e8;
-  var monthMs = daysInMonths[currentDateObj.getMonth()] * 8.64e7;
-  var timeInterval = 0;
-  const endDateObj = new Date(currentDateObj.getTime());
-  const reminderStartDay = new Date();
-  endDateObj.setDate(currentDateObj.getDate() + 7);
-  if (recurringReminder.frequency === "weekly") {
-    reminderStartDay.setDate(
-      currentDateObj.getDate() + recurringReminder.date - currentDateObj.getDay()
-    );
-    timeInterval = weekMs;
-  } else {
-    reminderStartDay.setDate(recurringReminder.date);
-    timeInterval = monthMs;
-  }
-  let startMs = reminderStartDay.getTime();
-
-  const endMs = endDateObj.getTime();
-  while (startMs <= endMs) {
-    const reminder = {
-      id: recurringReminder.reminderId,
-      startDate: localService.parseTime(
-        generateDate(new Date(startMs)) + recurringReminder.endTime
-      ),
-      title: recurringReminder.name,
-      description: recurringReminder.description,
-      eventType: recurringReminder.eventType,
-      tag: "Reminder",
-    };
-    if (recurringReminder.frequency === "monthly") {
-      timeInterval = daysInMonths[new Date(startMs).getMonth()] * 8.64e7;
-    }
-    startMs += timeInterval;
-    generatedReminders.push(reminder);
-  }
-  return generatedReminders;
-};
-const mapAppointmentData = (appointment) => {
-  if (appointment.active) {
-    if (appointment.frequency) {
-      if (appointment.eventType === "1") return recurringActivitiesGenerator(appointment);
-      else return recurringRemindersGenerator(appointment);
-    }
-
-    if (appointment.eventType === "1") {
-      return [
-        {
-          id: appointment.activityId,
-          startDate: localService.parseTime(appointment.startDateTime),
-          endDate: localService.parseTime(appointment.endDateTime),
-          title: appointment.name,
-          description: appointment.description,
-          eventType: appointment.eventType,
-          tag: appointment.activityTag,
-        },
-      ];
-    } else {
-      return [
-        {
-          id: appointment.reminderId,
-          startDate: localService.parseTime(appointment.endDateTime),
-          title: appointment.name,
-          description: appointment.description,
-          eventType: appointment.eventType,
-          tag: "Reminder",
-        },
-      ];
-    }
-  } else {
-    return [{}]; // not active, do not display
-  }
-
-};
-
-const initialState = {
-  data: [],
-  loading: false,
-  currentDate: currentDate(),
-  currentViewName: "Week",
-};
-
-const reducer = (state, action) => {
-  switch (action.type) {
-    case "setLoading":
-      return { ...state, loading: action.payload };
-    case "setData":
-      return { ...state, data: action.payload.flatMap(mapAppointmentData) };
-    case "setCurrentViewName":
-      return { ...state, currentViewName: action.payload };
-    case "setCurrentDate":
-      return { ...state, currentDate: action.payload };
-    default:
-      return state;
-  }
-};
-
-const Planner = () => {
-  const [state, dispatch] = useReducer(reducer, initialState);
-  const { data, loading, currentViewName, currentDate } = state;
   const [templateActivities, setTemplateActivities] = useState([]);
   const [templateActivitiesOptions, setTemplateActivitiesOptions] = useState([]);
   const [currentAlert, setCurrentAlert] = useState({ severity: "", message: "" });
   const [resources, setResources] = useState([
     {
-      fieldName: "activityTag",
-      title: "Activity Tag",
+      fieldName: "tag",
+      title: "Tag",
       instances: [],
     },
   ]);
@@ -271,17 +86,180 @@ const Planner = () => {
 
     setSnackbarOpen(false);
   };
+
+  const recurringActivitiesGenerator = (recurringActivity) => {
+    const generatedActivities = [];
+    let daysInMonths = [31, 28, 31, 30, 31, 30, 31, 31, 30, 31, 30, 31];
+    const year = currentDateObj.getFullYear();
+
+    if ((year % 4 === 0 && year % 100 !== 0) || year % 400 === 0) {
+      daysInMonths[1] = 29;
+    }
+
+    const weekMs = 6.048e8;
+    var monthMs = daysInMonths[currentDateObj.getMonth()] * 8.64e7;
+    var timeInterval = 0;
+    const endDateObj = new Date(currentDateObj.getTime());
+    const activityDay = new Date();
+    endDateObj.setDate(currentDateObj.getDate() + 7);
+
+    if (recurringActivity.frequency === "weekly") {
+      activityDay.setDate(
+        currentDateObj.getDate() + recurringActivity.date - currentDateObj.getDay()
+      );
+      timeInterval = weekMs;
+    } else {
+      activityDay.setDate(recurringActivity.date);
+      timeInterval = monthMs;
+    }
+
+    let startMs = activityDay.getTime();
+    const endMs = endDateObj.getTime();
+
+    while (startMs <= endMs) {
+      const activity = {
+        id: recurringActivity.activityId,
+        startDate: localService.parseTimeToString(
+          generateDate(new Date(startMs)) + recurringActivity.startTime
+        ),
+        endDate: localService.parseTimeToString(
+          generateDate(new Date(startMs)) + recurringActivity.endTime
+        ),
+        title: recurringActivity.name,
+        description: recurringActivity.description,
+        eventType: recurringActivity.eventType,
+        tag: recurringActivity.activityTag,
+      };
+
+      if (recurringActivity.frequency === "monthly") {
+        timeInterval = daysInMonths[new Date(startMs).getMonth()] * 8.64e7;
+      }
+
+      startMs += timeInterval;
+      generatedActivities.push(activity);
+    }
+
+    return generatedActivities;
+  };
+
+  const recurringRemindersGenerator = (recurringReminder) => {
+    const generatedReminders = [];
+    let daysInMonths = [31, 28, 31, 30, 31, 30, 31, 31, 30, 31, 30, 31];
+    const year = currentDateObj.getFullYear();
+
+    if ((year % 4 === 0 && year % 100 !== 0) || year % 400 === 0) {
+      daysInMonths[1] = 29;
+    }
+
+    const weekMs = 6.048e8;
+    var monthMs = daysInMonths[currentDateObj.getMonth()] * 8.64e7;
+    var timeInterval = 0;
+    const endDateObj = new Date(currentDateObj.getTime());
+    const reminderStartDay = new Date();
+    endDateObj.setDate(currentDateObj.getDate() + 7);
+
+    if (recurringReminder.frequency === "weekly") {
+      reminderStartDay.setDate(
+        currentDateObj.getDate() + recurringReminder.date - currentDateObj.getDay()
+      );
+      timeInterval = weekMs;
+    } else {
+      reminderStartDay.setDate(recurringReminder.date);
+      timeInterval = monthMs;
+    }
+
+    let startMs = reminderStartDay.getTime();
+
+    const endMs = endDateObj.getTime();
+
+    while (startMs <= endMs) {
+      const reminder = {
+        id: recurringReminder.reminderId,
+        startDate: localService.parseTimeToString(
+          generateDate(new Date(startMs)) + recurringReminder.endTime
+        ),
+        title: recurringReminder.name,
+        description: recurringReminder.description,
+        eventType: recurringReminder.eventType,
+        tag: "Reminder",
+      };
+
+      if (recurringReminder.frequency === "monthly") {
+        timeInterval = daysInMonths[new Date(startMs).getMonth()] * 8.64e7;
+      }
+
+      startMs += timeInterval;
+      generatedReminders.push(reminder);
+    }
+    return generatedReminders;
+  };
+
+  const mapAppointmentData = (appointment) => {
+    if (appointment.frequency) {
+      if (appointment.eventType === "1") return recurringActivitiesGenerator(appointment);
+      else return recurringRemindersGenerator(appointment);
+    }
+
+    if (appointment.eventType === "1") {
+      return {
+        id: appointment.activityId,
+        startDate: localService.parseTimeToString(appointment.startDateTime),
+        endDate: localService.parseTimeToString(appointment.endDateTime),
+        title: appointment.name,
+        description: appointment.description,
+        eventType: appointment.eventType,
+        tag: appointment.activityTag,
+        templateId: appointment.templateActivityId,
+      };
+    } else {
+      return {
+        id: appointment.reminderId,
+        startDate: localService.parseTimeToString(appointment.endDateTime),
+        title: appointment.name,
+        description: appointment.description,
+        eventType: appointment.eventType,
+        tag: "Reminder",
+        templateId: appointment.templateReminderId,
+      };
+    }
+  };
+
+  const reducer = (state, action) => {
+    switch (action.type) {
+      case "setLoading":
+        return { ...state, loading: action.payload };
+      case "setData":
+        return { ...state, data: action.payload.flatMap(mapAppointmentData) };
+      case "setCurrentViewName":
+        return { ...state, currentViewName: action.payload };
+      case "setCurrentDate":
+        return { ...state, currentDate: action.payload };
+      default:
+        return state;
+    }
+  };
+
+  const initialState = {
+    data: [],
+    loading: false,
+    currentDate: currentDateObj,
+    currentViewName: "Week",
+  };
+
+  const [state, dispatch] = useReducer(reducer, initialState);
+  const { data, loading, currentViewName, currentDate } = state;
+
   useEffect(() => {
     userService.getUserInfo().then((response) => {
       const instances = response.data.tags
-        .map((activityTag) => {
-          return { id: activityTag, text: activityTag, fieldName: "activityTag" };
+        .map((tag) => {
+          return { id: tag, text: tag, fieldName: "tag" };
         })
-        .concat({ id: "Reminder", text: "Reminder", fieldName: "activityTag", color: "#d50000" });
+        .concat({ id: "Reminder", text: "Reminder", fieldName: "tag", color: "#d50000" });
       setResources([
         {
-          fieldName: "activityTag",
-          title: "Activity Tag",
+          fieldName: "tag",
+          title: "Tag",
           instances,
         },
       ]);
@@ -344,7 +322,7 @@ const Planner = () => {
 
   const handleChange = ({ added, changed, deleted }) => {
     if (added) {
-      const addedActivityTag = added.newTag == undefined ? added.activityTag : added.newTag;
+      const addedActivityTag = added.newTag == undefined ? added.tag : added.newTag;
       userService
         .addTag(addedActivityTag)
         .then(() => {
@@ -376,7 +354,7 @@ const Planner = () => {
         if (changed[event.id]) {
           const updatedEvent = { ...event, ...changed[event.id] };
           if (event.eventType === "1") {
-            if (updatedEvent.activityTag !== "New Tag") {
+            if (updatedEvent.tag !== "New Tag") {
               activityService
                 .updateActivity(
                   updatedEvent.startDate,
@@ -384,7 +362,7 @@ const Planner = () => {
                   updatedEvent.title,
                   updatedEvent.description,
                   event.id,
-                  updatedEvent.activityTag
+                  updatedEvent.tag
                 )
                 .then(() => {
                   getData(setData, setLoading);
@@ -421,7 +399,10 @@ const Planner = () => {
                         setSnackbarOpen(true);
                       })
                       .catch(() => {
-                        setCurrentAlert({ severity: "error", message: "Error updating activity!" });
+                        setCurrentAlert({
+                          severity: "error",
+                          message: "Error updating activity!",
+                        });
                         setSnackbarOpen(true);
                       });
                   })
@@ -509,68 +490,16 @@ const Planner = () => {
     };
 
     const onTagFieldChange = (nextValue) => {
-      onFieldChange({ activityTag: nextValue });
+      onFieldChange({ tag: nextValue });
     };
 
     const onCreateTagFieldChange = (nextValue) => {
       onFieldChange({ newTag: nextValue });
     };
 
-
-    const getTemplateActivities = () => {
-      activityService
-        .getTemplateActivities()
-        .then((response) => {
-          setTemplateActivities(response.data);
-        })
-        .catch((error) => {
-          alert(
-            error === undefined
-              ? "Error accessing API"
-              : `Issue retrieving template activities. Error status code ${error.response.status}. ${error.response.data.message}`
-          );
-        });
-    };
-
-    const handleChangeTemplateActivity = (e) => {
-      setChosenTemplateActivity(e.target.value);
-      if (e.target.value >= 0) {
-        onNameFieldChange(templateActivities[e.target.value].name);
-        onDescriptionFieldChange(templateActivities[e.target.value].description);
-        setActivityTag(templateActivities[e.target.value].activityTag);
-        setChosenActivityTag(-1);
-        setActivityTagMenuItemArray(
-          <MenuItem value={-1} key={-1}>
-            {templateActivities[e.target.value].activityTag}
-          </MenuItem>
-        );
-      } else {
-        setActivityName("");
-        setDescription("");
-        setActivityTag("");
-        setChosenActivityTag(-1);
-      }
-    };
-
     useEffect(() => {
       originalAppointmentData = { ...appointmentData };
     }, []);
-
-    useEffect(() => {
-      setTemplateActivitiesOptionsArray(
-        [
-          <MenuItem value={-1} key={-1}>
-            Create new activity
-          </MenuItem>,
-        ].concat(
-          templateActivities.map((templateActivity, index) => (
-            <MenuItem value={index} key={index}>
-              {templateActivity.name}
-            </MenuItem>
-          ))
-        )
-      );
-    }, [templateActivities]);
 
     return appointmentData.eventType == 2 ? (
       <Grid container direction="column" alignItems="left" alignContent="center">
@@ -611,7 +540,7 @@ const Planner = () => {
         </Grid>
         <Grid item xs style={{ width: "90%" }}>
           <AppointmentForm.Select
-            value={appointmentData.templateActivityId}
+            value={appointmentData.templateId}
             availableOptions={templateActivitiesOptions}
             onValueChange={onTemplateActivityFieldChange}
             placeholder="Create an activity"
@@ -668,7 +597,7 @@ const Planner = () => {
         </Grid>
         <Grid item xs style={{ width: "90%" }}>
           <AppointmentForm.Select
-            value={appointmentData.activityTag}
+            value={appointmentData.tag}
             availableOptions={resources[0].instances
               .filter((resource) => resource.id != "Reminder")
               .concat([{ id: "New Tag", text: "Add a new activity tag" }])}
@@ -676,7 +605,7 @@ const Planner = () => {
             placeholder="Add an activity tag"
           />
         </Grid>
-        {appointmentData.activityTag == "New Tag" ? (
+        {appointmentData.tag == "New Tag" ? (
           <>
             <Grid item xs>
               <AppointmentForm.Label text="Create a new Tag" type="title" />
@@ -719,7 +648,7 @@ const Planner = () => {
         <WeekView startDayHour={8} endDayHour={24} />
         <MonthView startDayHour={8} endDayHour={24} />
         <Appointments />
-        <Resources data={resources} mainResourceName="activityTag" />
+        <Resources data={resources} mainResourceName="tag" />
 
         <AppointmentTooltip showOpenButton showCloseButton showDeleteButton />
         <AppointmentForm basicLayoutComponent={BasicLayout} />

@@ -182,6 +182,11 @@ const SearchReminders = () => {
     if (!selectedRow) {
       alert("Please select an reminder to edit");
       return;
+    } else if (selectedRow.subscribed === true) {
+      alert(
+        "You cannot delete a reminder from a reminder package that you are subscribed. Please unsubscribe from the respective reminder package instead."
+      );
+      return;
     } else {
       setDialogMaxWidth("xs");
       setEditingReminder(true);
