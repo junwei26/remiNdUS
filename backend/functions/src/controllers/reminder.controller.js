@@ -78,8 +78,8 @@ const getRemindersByIds = (uid, plannedReminderIds, recurringReminderIds, subscr
     });
 };
 
-exports.getAllRemindersExport = (userQuerySnapshot) => {
-  return getAllReminders(userQuerySnapshot);
+exports.getAllRemindersExport = (userQuerySnapshot, plannedReminderQuery) => {
+  return getAllReminders(userQuerySnapshot, plannedReminderQuery);
 };
 
 const getAllReminders = (
@@ -711,10 +711,6 @@ exports.getByTelegram = (req, res) => {
     .limit(1)
     .get()
     .then((querySnapshot) => {
-      if (querySnapshot.empty) {
-        return res.status(404).send({ message: "No reminders found." });
-      }
-
       let reminders = [];
 
       const userDoc = querySnapshot.docs[0].ref;

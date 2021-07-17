@@ -45,10 +45,9 @@ const getActivitiesById = (userDoc, activityIds, activityCollection) => {
   });
 };
 
-exports.getAllActivitiesExport = (userQuerySnapshot) => {
-  return getAllActivities(userQuerySnapshot);
+exports.getAllActivitiesExport = (userQuerySnapshot, plannedActivityQuery) => {
+  return getAllActivities(userQuerySnapshot, plannedActivityQuery);
 };
-
 const getAllActivities = (
   userQuerySnapshot,
   plannedActivityQuery = (x) => x,
@@ -196,10 +195,6 @@ exports.getByTelegram = (req, res) => {
     .limit(1)
     .get()
     .then((querySnapshot) => {
-      if (querySnapshot.empty) {
-        return res.status(404).send({ message: "No activities found." });
-      }
-
       let activities = [];
 
       const plannedActivityQuery = (plannedActivitiesCollection) => {

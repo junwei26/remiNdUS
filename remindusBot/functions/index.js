@@ -55,7 +55,7 @@ const addReminderScene = new Scenes.WizardScene(
       telegramHandle: user.username,
       name: ctx.wizard.state.reminder.name,
       description: ctx.wizard.state.reminder.description,
-      dateTime: selectedDate.split("-").join("") + ctx.wizard.state.reminder.time,
+      endDateTime: selectedDate.split("-").join("") + ctx.wizard.state.reminder.time,
     };
 
     axios
@@ -172,13 +172,24 @@ bot.command("/retrieve", async (ctx) => {
       },
     })
     .then((response) => {
-      const activityArr = response.data.map(
-        (activity) =>
-          ` ${activity.name} : ${activity.startDateTime.slice(
+      const activityArr = response.data.map((activity) => {
+        if (activity.activityType === "planned") {
+          return ` ${activity.name} : ${activity.startDateTime.slice(
             8,
             12
-          )} - ${activity.endDateTime.slice(8, 12)}`
-      );
+          )} - ${activity.endDateTime.slice(8, 12)}`;
+        } else {
+          if (activity.frequency === "monthly" && activity.date === currentDate.getDate()) {
+            return `${activity.name} : ${activity.startTime} - ${activity.endTime}`;
+          }
+
+          if (activity.frequency === "weekly" && currentDate.getDay() === activity.date) {
+            return `${activity.name} : ${activity.startTime} - ${activity.endTime}`;
+          }
+
+          return "";
+        }
+      });
       axios
         .get(backendURL + "/reminder/getByTelegram", {
           params: {
@@ -188,17 +199,29 @@ bot.command("/retrieve", async (ctx) => {
           },
         })
         .then((response) => {
-          const reminderArr = response.data.map(
-            (reminder) => ` ${reminder.name} : ${reminder.dateTime.slice(8, 12)}`
-          );
+          const reminderArr = response.data.map((reminder) => {
+            if (reminder.reminderType === "planned") {
+              return ` ${reminder.name} : ${reminder.endDateTime.slice(8, 12)}`;
+            } else {
+              if (reminder.frequency === "monthly" && reminder.date === currentDate.getDate()) {
+                return `${reminder.name} : ${reminder.endTime}`;
+              }
+
+              if (reminder.frequency === "weekly" && currentDate.getDay() === reminder.date) {
+                return `${reminder.name} : ${reminder.endTime}`;
+              }
+
+              return "";
+            }
+          });
           ctx.reply(
             "Here are your activities for today.\n" +
-              activityArr.join("\n") +
+              activityArr.filter((str) => str !== "").join("\n") +
               "\n Here are your reminders for today.\n" +
-              reminderArr.join("\n")
+              reminderArr.filter((str) => str !== "").join("\n")
           );
         })
-        .catch(() => ctx.reply("Error retrieving reminders from database."));
+        .catch((e) => ctx.reply(`Error retrieving reminders from database. ${e}`));
     })
     .catch(() => ctx.reply("Error retrieving activities from database."));
 });

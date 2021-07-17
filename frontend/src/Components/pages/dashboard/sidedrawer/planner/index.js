@@ -87,8 +87,145 @@ const currentDate = () => {
 
   if (month.length < 2) month = "0" + month;
   if (day.length < 2) day = "0" + day;
-
   return [year, month, day].join("-");
+}
+
+const Planner = () => {
+  const [currentDateObj, setCurrentDateObj] = useState(new Date());
+  const generateDate = (dateObj) => {
+    const padZero = (num) => (num < 10 ? "0" + num.toString() : num.toString());
+    const year = dateObj.getFullYear().toString();
+    const month = padZero(dateObj.getMonth() + 1);
+    const day = padZero(dateObj.getDate());
+    return year + month + day;
+  };
+  
+  const recurringActivitiesGenerator = (recurringActivity) => {
+    const generatedActivities = [];
+    let daysInMonths = [31, 28, 31, 30, 31, 30, 31, 31, 30, 31, 30, 31];
+    const year = currentDateObj.getFullYear();
+    if ((year % 4 === 0 && year % 100 !== 0) || year % 400 === 0) {
+      daysInMonths[1] = 29;
+    }
+    const weekMs = 6.048e8;
+    var monthMs = daysInMonths[currentDateObj.getMonth()] * 8.64e7;
+    var timeInterval = 0;
+    const endDateObj = new Date(currentDateObj.getTime());
+    const activityDay = new Date();
+    endDateObj.setDate(currentDateObj.getDate() + 7);
+    if (recurringActivity.frequency === "weekly") {
+      activityDay.setDate(
+        currentDateObj.getDate() + recurringActivity.date - currentDateObj.getDay()
+      );
+      timeInterval = weekMs;
+    } else {
+      activityDay.setDate(recurringActivity.date);
+      timeInterval = monthMs;
+    }
+    let startMs = activityDay.getTime();
+    const endMs = endDateObj.getTime();
+    while (startMs <= endMs) {
+      const activity = {
+        id: recurringActivity.activityId,
+        startDate: localService.parseTime(
+          generateDate(new Date(startMs)) + recurringActivity.startTime
+        ),
+        endDate: localService.parseTime(
+          generateDate(new Date(startMs)) + recurringActivity.endTime
+        ),
+        title: recurringActivity.name,
+        description: recurringActivity.description,
+        eventType: recurringActivity.eventType,
+        tag: recurringActivity.activityTag,
+      };
+
+  if (recurringActivity.frequency === "monthly") {
+    timeInterval = daysInMonths[new Date(startMs).getMonth()] * 8.64e7;
+  }
+  startMs += timeInterval;
+  generatedActivities.push(activity);
+}
+return generatedActivities;
+};
+const recurringRemindersGenerator = (recurringReminder) => {
+  const generatedReminders = [];
+  let daysInMonths = [31, 28, 31, 30, 31, 30, 31, 31, 30, 31, 30, 31];
+  const year = currentDateObj.getFullYear();
+  if ((year % 4 === 0 && year % 100 !== 0) || year % 400 === 0) {
+    daysInMonths[1] = 29;
+  }
+  const weekMs = 6.048e8;
+  var monthMs = daysInMonths[currentDateObj.getMonth()] * 8.64e7;
+  var timeInterval = 0;
+  const endDateObj = new Date(currentDateObj.getTime());
+  const reminderStartDay = new Date();
+  endDateObj.setDate(currentDateObj.getDate() + 7);
+  if (recurringReminder.frequency === "weekly") {
+    reminderStartDay.setDate(
+      currentDateObj.getDate() + recurringReminder.date - currentDateObj.getDay()
+    );
+    timeInterval = weekMs;
+  } else {
+    reminderStartDay.setDate(recurringReminder.date);
+    timeInterval = monthMs;
+  }
+  let startMs = reminderStartDay.getTime();
+
+  const endMs = endDateObj.getTime();
+  while (startMs <= endMs) {
+    const reminder = {
+      id: recurringReminder.reminderId,
+      startDate: localService.parseTime(
+        generateDate(new Date(startMs)) + recurringReminder.endTime
+      ),
+      title: recurringReminder.name,
+      description: recurringReminder.description,
+      eventType: recurringReminder.eventType,
+      tag: "Reminder",
+    };
+    if (recurringReminder.frequency === "monthly") {
+      timeInterval = daysInMonths[new Date(startMs).getMonth()] * 8.64e7;
+    }
+    startMs += timeInterval;
+    generatedReminders.push(reminder);
+  }
+  return generatedReminders;
+};
+const mapAppointmentData = (appointment) => {
+  if (appointment.active) {
+    if (appointment.frequency) {
+      if (appointment.eventType === "1") return recurringActivitiesGenerator(appointment);
+      else return recurringRemindersGenerator(appointment);
+    }
+
+    if (appointment.eventType === "1") {
+      return [
+        {
+          id: appointment.activityId,
+          startDate: localService.parseTime(appointment.startDateTime),
+          endDate: localService.parseTime(appointment.endDateTime),
+          title: appointment.name,
+          description: appointment.description,
+          eventType: appointment.eventType,
+          tag: appointment.activityTag,
+        },
+      ];
+    } else {
+      return [
+        {
+          id: appointment.reminderId,
+          startDate: localService.parseTime(appointment.endDateTime),
+          title: appointment.name,
+          description: appointment.description,
+          eventType: appointment.eventType,
+          tag: "Reminder",
+        },
+      ];
+    }
+  } else {
+    return [{}]; // not active, do not display
+  }
+
 };
 
 const initialState = {
@@ -103,7 +240,7 @@ const reducer = (state, action) => {
     case "setLoading":
       return { ...state, loading: action.payload };
     case "setData":
-      return { ...state, data: action.payload.map(mapAppointmentData) };
+      return { ...state, data: action.payload.flatMap(mapAppointmentData) };
     case "setCurrentViewName":
       return { ...state, currentViewName: action.payload };
     case "setCurrentDate":
@@ -116,6 +253,8 @@ const reducer = (state, action) => {
 const Planner = () => {
   const [state, dispatch] = useReducer(reducer, initialState);
   const { data, loading, currentViewName, currentDate } = state;
+  const [templateActivities, setTemplateActivities] = useState([]);
+  const [templateActivitiesOptions, setTemplateActivitiesOptions] = useState([]);
   const [currentAlert, setCurrentAlert] = useState({ severity: "", message: "" });
   const [resources, setResources] = useState([
     {
@@ -160,9 +299,10 @@ const Planner = () => {
           };
         })
         .concat({});
-      setTemplate;
+      setTemplateActivities(response.data);
+      setTemplateActivitiesOptions(instances);
     });
-  });
+  }, [data]);
 
   const setCurrentViewName = useCallback(
     (nextViewName) =>
@@ -199,6 +339,7 @@ const Planner = () => {
 
   useEffect(() => {
     getData(setData, setLoading);
+    setCurrentDateObj(currentDate);
   }, [setData, currentViewName, currentDate]);
 
   const handleChange = ({ added, changed, deleted }) => {
@@ -336,6 +477,22 @@ const Planner = () => {
   };
 
   const BasicLayout = ({ onFieldChange, appointmentData }) => {
+    let originalAppointmentData = [];
+
+    const onTemplateActivityFieldChange = (nextValue) => {
+      onFieldChange({ templateId: nextValue });
+      if (nextValue !== -1 && nextValue !== -2) {
+        const chosenTemplateActivity = templateActivities.filter((templateActivity) => {
+          return templateActivity.templateActivityId === nextValue;
+        })[0];
+        onFieldChange({ title: chosenTemplateActivity.name });
+        onFieldChange({ description: chosenTemplateActivity.description });
+      } else {
+        onFieldChange({ title: originalAppointmentData.title });
+        onFieldChange({ description: originalAppointmentData.description });
+      }
+    };
+
     const onNameFieldChange = (nextValue) => {
       onFieldChange({ title: nextValue });
     };
@@ -358,6 +515,7 @@ const Planner = () => {
     const onCreateTagFieldChange = (nextValue) => {
       onFieldChange({ newTag: nextValue });
     };
+
 
     const getTemplateActivities = () => {
       activityService
@@ -393,6 +551,10 @@ const Planner = () => {
         setChosenActivityTag(-1);
       }
     };
+
+    useEffect(() => {
+      originalAppointmentData = { ...appointmentData };
+    }, []);
 
     useEffect(() => {
       setTemplateActivitiesOptionsArray(
@@ -449,9 +611,9 @@ const Planner = () => {
         </Grid>
         <Grid item xs style={{ width: "90%" }}>
           <AppointmentForm.Select
-            value={chosenTemplateActivity}
-            availableOptions={templateActivitiesMenuItemArray}
-            onValueChange={handleChangeTemplateActivity}
+            value={appointmentData.templateActivityId}
+            availableOptions={templateActivitiesOptions}
+            onValueChange={onTemplateActivityFieldChange}
             placeholder="Create an activity"
           />
         </Grid>
