@@ -70,6 +70,8 @@ const Planner = () => {
 
   const [templateActivities, setTemplateActivities] = useState([]);
   const [templateActivitiesOptions, setTemplateActivitiesOptions] = useState([]);
+  const [templateReminders, setTemplateReminders] = useState([]);
+  const [templateRemindersOptions, setTemplateRemindersOptions] = useState([]);
   const [currentAlert, setCurrentAlert] = useState({ severity: "", message: "" });
   const [resources, setResources] = useState([
     {
@@ -129,6 +131,10 @@ const Planner = () => {
         description: recurringActivity.description,
         eventType: recurringActivity.eventType,
         tag: recurringActivity.activityTag,
+        frequency: recurringActivity.frequency,
+        date: recurringActivity.date,
+        type: recurringActivity.activityType,
+        templateId: recurringActivity.templateActivityId,
       };
 
       if (recurringActivity.frequency === "monthly") {
@@ -182,6 +188,10 @@ const Planner = () => {
         description: recurringReminder.description,
         eventType: recurringReminder.eventType,
         tag: "Reminder",
+        frequency: recurringReminder.frequency,
+        date: recurringReminder.date,
+        type: recurringReminder.reminderType,
+        templateId: recurringReminder.templateReminderId,
       };
 
       if (recurringReminder.frequency === "monthly") {
@@ -210,6 +220,9 @@ const Planner = () => {
         eventType: appointment.eventType,
         tag: appointment.activityTag,
         templateId: appointment.templateActivityId,
+        type: appointment.activityType,
+        frequency: null,
+        date: null,
       };
     } else {
       return {
@@ -220,6 +233,9 @@ const Planner = () => {
         eventType: appointment.eventType,
         tag: "Reminder",
         templateId: appointment.templateReminderId,
+        type: appointment.reminderType,
+        frequency: null,
+        date: null,
       };
     }
   };
@@ -273,12 +289,28 @@ const Planner = () => {
           return {
             id: activityTemplate.templateActivityId,
             text: activityTemplate.name,
-            fieldName: "activityTemplate",
+            fieldName: "templateId",
           };
         })
-        .concat({});
+        .concat({ id: 0, text: "Create new activity", fieldName: "templateId" });
       setTemplateActivities(response.data);
       setTemplateActivitiesOptions(instances);
+    });
+  }, [data]);
+
+  useEffect(() => {
+    reminderService.getTemplateReminders().then((response) => {
+      const instances = response.data
+        .map((reminderTemplate) => {
+          return {
+            id: reminderTemplate.templateReminderId,
+            text: reminderTemplate.name,
+            fieldName: "templateId",
+          };
+        })
+        .concat({ id: 0, text: "Create new reminder", fieldName: "templateId" });
+      setTemplateReminders(response.data);
+      setTemplateRemindersOptions(instances);
     });
   }, [data]);
 
@@ -322,27 +354,77 @@ const Planner = () => {
 
   const handleChange = ({ added, changed, deleted }) => {
     if (added) {
-      const addedActivityTag = added.newTag == undefined ? added.tag : added.newTag;
-      userService
-        .addTag(addedActivityTag)
+      let tagFunction = Promise.resolve(null);
+      let tag = added.tag;
+
+      if (added.title === "") {
+        alert("Please input a name");
+        return;
+      } else if (added.description === "") {
+        alert("Please input a description");
+        return;
+      } else if (new Date(added.endDate).getTime() <= new Date(added.startDate).getTime()) {
+        alert("End datetime cannot be earlier than start datetime");
+        return;
+      }
+
+      if (added.tag === "New Tag") {
+        if (added.newTag === undefined) {
+          setCurrentAlert({
+            severity: "error",
+            message: "New activity tag cannot be empty!",
+          });
+          setSnackbarOpen(true);
+          return;
+        }
+
+        tagFunction = userService.addTag(added.newTag);
+        tag = added.newTag;
+      }
+
+      tagFunction
         .then(() => {
-          activityService
-            .addActivity(
-              added.startDate,
-              added.endDate,
-              added.title,
-              added.description,
-              addedActivityTag
-            )
-            .then(() => {
-              getData(setData, setLoading);
-              setCurrentAlert({ severity: "success", message: "Activity added!" });
-              setSnackbarOpen(true);
-            })
-            .catch(() => {
-              setCurrentAlert({ severity: "error", message: "Error creating activity!" });
-              setSnackbarOpen(true);
-            });
+          if (added.type === "planned") {
+            activityService
+              .addPlannedActivity(
+                localService.convertDateToString(new Date(added.startDate)),
+                localService.convertDateToString(new Date(added.endDate)),
+                tag,
+                added.title,
+                added.description,
+                added.templateId
+              )
+              .then(() => {
+                getData(setData, setLoading);
+                setCurrentAlert({ severity: "success", message: "Activity added!" });
+                setSnackbarOpen(true);
+              })
+              .catch(() => {
+                setCurrentAlert({ severity: "error", message: "Error creating activity!" });
+                setSnackbarOpen(true);
+              });
+          } else {
+            activityService
+              .addRecurringActivity(
+                added.frequency,
+                localService.convertDateToString(new Date(added.startDate)),
+                localService.convertDateToString(new Date(added.endDate)),
+                added.date,
+                tag,
+                added.title,
+                added.description,
+                added.templateId
+              )
+              .then(() => {
+                getData(setData, setLoading);
+                setCurrentAlert({ severity: "success", message: "Activity added!" });
+                setSnackbarOpen(true);
+              })
+              .catch(() => {
+                setCurrentAlert({ severity: "error", message: "Error creating activity!" });
+                setSnackbarOpen(true);
+              });
+          }
         })
         .catch(() => {
           setCurrentAlert({ severity: "error", message: "Error creating new activity tag!" });
@@ -354,84 +436,170 @@ const Planner = () => {
         if (changed[event.id]) {
           const updatedEvent = { ...event, ...changed[event.id] };
           if (event.eventType === "1") {
-            if (updatedEvent.tag !== "New Tag") {
-              activityService
-                .updateActivity(
-                  updatedEvent.startDate,
-                  updatedEvent.endDate,
-                  updatedEvent.title,
-                  updatedEvent.description,
-                  event.id,
-                  updatedEvent.tag
-                )
-                .then(() => {
-                  getData(setData, setLoading);
-                  setCurrentAlert({ severity: "success", message: "Activity updated!" });
-                  setSnackbarOpen(true);
-                })
-                .catch(() => {
-                  setCurrentAlert({ severity: "error", message: "Error updating activity!" });
-                  setSnackbarOpen(true);
-                });
-            } else {
+            if (updatedEvent.title === "") {
+              alert("Please input a name");
+              return;
+            } else if (updatedEvent.description === "") {
+              alert("Please input a description");
+              return;
+            } else if (
+              new Date(updatedEvent.endDate).getTime() <= new Date(updatedEvent.startDate).getTime()
+            ) {
+              alert("End datetime cannot be earlier than start datetime");
+              return;
+            }
+            let tagFunction = Promise.resolve(null);
+            let tag = updatedEvent.tag;
+
+            if (updatedEvent.tag === "New Tag") {
               if (updatedEvent.newTag === undefined) {
                 setCurrentAlert({
                   severity: "error",
                   message: "New activity tag cannot be empty!",
                 });
                 setSnackbarOpen(true);
-              } else {
-                userService
-                  .addTag(updatedEvent.newTag)
-                  .then(() => {
-                    activityService
-                      .updateActivity(
-                        updatedEvent.startDate,
-                        updatedEvent.endDate,
-                        updatedEvent.title,
-                        updatedEvent.description,
-                        event.id,
-                        updatedEvent.newTag
-                      )
-                      .then(() => {
-                        getData(setData, setLoading);
-                        setCurrentAlert({ severity: "success", message: "Activity updated!" });
-                        setSnackbarOpen(true);
-                      })
-                      .catch(() => {
-                        setCurrentAlert({
-                          severity: "error",
-                          message: "Error updating activity!",
-                        });
-                        setSnackbarOpen(true);
-                      });
-                  })
-                  .catch(() => {
-                    setCurrentAlert({
-                      severity: "error",
-                      message: "Error creating new activity tag!",
-                    });
-                    setSnackbarOpen(true);
-                  });
+                return;
               }
+
+              tagFunction = userService.addTag(updatedEvent.newTag);
+              tag = updatedEvent.newTag;
             }
-          } else {
-            reminderService
-              .updateReminder(
-                updatedEvent.startDate,
-                updatedEvent.title,
-                updatedEvent.description,
-                event.id
-              )
+
+            tagFunction
               .then(() => {
-                getData(setData, setLoading);
-                setCurrentAlert({ severity: "success", message: "Reminder updated!" });
-                setSnackbarOpen(true);
+                if (updatedEvent.type === "planned") {
+                  activityService
+                    .updatePlannedActivity(
+                      localService.convertDateToString(new Date(updatedEvent.startDate)),
+                      localService.convertDateToString(new Date(updatedEvent.endDate)),
+                      tag,
+                      updatedEvent.title,
+                      updatedEvent.description,
+                      updatedEvent.templateId,
+                      event.id
+                    )
+                    .then(() => {
+                      getData(setData, setLoading);
+                      setCurrentAlert({ severity: "success", message: "Activity updated!" });
+                      setSnackbarOpen(true);
+                    })
+                    .catch((error) => {
+                      setCurrentAlert({
+                        severity: "error",
+                        message: `Error updating activity! ${error}`,
+                      });
+                      setSnackbarOpen(true);
+                    });
+                } else {
+                  activityService
+                    .updateRecurringActivity(
+                      updatedEvent.frequency,
+                      `${updatedEvent.startDate
+                        .getHours()
+                        .toString()
+                        .padStart(2, "0")}${updatedEvent.startDate
+                        .getMinutes()
+                        .toString()
+                        .padStart(2, "0")}`,
+                      `${updatedEvent.endDate
+                        .getHours()
+                        .toString()
+                        .padStart(2, "0")}${updatedEvent.endDate
+                        .getMinutes()
+                        .toString()
+                        .padStart(2, "0")}`,
+                      updatedEvent.date,
+                      tag,
+                      updatedEvent.title,
+                      updatedEvent.description,
+                      updatedEvent.templateId,
+                      event.id
+                    )
+                    .then(() => {
+                      getData(setData, setLoading);
+                      setCurrentAlert({ severity: "success", message: "Activity updated!" });
+                      setSnackbarOpen(true);
+                    })
+                    .catch((error) => {
+                      alert(
+                        `Issue updating planned activity. Error status code: ${error.response.status}. ${error.response.data.message}`
+                      );
+                      // setCurrentAlert({
+                      //   severity: "error",
+                      //   message: `Error updating activity! ${error}`,
+                      // });
+                      // setSnackbarOpen(true);
+                    });
+                }
               })
-              .catch(() => {
-                setCurrentAlert({ severity: "error", message: "Error updating reminder!" });
+              .catch((error) => {
+                setCurrentAlert({
+                  severity: "error",
+                  message: `Error updating activity tag! ${error}`,
+                });
                 setSnackbarOpen(true);
               });
+          } else {
+            if (updatedEvent.type === "planned") {
+              reminderService
+                .updatePlannedReminder(
+                  `${updatedEvent.startDate
+                    .getHours()
+                    .toString()
+                    .padStart(2, "0")}${updatedEvent.startDate
+                    .getMinutes()
+                    .toString()
+                    .padStart(2, "0")}`,
+                  updatedEvent.title,
+                  updatedEvent.description,
+                  updatedEvent.templateId,
+                  event.id
+                )
+                .then(() => {
+                  getData(setData, setLoading);
+                  setCurrentAlert({ severity: "success", message: "Reminder updated!" });
+                  setSnackbarOpen(true);
+                })
+                .catch((error) => {
+                  setCurrentAlert({
+                    severity: "error",
+                    message: `Error updating reminder! ${error}`,
+                  });
+                  setSnackbarOpen(true);
+                });
+            } else {
+              reminderService
+                .updateRecurringReminder(
+                  updatedEvent.frequency,
+                  `${updatedEvent.startDate
+                    .getHours()
+                    .toString()
+                    .padStart(2, "0")}${updatedEvent.startDate
+                    .getMinutes()
+                    .toString()
+                    .padStart(2, "0")}`,
+                  updatedEvent.date,
+                  updatedEvent.title,
+                  updatedEvent.description,
+                  updatedEvent.templateId,
+                  event.id
+                )
+                .then(() => {
+                  getData(setData, setLoading);
+                  setCurrentAlert({ severity: "success", message: "Reminder updated!" });
+                  setSnackbarOpen(true);
+                })
+                .catch((error) => {
+                  alert(
+                    `Issue updating planned activity. Error status code: ${error.response.status}. ${error.response.data.message}`
+                  );
+                  // setCurrentAlert({
+                  //   severity: "error",
+                  //   message: `Error updating reminder! ${error}`,
+                  // });
+                  // setSnackbarOpen(true);
+                });
+            }
           }
         }
       });
@@ -440,13 +608,17 @@ const Planner = () => {
       data.map((event) => {
         if (deleted === event.id) {
           if (event.eventType == "1") {
-            activityService.deleteActivity(deleted).then(() => {
+            const activityCollection =
+              event.type === "planned" ? "plannedActivities" : "recurringActivities";
+            activityService.deleteActivity(deleted, activityCollection).then(() => {
               getData(setData, setLoading);
               setCurrentAlert({ severity: "success", message: "Activity deleted!" });
               setSnackbarOpen(true);
             });
           } else {
-            reminderService.deleteReminder(deleted).then(() => {
+            const reminderCollection =
+              event.type === "planned" ? "plannedReminders" : "recurringReminders";
+            reminderService.deleteReminder(deleted, reminderCollection).then(() => {
               getData(setData, setLoading);
               setCurrentAlert({ severity: "success", message: "Reminder deleted!" });
               setSnackbarOpen(true);
@@ -458,19 +630,58 @@ const Planner = () => {
   };
 
   const BasicLayout = ({ onFieldChange, appointmentData }) => {
-    let originalAppointmentData = [];
+    // Using type as a field that does not exist for when creating a new item as opposed to editing
+    const isEditing = appointmentData.eventType !== undefined;
+    // let originalAppointmentData = [];
+    const [recurring, setRecurring] = useState(appointmentData.type === "recurring");
+    const [activityTag, setActivityTag] = useState(appointmentData.tag);
+    const [chosenTemplateActivity, setChosenTemplateActivity] = useState(
+      appointmentData.templateId === 0 || appointmentData.templateId === undefined
+        ? 0
+        : appointmentData.templateId
+    );
+
+    const [chosenTemplateReminder, setChosenTemplateReminder] = useState(
+      appointmentData.templateId === 0 || appointmentData.templateId === undefined
+        ? 0
+        : appointmentData.templateId
+    );
 
     const onTemplateActivityFieldChange = (nextValue) => {
       onFieldChange({ templateId: nextValue });
-      if (nextValue !== -1 && nextValue !== -2) {
+      setChosenTemplateActivity(nextValue);
+      if (nextValue !== 0) {
         const chosenTemplateActivity = templateActivities.filter((templateActivity) => {
           return templateActivity.templateActivityId === nextValue;
         })[0];
         onFieldChange({ title: chosenTemplateActivity.name });
         onFieldChange({ description: chosenTemplateActivity.description });
+        onFieldChange({ tag: chosenTemplateActivity.activityTag });
+        setActivityTag(chosenTemplateActivity.activityTag);
       } else {
-        onFieldChange({ title: originalAppointmentData.title });
-        onFieldChange({ description: originalAppointmentData.description });
+        // onFieldChange({ title: originalAppointmentData.title });
+        // onFieldChange({ description: originalAppointmentData.description });
+        onFieldChange({ title: "" });
+        onFieldChange({ description: "" });
+        onFieldChange({ tag: "" });
+        setActivityTag("");
+      }
+    };
+
+    const onTemplateReminderFieldChange = (nextValue) => {
+      onFieldChange({ templateId: nextValue });
+      setChosenTemplateReminder(nextValue);
+      if (nextValue !== 0) {
+        const chosenTemplateReminder = templateReminders.filter((templateReminder) => {
+          return templateReminder.templateActivityId === nextValue;
+        })[0];
+        onFieldChange({ title: chosenTemplateReminder.name });
+        onFieldChange({ description: chosenTemplateReminder.description });
+      } else {
+        // onFieldChange({ title: originalAppointmentData.title });
+        // onFieldChange({ description: originalAppointmentData.description });
+        onFieldChange({ title: "" });
+        onFieldChange({ description: "" });
       }
     };
 
@@ -478,9 +689,16 @@ const Planner = () => {
       onFieldChange({ title: nextValue });
     };
 
+    const onRecurringFieldChange = (nextValue) => {
+      setRecurring(nextValue);
+      const newValue = nextValue ? "recurring" : "planned";
+      onFieldChange({ type: newValue });
+    };
+
     const onDescriptionFieldChange = (nextValue) => {
       onFieldChange({ description: nextValue });
     };
+
     const onStartFieldChange = (nextValue) => {
       onFieldChange({ startDate: nextValue });
     };
@@ -491,6 +709,15 @@ const Planner = () => {
 
     const onTagFieldChange = (nextValue) => {
       onFieldChange({ tag: nextValue });
+      setActivityTag(nextValue);
+    };
+
+    const onFrequencyFieldChange = (nextValue) => {
+      onFieldChange({ frequency: nextValue });
+    };
+
+    const onDateFieldChange = (nextValue) => {
+      onFieldChange({ date: nextValue });
     };
 
     const onCreateTagFieldChange = (nextValue) => {
@@ -498,65 +725,174 @@ const Planner = () => {
     };
 
     useEffect(() => {
-      originalAppointmentData = { ...appointmentData };
+      const initialFrequency = !appointmentData.frequency ? "weekly" : appointmentData.frequency;
+      const initialType = !appointmentData.type ? "planned" : appointmentData.type;
+      const initialDate = !appointmentData.date ? 1 : appointmentData.date;
+      const initialStartDate = !appointmentData.startDate
+        ? null
+        : new Date(appointmentData.startDate);
+      const initialEndDate = !appointmentData.endDate ? null : new Date(appointmentData.endDate);
+      onFieldChange({ startDate: initialStartDate });
+      onFieldChange({ endDate: initialEndDate });
+      onFieldChange({ frequency: initialFrequency });
+      onFieldChange({ type: initialType });
+      onFieldChange({ date: initialDate });
+      setActivityTag(appointmentData.tag);
+      //   originalAppointmentData = { ...appointmentData };
     }, []);
 
-    return appointmentData.eventType == 2 ? (
-      <Grid container direction="column" alignItems="left" alignContent="center">
-        <Grid item xs>
-          <AppointmentForm.Label text="Reminder" type="title" />
-        </Grid>
-        <Grid item xs>
+    const weeklyDateOptions = [
+      "Monday",
+      "Tuesday",
+      "Wednesday",
+      "Thursday",
+      "Friday",
+      "Saturday",
+      "Sunday",
+    ].map((day, index) => {
+      return { id: index + 1, text: day, fieldName: "date" };
+    });
+
+    const monthlyDateOptions = [
+      1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11, 12, 13, 14, 15, 16, 17, 18, 19, 20, 21, 22, 23, 24, 25, 26,
+      27, 28, 29, 30, 31,
+    ].map((date) => {
+      return { id: date, text: date, fieldName: "date" };
+    });
+
+    return appointmentData.eventType === "2" ? (
+      <Grid container direction="column" alignItems="left" alignContent="center" spacing={2}>
+        {isEditing ? (
+          <></>
+        ) : (
+          <Grid item xs style={{ width: "90%" }}>
+            <AppointmentForm.Label text="Select Reminder" type="title" />
+            <AppointmentForm.Select
+              value={appointmentData.templateId}
+              availableOptions={templateRemindersOptions}
+              onValueChange={onTemplateReminderFieldChange}
+              placeholder="Create an reminder"
+            />
+          </Grid>
+        )}
+        <Grid item xs style={{ width: "90%" }}>
+          <AppointmentForm.Label text="Reminder Name" type="title" />
           <AppointmentForm.TextEditor
             value={appointmentData.title}
             onValueChange={onNameFieldChange}
             placeholder="Add a name"
+            readOnly={!isEditing && chosenTemplateReminder !== 0}
           />
         </Grid>
         <Grid item xs style={{ width: "90%" }}>
-          <AppointmentForm.Label text="Deadline" type="title" />
+          <AppointmentForm.Label text="Description" type="title" />
+          <AppointmentForm.TextEditor
+            value={appointmentData.description}
+            onValueChange={onDescriptionFieldChange}
+            placeholder="Add a description"
+            readOnly={!isEditing && chosenTemplateReminder !== 0}
+          />
+          {appointmentData.templateId !== 0 ? (
+            <Typography variant="body2">
+              Note: Editing the name and description changes that of all other associated reminders.
+            </Typography>
+          ) : (
+            <></>
+          )}
         </Grid>
-        <Grid item xs>
+        <Grid item xs style={{ width: "90%" }}>
+          <AppointmentForm.Label text="Deadline" type="title" />
           <AppointmentForm.DateEditor
             value={appointmentData.startDate}
             onValueChange={onStartFieldChange}
           />
         </Grid>
         <Grid item xs style={{ width: "90%" }}>
-          <AppointmentForm.Label text="Description" type="title" />
-        </Grid>
-        <Grid item xs>
-          <AppointmentForm.TextEditor
-            value={appointmentData.description}
-            onValueChange={onDescriptionFieldChange}
-            placeholder="Add a description"
+          <AppointmentForm.BooleanEditor
+            label="Recurring"
+            value={recurring}
+            onValueChange={onRecurringFieldChange}
+            readOnly={isEditing}
           />
         </Grid>
+        {appointmentData.type === "recurring" ? (
+          <Grid container item direction="row" justifyContent="space-between" alignItems="center">
+            <Grid item xs style={{ width: "90%" }}>
+              <AppointmentForm.Label text="Frequency" type="title" />
+              <AppointmentForm.Select
+                value={appointmentData.frequency}
+                availableOptions={[
+                  { id: "weekly", text: "Weekly" },
+                  { id: "monthly", text: "Monthly" },
+                ]}
+                onValueChange={onFrequencyFieldChange}
+              />
+            </Grid>
+            <Grid item xs style={{ width: "90%" }}>
+              <AppointmentForm.Label text="Date" type="title" />
+              <AppointmentForm.Select
+                value={appointmentData.date}
+                availableOptions={
+                  appointmentData.frequency === "weekly" ? weeklyDateOptions : monthlyDateOptions
+                }
+                onValueChange={onDateFieldChange}
+              />
+            </Grid>
+          </Grid>
+        ) : (
+          <></>
+        )}
       </Grid>
     ) : (
-      <Grid container direction="column" alignItems="left" alignContent="center">
-        <Grid item xs>
-          <AppointmentForm.Label text="Select Activity" type="title" />
-        </Grid>
+      <Grid container direction="column" alignItems="left" alignContent="center" spacing={2}>
+        {isEditing ? (
+          <></>
+        ) : (
+          <Grid item xs style={{ width: "90%" }}>
+            <AppointmentForm.Label text="Select Activity" type="title" />
+            <AppointmentForm.Select
+              value={chosenTemplateActivity}
+              availableOptions={templateActivitiesOptions}
+              onValueChange={onTemplateActivityFieldChange}
+            />
+          </Grid>
+        )}
         <Grid item xs style={{ width: "90%" }}>
-          <AppointmentForm.Select
-            value={appointmentData.templateId}
-            availableOptions={templateActivitiesOptions}
-            onValueChange={onTemplateActivityFieldChange}
-            placeholder="Create an activity"
-          />
-        </Grid>
-        <AppointmentForm.Label text="Activity" type="title" />
-        <Grid item xs>
+          <AppointmentForm.Label text="Activity Name" type="title" />
           <AppointmentForm.TextEditor
             value={appointmentData.title}
             onValueChange={onNameFieldChange}
             placeholder="Add a name"
+            readOnly={!isEditing && chosenTemplateActivity !== 0}
           />
         </Grid>
-        <AppointmentForm.Label text="Duration" type="title" />
-
-        <Grid item xs>
+        <Grid item xs style={{ width: "90%" }}>
+          <AppointmentForm.Label text="Description" type="title" />
+          <AppointmentForm.TextEditor
+            value={appointmentData.description}
+            onValueChange={onDescriptionFieldChange}
+            placeholder="Add a description"
+            readOnly={!isEditing && chosenTemplateActivity !== 0}
+          />
+          {appointmentData.templateId !== 0 ? (
+            <Typography variant="body2">
+              Note: Editing the name and description changes that of all other associated
+              activities.
+            </Typography>
+          ) : (
+            <></>
+          )}
+        </Grid>
+        <Grid item xs style={{ width: "90%" }}>
+          <AppointmentForm.BooleanEditor
+            label="Recurring"
+            value={recurring}
+            onValueChange={onRecurringFieldChange}
+            readOnly={isEditing}
+          />
+        </Grid>
+        <Grid item xs style={{ width: "90%" }}>
+          <AppointmentForm.Label text="Duration" type="title" />
           <Grid
             container
             direction="row"
@@ -582,42 +918,56 @@ const Planner = () => {
             </Grid>
           </Grid>
         </Grid>
-        <Grid item xs>
-          <AppointmentForm.Label text="Description" type="title" />
-        </Grid>
-        <Grid item xs>
-          <AppointmentForm.TextEditor
-            value={appointmentData.description}
-            onValueChange={onDescriptionFieldChange}
-            placeholder="Add a description"
-          />
-        </Grid>
+        {appointmentData.type === "recurring" ? (
+          <Grid container item direction="row" justifyContent="space-between" alignItems="center">
+            <Grid item xs style={{ width: "90%" }}>
+              <AppointmentForm.Label text="Frequency" type="title" />
+              <AppointmentForm.Select
+                value={appointmentData.frequency}
+                availableOptions={[
+                  { id: "weekly", text: "Weekly" },
+                  { id: "monthly", text: "Monthly" },
+                ]}
+                onValueChange={onFrequencyFieldChange}
+              />
+            </Grid>
+            <Grid item xs style={{ width: "90%" }}>
+              <AppointmentForm.Label text="Date" type="title" />
+              <AppointmentForm.Select
+                value={appointmentData.date}
+                availableOptions={
+                  appointmentData.frequency === "weekly" ? weeklyDateOptions : monthlyDateOptions
+                }
+                onValueChange={onDateFieldChange}
+              />
+            </Grid>
+          </Grid>
+        ) : (
+          <></>
+        )}
         <Grid item xs>
           <AppointmentForm.Label text="Tag" type="title" />
         </Grid>
         <Grid item xs style={{ width: "90%" }}>
           <AppointmentForm.Select
-            value={appointmentData.tag}
+            value={activityTag}
             availableOptions={resources[0].instances
               .filter((resource) => resource.id != "Reminder")
               .concat([{ id: "New Tag", text: "Add a new activity tag" }])}
             onValueChange={onTagFieldChange}
             placeholder="Add an activity tag"
+            readOnly={!isEditing && chosenTemplateActivity !== 0}
           />
         </Grid>
         {appointmentData.tag == "New Tag" ? (
-          <>
-            <Grid item xs>
-              <AppointmentForm.Label text="Create a new Tag" type="title" />
-            </Grid>
-            <Grid item xs>
-              <AppointmentForm.TextEditor
-                value={appointmentData.newTag}
-                onValueChange={onCreateTagFieldChange}
-                placeholder="Create a new Tag"
-              />
-            </Grid>
-          </>
+          <Grid item xs style={{ width: "90%" }}>
+            <AppointmentForm.Label text="Create a new Tag" type="title" />
+            <AppointmentForm.TextEditor
+              value={appointmentData.newTag}
+              onValueChange={onCreateTagFieldChange}
+              placeholder="Create a new Tag"
+            />
+          </Grid>
         ) : null}
       </Grid>
     );

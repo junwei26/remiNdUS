@@ -140,7 +140,7 @@ const updateRecurringReminder = (
     templateReminderId,
     reminderId,
     updateTemplate: true,
-    reminderCollection: "plannedReminders",
+    reminderCollection: "recurringReminders",
   });
 };
 
