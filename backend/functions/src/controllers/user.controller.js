@@ -282,3 +282,41 @@ exports.setChatId = (req, res) => {
     })
     .catch(() => res.status(400).send({ message: "Chat Id not recorded" }));
 };
+
+exports.getDashboardInfo = (req, res) => {
+  if (!req.query.uid) {
+    return res.status(400).send({ message: "You must be logged in to make this operation!" });
+  }
+
+  db.collection("users")
+    .doc(req.query.uid)
+    .collection("templateActivities")
+    .get()
+    .then((querySnapshot) => {
+      const templateActivities = querySnapshot.docs.map((doc) => {
+        return { ...doc.data(), templateActivityId: doc.id };
+      });
+      db.collection("users")
+        .doc(req.query.uid)
+        .collection("templateReminders")
+        .get()
+        .then((querySnapshot) => {
+          const templateReminders = querySnapshot.docs.map((doc) => {
+            return { ...doc.data(), templateReminderId: doc.id };
+          });
+          db.collection("users")
+            .doc(req.query.uid)
+            .get()
+            .then((doc) => {
+              const user = doc.data();
+              const payload = { templateActivities, templateReminders, user };
+              res.send(payload);
+              return res.status(200).send();
+            });
+        });
+    })
+
+    .catch((error) => {
+      return res.status(400).send({ message: `Issue getting dashboard data from user. ${error}` });
+    });
+};

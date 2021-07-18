@@ -9,8 +9,12 @@ const getUserInfo = () => {
   return axios.get(USER_API_URL, { params: { uid: firebaseAuth.currentUser.uid } });
 };
 
+const getDashboardInfo = () => {
+  return axios.get(USER_API_URL + "/dashboard", { params: { uid: firebaseAuth.currentUser.uid } });
+};
+
 const addTag = (activityTag) => {
   return axios.post(USER_API_URL + "/addTag", { uid: firebaseAuth.currentUser.uid, activityTag });
 };
 
-export default { getUserInfo, addTag };
+export default { getUserInfo, addTag, getDashboardInfo };

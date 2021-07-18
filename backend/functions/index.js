@@ -13,8 +13,12 @@ admin.initializeApp({
 
 const app = express();
 
-app.use(cors({ origin: true }));
-
+app.use(cors());
+app.options("*", cors());
+app.use((req, res, next) => {
+  res.header("Access-Control-Allow-Origin", "*");
+  next();
+});
 // parse requests of content-type - application/json
 app.use(bodyParser.json());
 

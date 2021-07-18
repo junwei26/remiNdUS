@@ -30,10 +30,8 @@ import userService from "../../../services/userService";
 const getData = (setData, setLoading) => {
   setLoading(true);
   return activityService.getAllActivities().then((activities) => {
-    reminderService.getAllReminders().then((reminders) => {
-      setData([...activities.data, ...reminders.data]);
-      setLoading(false);
-    });
+    setData([...activities.data]);
+    setLoading(false);
   });
 };
 
@@ -266,8 +264,9 @@ const Planner = () => {
   const { data, loading, currentViewName, currentDate } = state;
 
   useEffect(() => {
-    userService.getUserInfo().then((response) => {
-      const instances = response.data.tags
+    userService.getDashboardInfo().then((response) => {
+      const payload = response.data;
+      const instances = payload.user.tags
         .map((tag) => {
           return { id: tag, text: tag, fieldName: "tag" };
         })
@@ -279,12 +278,7 @@ const Planner = () => {
           instances,
         },
       ]);
-    });
-  }, [data]);
-
-  useEffect(() => {
-    activityService.getTemplateActivities().then((response) => {
-      const instances = response.data
+      const activityTemplates = payload.templateActivities
         .map((activityTemplate) => {
           return {
             id: activityTemplate.templateActivityId,
@@ -293,14 +287,9 @@ const Planner = () => {
           };
         })
         .concat({ id: 0, text: "Create new activity", fieldName: "templateId" });
-      setTemplateActivities(response.data);
-      setTemplateActivitiesOptions(instances);
-    });
-  }, [data]);
-
-  useEffect(() => {
-    reminderService.getTemplateReminders().then((response) => {
-      const instances = response.data
+      setTemplateActivities(payload.templateActivities);
+      setTemplateActivitiesOptions(activityTemplates);
+      const reminderTemplates = payload.templateReminders
         .map((reminderTemplate) => {
           return {
             id: reminderTemplate.templateReminderId,
@@ -309,8 +298,8 @@ const Planner = () => {
           };
         })
         .concat({ id: 0, text: "Create new reminder", fieldName: "templateId" });
-      setTemplateReminders(response.data);
-      setTemplateRemindersOptions(instances);
+      setTemplateReminders(payload.templateReminders);
+      setTemplateRemindersOptions(reminderTemplates);
     });
   }, [data]);
 
