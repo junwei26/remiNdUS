@@ -20,14 +20,14 @@ const ActivityDurationRanking = (props) => {
       if (activityMap.has(activity.tag)) {
         const tagDuration = activityMap.get(activity.tag);
         const currDuration =
-          new Date(localService.parseTime(activity.actualEndDateTime)) -
-          new Date(localService.parseTime(activity.actualStartDateTime));
+          new Date(localService.parseTimeToString(activity.actualEndDateTime)) -
+          new Date(localService.parseTimeToString(activity.actualStartDateTime));
         activityMap.set(activity.tag, tagDuration + currDuration);
       } else {
         activityMap.set(
           activity.tag,
-          new Date(localService.parseTime(activity.actualEndDateTime)) -
-            new Date(localService.parseTime(activity.actualStartDateTime))
+          new Date(localService.parseTimeToString(activity.actualEndDateTime)) -
+            new Date(localService.parseTimeToString(activity.actualStartDateTime))
         );
       }
     });

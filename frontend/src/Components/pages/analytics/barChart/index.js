@@ -47,11 +47,11 @@ const BarChart = (props) => {
         .reverse()
         .join("/");
       const currActualDuration =
-        new Date(localService.parseTime(activity.actualEndDateTime)) -
-        new Date(localService.parseTime(activity.actualStartDateTime));
+        new Date(localService.parseTimeToString(activity.actualEndDateTime)) -
+        new Date(localService.parseTimeToString(activity.actualStartDateTime));
       const currPlannedDuration =
-        new Date(localService.parseTime(activity.plannedEndDateTime)) -
-        new Date(localService.parseTime(activity.plannedStartDateTime));
+        new Date(localService.parseTimeToString(activity.plannedEndDateTime)) -
+        new Date(localService.parseTimeToString(activity.plannedStartDateTime));
 
       if (activityMap.has(date)) {
         const { actualDuration, plannedDuration } = activityMap.get(date);
