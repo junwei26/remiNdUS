@@ -114,6 +114,8 @@ const EditActivityDisplay = (props) => {
     props.setEditingActivity(false);
     props.setSelectedRow(null);
     props.setDialogMaxWidth("lg");
+    props.getAllActivities();
+    props.setPlannerDataUpdate(!props.plannerDataUpdate);
   };
 
   const closeDialogUpdateActivity = () => {
@@ -152,9 +154,7 @@ const EditActivityDisplay = (props) => {
             props.activity.activityId
           )
           .then(() => {
-            alert(
-              "Successfully updated activity. It may take up to a minute for changes to be reflected."
-            );
+            alert("Successfully updated activity.");
             handleDialogBack();
             return;
           })
@@ -473,6 +473,9 @@ EditActivityDisplay.propTypes = {
   setEditingActivity: PropTypes.func,
   setDialogMaxWidth: PropTypes.func,
   setSelectedRow: PropTypes.func,
+  getAllActivities: PropTypes.func,
+  plannerDataUpdate: PropTypes.boolean,
+  setPlannerDataUpdate: PropTypes.func,
 };
 
 export default EditActivityDisplay;

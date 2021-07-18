@@ -18,6 +18,7 @@ import {
   ListItemIcon,
   ListItemText,
 } from "@material-ui/core";
+import PropTypes from "prop-types";
 import DateFnsUtils from "@date-io/date-fns";
 import { MuiPickersUtilsProvider, DateTimePicker, TimePicker } from "@material-ui/pickers";
 import reminderService from "../../services/reminderService";
@@ -30,7 +31,7 @@ const useStyles = makeStyles(() => ({
   },
 }));
 
-const addReminderButton = () => {
+const addReminderButton = (props) => {
   const classes = useStyles();
 
   const nearestTime = 1000 * 60 * 15; // round up to nearest 15 minutes
@@ -115,6 +116,7 @@ const addReminderButton = () => {
         )
         .then(() => {
           alert("Succesfully created reminder");
+          props.setPlannerDataUpdate(!props.plannerDataUpdate);
         })
         .catch((error) => {
           alert(
@@ -136,6 +138,7 @@ const addReminderButton = () => {
         )
         .then(() => {
           alert("Succesfully created reminder");
+          props.setPlannerDataUpdate(!props.plannerDataUpdate);
         })
         .catch((error) => {
           alert(
@@ -378,6 +381,11 @@ const addReminderButton = () => {
       </Dialog>
     </>
   );
+};
+
+addReminderButton.propTypes = {
+  plannerDataUpdate: PropTypes.boolean,
+  setPlannerDataUpdate: PropTypes.func,
 };
 
 export default addReminderButton;

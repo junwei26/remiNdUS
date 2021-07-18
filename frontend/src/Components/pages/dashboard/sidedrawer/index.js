@@ -1,10 +1,7 @@
 import React from "react";
 import { makeStyles } from "@material-ui/core/styles";
-import Drawer from "@material-ui/core/Drawer";
-import CssBaseline from "@material-ui/core/CssBaseline";
-import List from "@material-ui/core/List";
-import Divider from "@material-ui/core/Divider";
-import Planner from "./planner";
+import { Drawer, CssBaseline, List, Divider } from "@material-ui/core";
+import PropTypes from "prop-types";
 import AddActivityButton from "../addactivitybutton";
 import AddReminderButton from "../addreminderbutton";
 import SearchActivities from "../searchactivities";
@@ -35,11 +32,18 @@ const useStyles = makeStyles((theme) => ({
   },
 }));
 
-const Sidedrawer = () => {
+const Sidedrawer = (props) => {
   const classes = useStyles();
 
   return (
-    <div className={classes.root}>
+    // <Grid
+    //   container
+    //   direction="row"
+    //   justify="flex-start"
+    //   alignItems="flex-start"
+    //   className={classes.root}
+    // >
+    <div style={{ width: drawerWidth }}>
       <CssBaseline />
       <Drawer
         className={classes.drawer}
@@ -52,16 +56,37 @@ const Sidedrawer = () => {
         <div className={classes.toolbar} />
         <Divider />
         <List>
-          <AddActivityButton />
-          <SearchActivities />
-          <AddReminderButton />
-          <SearchReminders />
+          <AddActivityButton
+            plannerDataUpdate={props.plannerDataUpdate}
+            setPlannerDataUpdate={props.setPlannerDataUpdate}
+          />
+          <SearchActivities
+            plannerDataUpdate={props.plannerDataUpdate}
+            setPlannerDataUpdate={props.setPlannerDataUpdate}
+          />
+          <AddReminderButton
+            plannerDataUpdate={props.plannerDataUpdate}
+            setPlannerDataUpdate={props.setPlannerDataUpdate}
+          />
+          <SearchReminders
+            plannerDataUpdate={props.plannerDataUpdate}
+            setPlannerDataUpdate={props.setPlannerDataUpdate}
+          />
         </List>
       </Drawer>
-      <main className={classes.content}>
-        <Planner />
-      </main>
     </div>
+    //   <Grid item className={classes.appBar} style={{ width: "auto" }}>
+    //     <main className={classes.content}>
+    //       <Planner />
+    //     </main>
+    //   </Grid>
+    // </Grid>
   );
 };
+
+Sidedrawer.propTypes = {
+  plannerDataUpdate: PropTypes.boolean,
+  setPlannerDataUpdate: PropTypes.func,
+};
+
 export default Sidedrawer;
