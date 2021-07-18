@@ -377,7 +377,7 @@ const SearchActivities = (props) => {
 };
 
 SearchActivities.propTypes = {
-  plannerDataUpdate: PropTypes.boolean,
+  plannerDataUpdate: PropTypes.bool,
   setPlannerDataUpdate: PropTypes.func,
 };
 

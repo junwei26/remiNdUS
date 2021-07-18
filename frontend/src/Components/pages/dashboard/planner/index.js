@@ -450,7 +450,7 @@ const Planner = (props) => {
       data.map((event) => {
         if (changed[event.id]) {
           const updatedEvent = { ...event, ...changed[event.id] };
-          if (event.eventType === "1") {
+          if (event.eventType == "1") {
             if (updatedEvent.title === "") {
               alert("Please input a name");
               return;
@@ -1023,7 +1023,7 @@ const Planner = (props) => {
 };
 
 Planner.propTypes = {
-  plannerDataUpdate: PropTypes.boolean,
+  plannerDataUpdate: PropTypes.bool,
   setPlannerDataUpdate: PropTypes.func,
 };
 

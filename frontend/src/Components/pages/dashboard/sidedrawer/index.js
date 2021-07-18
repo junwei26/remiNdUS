@@ -85,7 +85,7 @@ const Sidedrawer = (props) => {
 };
 
 Sidedrawer.propTypes = {
-  plannerDataUpdate: PropTypes.boolean,
+  plannerDataUpdate: PropTypes.bool,
   setPlannerDataUpdate: PropTypes.func,
 };
 

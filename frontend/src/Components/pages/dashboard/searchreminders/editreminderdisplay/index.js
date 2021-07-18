@@ -334,7 +334,7 @@ EditReminderDisplay.propTypes = {
   setDialogMaxWidth: PropTypes.func,
   setSelectedRow: PropTypes.func,
   getAllReminders: PropTypes.func,
-  plannerDataUpdate: PropTypes.boolean,
+  plannerDataUpdate: PropTypes.bool,
   setPlannerDataUpdate: PropTypes.func,
 };
 

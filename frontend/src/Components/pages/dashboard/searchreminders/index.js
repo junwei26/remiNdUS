@@ -355,7 +355,7 @@ const SearchReminders = (props) => {
 };
 
 SearchReminders.propTypes = {
-  plannerDataUpdate: PropTypes.boolean,
+  plannerDataUpdate: PropTypes.bool,
   setPlannerDataUpdate: PropTypes.func,
 };
 

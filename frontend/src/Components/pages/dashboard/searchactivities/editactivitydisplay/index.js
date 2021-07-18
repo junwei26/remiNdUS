@@ -474,7 +474,7 @@ EditActivityDisplay.propTypes = {
   setDialogMaxWidth: PropTypes.func,
   setSelectedRow: PropTypes.func,
   getAllActivities: PropTypes.func,
-  plannerDataUpdate: PropTypes.boolean,
+  plannerDataUpdate: PropTypes.bool,
   setPlannerDataUpdate: PropTypes.func,
 };
 

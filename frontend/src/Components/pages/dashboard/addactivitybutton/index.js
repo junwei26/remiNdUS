@@ -542,7 +542,7 @@ const AddActivityButton = (props) => {
 };
 
 AddActivityButton.propTypes = {
-  plannerDataUpdate: PropTypes.boolean,
+  plannerDataUpdate: PropTypes.bool,
   setPlannerDataUpdate: PropTypes.func,
 };
 

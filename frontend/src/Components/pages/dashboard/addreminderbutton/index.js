@@ -384,7 +384,7 @@ const addReminderButton = (props) => {
 };
 
 addReminderButton.propTypes = {
-  plannerDataUpdate: PropTypes.boolean,
+  plannerDataUpdate: PropTypes.bool,
   setPlannerDataUpdate: PropTypes.func,
 };
 
