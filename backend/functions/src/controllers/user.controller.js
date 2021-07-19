@@ -1,5 +1,7 @@
 const admin = require("firebase-admin");
 const db = admin.firestore();
+const activityController = require("./activity.controller.js");
+const reminderController = require("./reminder.controller.js");
 
 exports.create = (req, res) => {
   if (!req.body.uid) {
@@ -318,5 +320,74 @@ exports.getDashboardInfo = (req, res) => {
 
     .catch((error) => {
       return res.status(400).send({ message: `Issue getting dashboard data from user. ${error}` });
+    });
+};
+
+exports.getAllActivitiesReminders = (req, res) => {
+  db.collection("users")
+    .where("uid", "==", req.query.uid)
+    .limit(1)
+    .get()
+    .then((querySnapshot) => {
+      if (querySnapshot.empty) {
+        throw new Error("No user found. Please contact the administrator");
+      }
+
+      let activities = [];
+
+      activityController
+        .getAllActivitiesExport(querySnapshot)
+        .then((results) => {
+          activities = [].concat.apply([], results);
+          db.collection("users")
+            .where("uid", "==", req.query.uid)
+            .limit(1)
+            .get()
+            .then((querySnapshot) => {
+              if (querySnapshot.empty) {
+                return res
+                  .status(404)
+                  .send({ message: "No user found. Please contact the administrator" });
+              }
+
+              querySnapshot.forEach((queryDocumentSnapshot) => {
+                reminderController
+                  .getAllRemindersExport(queryDocumentSnapshot.ref)
+                  .then((reminders) => {
+                    reminderController
+                      .getSubscribedExport(req.query.uid)
+                      .then((allSubscribedReminders) => {
+                        const allReminders = reminders.concat(allSubscribedReminders);
+
+                        res.send([...activities, ...allReminders]);
+                        return res.status(200).send({
+                          message: "Successfully retrieved activities and reminders",
+                        });
+                      })
+                      .catch((error) => {
+                        return res
+                          .status(404)
+                          .send({ message: `Error retrieving subscribed reminders. ${error}` });
+                      });
+                  })
+                  .catch((error) => {
+                    return res
+                      .status(404)
+                      .send({ message: `Error retrieving user reminders. ${error}` });
+                  });
+              });
+            })
+            .catch((error) => {
+              return res.status(404).send({ message: `Error retrieving reminders. ${error}` });
+            });
+        })
+        .catch((error) => {
+          return res.status(404).send({ message: `Error retrieving all activities. ${error}` });
+        });
+    })
+    .catch((error) => {
+      return res
+        .status(404)
+        .send({ message: `Error getting user database when getting all activities. ${error}` });
     });
 };

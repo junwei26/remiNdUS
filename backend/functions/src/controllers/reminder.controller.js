@@ -78,7 +78,7 @@ const getRemindersByIds = (uid, plannedReminderIds, recurringReminderIds, subscr
     });
 };
 
-exports.getAllRemindersExport = (userQuerySnapshot, plannedReminderQuery) => {
+exports.getAllRemindersExport = (userQuerySnapshot, plannedReminderQuery = (x) => x) => {
   return getAllReminders(userQuerySnapshot, plannedReminderQuery);
 };
 
@@ -162,6 +162,10 @@ const getPackageReminderIds = (uid, reminderPackageId) => {
         return { plannedReminderIds, recurringReminderIds };
       });
     });
+};
+
+exports.getSubscribedExport = (uid) => {
+  return getSubscribed(uid);
 };
 
 const getSubscribed = (

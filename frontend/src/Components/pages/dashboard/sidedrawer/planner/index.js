@@ -29,8 +29,8 @@ import userService from "../../../services/userService";
 
 const getData = (setData, setLoading) => {
   setLoading(true);
-  return activityService.getAllActivities().then((activities) => {
-    setData([...activities.data]);
+  return userService.getAllActivitiesAndReminders().then((response) => {
+    setData(response.data);
     setLoading(false);
   });
 };
@@ -262,8 +262,40 @@ const Planner = () => {
 
   const [state, dispatch] = useReducer(reducer, initialState);
   const { data, loading, currentViewName, currentDate } = state;
+  const setCurrentViewName = useCallback(
+    (nextViewName) =>
+      dispatch({
+        type: "setCurrentViewName",
+        payload: nextViewName,
+      }),
+    [dispatch]
+  );
+  const setData = useCallback(
+    (nextData) =>
+      dispatch({
+        type: "setData",
+        payload: nextData,
+      }),
+    [dispatch]
+  );
+  const setCurrentDate = useCallback(
+    (nextDate) =>
+      dispatch({
+        type: "setCurrentDate",
+        payload: nextDate,
+      }),
+    [dispatch]
+  );
+  const setLoading = useCallback(
+    (nextLoading) =>
+      dispatch({
+        type: "setLoading",
+        payload: nextLoading,
+      }),
+    [dispatch]
+  );
 
-  useEffect(() => {
+  const getDashboardInfo = () => {
     userService.getDashboardInfo().then((response) => {
       const payload = response.data;
       const instances = payload.user.tags
@@ -301,40 +333,11 @@ const Planner = () => {
       setTemplateReminders(payload.templateReminders);
       setTemplateRemindersOptions(reminderTemplates);
     });
-  }, [data]);
+  };
 
-  const setCurrentViewName = useCallback(
-    (nextViewName) =>
-      dispatch({
-        type: "setCurrentViewName",
-        payload: nextViewName,
-      }),
-    [dispatch]
-  );
-  const setData = useCallback(
-    (nextData) =>
-      dispatch({
-        type: "setData",
-        payload: nextData,
-      }),
-    [dispatch]
-  );
-  const setCurrentDate = useCallback(
-    (nextDate) =>
-      dispatch({
-        type: "setCurrentDate",
-        payload: nextDate,
-      }),
-    [dispatch]
-  );
-  const setLoading = useCallback(
-    (nextLoading) =>
-      dispatch({
-        type: "setLoading",
-        payload: nextLoading,
-      }),
-    [dispatch]
-  );
+  useEffect(() => {
+    getDashboardInfo();
+  }, [setData]);
 
   useEffect(() => {
     getData(setData, setLoading);
@@ -385,6 +388,7 @@ const Planner = () => {
               )
               .then(() => {
                 getData(setData, setLoading);
+                getDashboardInfo();
                 setCurrentAlert({ severity: "success", message: "Activity added!" });
                 setSnackbarOpen(true);
               })
@@ -406,6 +410,7 @@ const Planner = () => {
               )
               .then(() => {
                 getData(setData, setLoading);
+                getDashboardInfo();
                 setCurrentAlert({ severity: "success", message: "Activity added!" });
                 setSnackbarOpen(true);
               })
@@ -469,6 +474,7 @@ const Planner = () => {
                     )
                     .then(() => {
                       getData(setData, setLoading);
+                      getDashboardInfo();
                       setCurrentAlert({ severity: "success", message: "Activity updated!" });
                       setSnackbarOpen(true);
                     })
@@ -506,6 +512,7 @@ const Planner = () => {
                     )
                     .then(() => {
                       getData(setData, setLoading);
+                      getDashboardInfo();
                       setCurrentAlert({ severity: "success", message: "Activity updated!" });
                       setSnackbarOpen(true);
                     })

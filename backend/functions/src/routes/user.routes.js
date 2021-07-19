@@ -16,6 +16,7 @@ module.exports = (app) => {
   router.get("/", user.get);
   router.get("/dashboard", user.getDashboardInfo);
   router.get("/getTelegramReminderUsers", user.getTelegramReminderUsers);
+  router.get("/activitiesAndReminders", user.getAllActivitiesReminders);
 
   app.use("/api/user", router);
 };
