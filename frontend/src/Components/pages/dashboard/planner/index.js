@@ -406,10 +406,17 @@ const Planner = (props) => {
                 setSnackbarOpen(true);
               })
               .catch((error) => {
-                setCurrentAlert({
-                  severity: "error",
-                  message: `Error creating activity! Error status code: ${error.response.status}. ${error.response.data.message}`,
-                });
+                if (error.response) {
+                  setCurrentAlert({
+                    severity: "error",
+                    message: `Error creating planned activity! Error status code: ${error.response.status}. ${error.response.data.message}`,
+                  });
+                } else {
+                  setCurrentAlert({
+                    severity: "error",
+                    message: `Error creating planned activity. ${error}`,
+                  });
+                }
                 setSnackbarOpen(true);
               });
           } else {
@@ -430,19 +437,33 @@ const Planner = (props) => {
                 setSnackbarOpen(true);
               })
               .catch((error) => {
-                setCurrentAlert({
-                  severity: "error",
-                  message: `Error creating activity! Error status code: ${error.response.status}. ${error.response.data.message}`,
-                });
+                if (error.response) {
+                  setCurrentAlert({
+                    severity: "error",
+                    message: `Error creating recurring activity! Error status code: ${error.response.status}. ${error.response.data.message}`,
+                  });
+                } else {
+                  setCurrentAlert({
+                    severity: "error",
+                    message: `Error creating recurring activity. ${error}`,
+                  });
+                }
                 setSnackbarOpen(true);
               });
           }
         })
         .catch((error) => {
-          setCurrentAlert({
-            severity: "error",
-            message: `Error creating new activity tag! Error status code: ${error.response.status}. ${error.response.data.message}`,
-          });
+          if (error.response) {
+            setCurrentAlert({
+              severity: "error",
+              message: `Error creating new activity tag! Error status code: ${error.response.status}. ${error.response.data.message}`,
+            });
+          } else {
+            setCurrentAlert({
+              severity: "error",
+              message: `Error creating new activity tag. ${error}`,
+            });
+          }
           setSnackbarOpen(true);
         });
     }
@@ -499,10 +520,17 @@ const Planner = (props) => {
                       setSnackbarOpen(true);
                     })
                     .catch((error) => {
-                      setCurrentAlert({
-                        severity: "error",
-                        message: `Error updating activity! Error status code: ${error.response.status}. ${error.response.data.message}`,
-                      });
+                      if (error.response) {
+                        setCurrentAlert({
+                          severity: "error",
+                          message: `Error updating planned activity! Error status code: ${error.response.status}. ${error.response.data.message}`,
+                        });
+                      } else {
+                        setCurrentAlert({
+                          severity: "error",
+                          message: `Error updating planned activity. ${error}`,
+                        });
+                      }
                       setSnackbarOpen(true);
                     });
                 } else {
@@ -534,21 +562,50 @@ const Planner = (props) => {
                       getData(setData, setLoading);
                       setCurrentAlert({ severity: "success", message: "Activity updated!" });
                       setSnackbarOpen(true);
+                      if (
+                        new Date(event.startDate).getFullYear() !=
+                          updatedEvent.startDate.getFullYear() ||
+                        new Date(event.startDate).getMonth() != updatedEvent.startDate.getMonth() ||
+                        new Date(event.startDate).getDay() != updatedEvent.startDate.getDay()
+                      ) {
+                        setCurrentAlert({
+                          severity: "info",
+                          message: `Activity updated!. However note: For recurring activities, frequency/date has to be changed in the edit form instead.`,
+                        });
+                        setSnackbarOpen(true);
+                      } else {
+                        setCurrentAlert({ severity: "success", message: "Activity updated!" });
+                        setSnackbarOpen(true);
+                      }
                     })
                     .catch((error) => {
-                      setCurrentAlert({
-                        severity: "error",
-                        message: `Error updating planned activity. Error status code: ${error.response.status}. ${error.response.data.message}`,
-                      });
+                      if (error.response) {
+                        setCurrentAlert({
+                          severity: "error",
+                          message: `Error updating recurring activity. Error status code: ${error.response.status}. ${error.response.data.message}`,
+                        });
+                      } else {
+                        setCurrentAlert({
+                          severity: "error",
+                          message: `Error updating recurring activity. ${error}`,
+                        });
+                      }
                       setSnackbarOpen(true);
                     });
                 }
               })
               .catch((error) => {
-                setCurrentAlert({
-                  severity: "error",
-                  message: `Error updating activity tag! Error status code: ${error.response.status}. ${error.response.data.message}`,
-                });
+                if (error.response) {
+                  setCurrentAlert({
+                    severity: "error",
+                    message: `Error updating activity tag! Error status code: ${error.response.status}. ${error.response.data.message}`,
+                  });
+                } else {
+                  setCurrentAlert({
+                    severity: "error",
+                    message: `Error updating activity tag. ${error}`,
+                  });
+                }
                 setSnackbarOpen(true);
               });
           } else {
@@ -573,10 +630,17 @@ const Planner = (props) => {
                   setSnackbarOpen(true);
                 })
                 .catch((error) => {
-                  setCurrentAlert({
-                    severity: "error",
-                    message: `Error updating reminder! Error status code: ${error.response.status}. ${error.response.data.message}`,
-                  });
+                  if (error.response) {
+                    setCurrentAlert({
+                      severity: "error",
+                      message: `Error updating planned reminder! Error status code: ${error.response.status}. ${error.response.data.message}`,
+                    });
+                  } else {
+                    setCurrentAlert({
+                      severity: "error",
+                      message: `Error updating planned reminder. ${error}`,
+                    });
+                  }
                   setSnackbarOpen(true);
                 });
             } else {
@@ -598,14 +662,34 @@ const Planner = (props) => {
                 )
                 .then(() => {
                   getData(setData, setLoading);
-                  setCurrentAlert({ severity: "success", message: "Reminder updated!" });
-                  setSnackbarOpen(true);
+                  if (
+                    new Date(event.startDate).getFullYear() !=
+                      updatedEvent.startDate.getFullYear() ||
+                    new Date(event.startDate).getMonth() != updatedEvent.startDate.getMonth() ||
+                    new Date(event.startDate).getDay() != updatedEvent.startDate.getDay()
+                  ) {
+                    setCurrentAlert({
+                      severity: "info",
+                      message: `Reminder updated!. However note: For recurring reminders, frequency/date has to be changed in the edit form instead.`,
+                    });
+                    setSnackbarOpen(true);
+                  } else {
+                    setCurrentAlert({ severity: "success", message: "Reminder updated!" });
+                    setSnackbarOpen(true);
+                  }
                 })
                 .catch((error) => {
-                  setCurrentAlert({
-                    severity: "error",
-                    message: `Error updating reminder! Error status code: ${error.response.status}. ${error.response.data.message}`,
-                  });
+                  if (error.response) {
+                    setCurrentAlert({
+                      severity: "error",
+                      message: `Error updating recurring reminder! Error status code: ${error.response.status}. ${error.response.data.message}`,
+                    });
+                  } else {
+                    setCurrentAlert({
+                      severity: "error",
+                      message: `Error updating recurring reminder. ${error}`,
+                    });
+                  }
                   setSnackbarOpen(true);
                 });
             }
