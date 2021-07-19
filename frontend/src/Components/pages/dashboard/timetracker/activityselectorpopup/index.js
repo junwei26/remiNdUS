@@ -3,6 +3,7 @@ import PropTypes from "prop-types";
 import { makeStyles } from "@material-ui/core/styles";
 import { Button, Grid, Select, MenuItem, Card, Typography } from "@material-ui/core";
 import activityService from "../../../services/activityService";
+import localService from "../../../services/localService";
 
 const useStyles = makeStyles(() => ({
   topbar: {
@@ -28,7 +29,7 @@ const ActivitySelectorPopup = (props) => {
   const classes = useStyles();
   const [activity, setActivity] = useState("");
   const [activities, setActivities] = useState([]);
-
+  activities;
   useEffect(() => {
     const currentDate = new Date();
     currentDate.setHours(0, 0, 0, 0);
@@ -36,8 +37,24 @@ const ActivitySelectorPopup = (props) => {
     endDate.setDate(currentDate.getDate() + 1);
     endDate.setHours(0, 0, 0, 0);
     activityService
-      .getRangeActivity(currentDate.toLocaleString(), endDate.toLocaleString())
-      .then((response) => setActivities(response.data))
+      .getAllActivities()
+      .then((response) => {
+        const filterActivities = (activity) => {
+          if (activity.activityType === "recurring") {
+            return (
+              (activity.frequency === "monthly" && activity.date === currentDate.getDate()) ||
+              (activity.frequency === "weekly" && currentDate.getDay() === activity.date)
+            );
+          } else {
+            return (
+              activity.startDateTime >= localService.convertDateToString(currentDate) &&
+              activity.startDateTime <= localService.convertDateToString(endDate)
+            );
+          }
+        };
+
+        setActivities(response.data.filter(filterActivities));
+      })
       .catch((e) => alert(`Error retrieving activities.${e.response.data.message}`));
   }, []);
 
@@ -69,7 +86,18 @@ const ActivitySelectorPopup = (props) => {
           </Grid>
         </Grid>
         <Grid item style={{ width: "100%" }}>
-          <form noValidate autoComplete="off" onSubmit={() => props.start(activity)}>
+          <form
+            noValidate
+            autoComplete="off"
+            onSubmit={(e) => {
+              props.start({
+                ...activity,
+                actualStartDateTime: localService.convertDateToString(new Date()),
+              });
+              e.preventDefault();
+              props.close();
+            }}
+          >
             <Grid container direction="column" spacing={2}>
               <Grid item>
                 <Select
