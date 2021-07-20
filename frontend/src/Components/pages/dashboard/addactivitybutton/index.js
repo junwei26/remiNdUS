@@ -253,38 +253,42 @@ const AddActivityButton = () => {
   };
 
   useEffect(() => {
-    setTemplateActivitiesMenuItemArray(
-      [
-        <MenuItem value={-1} key={-1}>
-          Create new activity
-        </MenuItem>,
-      ].concat(
-        templateActivities.map((templateActivity, index) => (
-          <MenuItem value={index} key={index}>
-            {templateActivity.name}
-          </MenuItem>
-        ))
-      )
-    );
+    if (dialogOpen === true) {
+      setTemplateActivitiesMenuItemArray(
+        [
+          <MenuItem value={-1} key={-1}>
+            Create new activity
+          </MenuItem>,
+        ].concat(
+          templateActivities.map((templateActivity, index) => (
+            <MenuItem value={index} key={index}>
+              {templateActivity.name}
+            </MenuItem>
+          ))
+        )
+      );
+    }
   }, [templateActivities]);
 
   useEffect(() => {
-    setActivityTagMenuItemArray(
-      [
-        <MenuItem value={-1} key={-1}>
-          Choose an existing activity tag...
-        </MenuItem>,
-        <MenuItem value={-2} key={-2}>
-          Create new activity tag
-        </MenuItem>,
-      ].concat(
-        activityTags.map((activityTag, index) => (
-          <MenuItem value={index} key={index}>
-            {activityTag}
-          </MenuItem>
-        ))
-      )
-    );
+    if (dialogOpen === true) {
+      setActivityTagMenuItemArray(
+        [
+          <MenuItem value={-1} key={-1}>
+            Choose an existing activity tag...
+          </MenuItem>,
+          <MenuItem value={-2} key={-2}>
+            Create new activity tag
+          </MenuItem>,
+        ].concat(
+          activityTags.map((activityTag, index) => (
+            <MenuItem value={index} key={index}>
+              {activityTag}
+            </MenuItem>
+          ))
+        )
+      );
+    }
   }, [activityTags]);
 
   useEffect(() => {

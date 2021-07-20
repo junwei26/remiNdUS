@@ -205,7 +205,9 @@ const SearchActivities = () => {
   };
 
   useEffect(() => {
-    getAllActivities();
+    if (dialogOpen === true) {
+      getAllActivities();
+    }
   }, []);
 
   const handleEditActivity = () => {

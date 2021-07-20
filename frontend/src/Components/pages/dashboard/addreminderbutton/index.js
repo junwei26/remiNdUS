@@ -174,19 +174,21 @@ const addReminderButton = () => {
   };
 
   useEffect(() => {
-    setMenuItemArray(
-      [
-        <MenuItem value={-1} key={-1}>
-          Choose an existing reminder...
-        </MenuItem>,
-      ].concat(
-        templateReminders.map((templateReminder, index) => (
-          <MenuItem value={index} key={index}>
-            {templateReminder.name}
-          </MenuItem>
-        ))
-      )
-    );
+    if (dialogOpen === true) {
+      setMenuItemArray(
+        [
+          <MenuItem value={-1} key={-1}>
+            Choose an existing reminder...
+          </MenuItem>,
+        ].concat(
+          templateReminders.map((templateReminder, index) => (
+            <MenuItem value={index} key={index}>
+              {templateReminder.name}
+            </MenuItem>
+          ))
+        )
+      );
+    }
   }, [templateReminders]);
 
   useEffect(() => {

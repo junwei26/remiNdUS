@@ -2,13 +2,13 @@ import React from "react";
 import { makeStyles } from "@material-ui/core/styles";
 import Drawer from "@material-ui/core/Drawer";
 import CssBaseline from "@material-ui/core/CssBaseline";
-// import List from "@material-ui/core/List";
+import List from "@material-ui/core/List";
 import Divider from "@material-ui/core/Divider";
 import Planner from "./planner";
-// import AddActivityButton from "../addactivitybutton";
-// import AddReminderButton from "../addreminderbutton";
-// import SearchActivities from "../searchactivities";
-// import SearchReminders from "../searchreminders";
+import AddActivityButton from "../addactivitybutton";
+import AddReminderButton from "../addreminderbutton";
+import SearchActivities from "../searchactivities";
+import SearchReminders from "../searchreminders";
 const drawerWidth = 240;
 
 const useStyles = makeStyles((theme) => ({
@@ -51,6 +51,12 @@ const Sidedrawer = () => {
       >
         <div className={classes.toolbar} />
         <Divider />
+        <List>
+          <AddActivityButton />
+          <SearchActivities />
+          <AddReminderButton />
+          <SearchReminders />
+        </List>
       </Drawer>
       <main className={classes.content}>
         <Planner />

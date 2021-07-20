@@ -175,7 +175,9 @@ const SearchReminders = () => {
   };
 
   useEffect(() => {
-    getAllReminders();
+    if (dialogOpen === true) {
+      getAllReminders();
+    }
   }, []);
 
   const handleEditReminders = () => {
