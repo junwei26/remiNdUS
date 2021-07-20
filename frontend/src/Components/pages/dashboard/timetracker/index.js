@@ -61,11 +61,18 @@ const TimeTracker = () => {
     setTimer(0);
     setCurrentActivity({});
     const actualEndDateTime = localService.convertDateToString(new Date());
+    const currentDate = actualEndDateTime.slice(0, 8);
     const trackedActivity = {
       name: currentActivity.name,
       tag: currentActivity.activityTag,
-      plannedStartDateTime: currentActivity.startDateTime,
-      plannedEndDateTime: currentActivity.endDateTime,
+      plannedStartDateTime:
+        currentActivity.activityType === "planned"
+          ? currentActivity.startDateTime
+          : currentDate + currentActivity.startTime,
+      plannedEndDateTime:
+        currentActivity.activityType === "planned"
+          ? currentActivity.endDateTime
+          : currentDate + currentActivity.endTime,
       actualStartDateTime: currentActivity.actualStartDateTime,
       actualEndDateTime,
     };
