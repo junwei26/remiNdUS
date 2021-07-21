@@ -15,6 +15,7 @@ import {
   ListItemIcon,
   ListItemText,
 } from "@material-ui/core";
+import PropTypes from "prop-types";
 import { DataGrid, GridToolbar } from "@material-ui/data-grid";
 import activityService from "../../services/activityService";
 import localService from "../../services/localService";
@@ -39,7 +40,7 @@ const useStyles = makeStyles(() => ({
   },
 }));
 
-const SearchActivities = () => {
+const SearchActivities = (props) => {
   const activityColumns = [
     {
       field: "name",
@@ -133,12 +134,11 @@ const SearchActivities = () => {
       id: 1,
       name: "Loading...",
       description: "Loading...",
-      packageTag: "Loading...",
-      ownerName: "Loading...",
-      public: "Loading...",
-      verified: "Loading...",
-      lastModified: "Loading...",
-      numberOfReminders: "Loading...",
+      activityTag: "Loading...",
+      startDateAndTime: "Loading...",
+      endDateAndTime: "Loading...",
+      frequency: "Loading...",
+      activityType: "Loading...",
     },
   ];
 
@@ -231,6 +231,7 @@ const SearchActivities = () => {
         )
         .then(() => {
           alert("Successfully deleted activity");
+          props.setPlannerDataUpdate(!props.plannerDataUpdate);
         })
         .catch((error) => {
           alert(
@@ -264,6 +265,9 @@ const SearchActivities = () => {
             setEditingActivity={setEditingActivity}
             setDialogMaxWidth={setDialogMaxWidth}
             setSelectedRow={setSelectedRow}
+            getAllActivities={getAllActivities}
+            plannerDataUpdate={props.plannerDataUpdate}
+            setPlannerDataUpdate={props.setPlannerDataUpdate}
           />
         ) : (
           <>
@@ -278,7 +282,7 @@ const SearchActivities = () => {
               >
                 <Grid item className={classes.gridItem}>
                   <TextField
-                    label="Search Packages (by name)"
+                    label="Search Activities (by name)"
                     type="search"
                     value={searchText}
                     onChange={updateSearchText}
@@ -370,6 +374,11 @@ const SearchActivities = () => {
       </Dialog>
     </>
   );
+};
+
+SearchActivities.propTypes = {
+  plannerDataUpdate: PropTypes.bool,
+  setPlannerDataUpdate: PropTypes.func,
 };
 
 export default SearchActivities;

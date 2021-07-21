@@ -6,6 +6,7 @@ import { List, Divider, ListItem, ListItemText } from "@material-ui/core";
 import SubscribedPackages from "./subscribedpackages";
 import CreatePackages from "./createpackages";
 import SearchPackages from "./searchpackages";
+import RetrieveActivities from "./retrieveactivities";
 const drawerWidth = 240;
 
 const useStyles = makeStyles((theme) => ({
@@ -55,8 +56,11 @@ const Sidedrawer = () => {
           <CreatePackages
             reminderPackage={selectedReminderPackage}
             setSelectedReminderPackage={setSelectedReminderPackage}
+            setView={setView}
           />
         );
+      case "Retrieve NUSMODS Activities":
+        return <RetrieveActivities />;
       default:
         return (
           <SubscribedPackages
@@ -67,6 +71,12 @@ const Sidedrawer = () => {
     }
   };
   const classes = useStyles();
+
+  const handleSelectCreatePackages = () => {
+    // If manual click, make sure to deselect if previously clicked away, so edit is not the "same tab" as create
+    setSelectedReminderPackage(null);
+    setView("Create Packages");
+  };
 
   return (
     <div className={classes.root}>
@@ -92,7 +102,15 @@ const Sidedrawer = () => {
             <ListItemText primary="Search Packages" onClick={() => setView("Search Packages")} />
           </ListItem>
           <ListItem button key="Create Packages">
-            <ListItemText primary="Create Packages" onClick={() => setView("Create Packages")} />
+            <ListItemText primary="Create Packages" onClick={handleSelectCreatePackages} />
+          </ListItem>
+          <ListItem button key="Retrieve NUSMODS Activities">
+            <ListItemText
+              primary="Retrieve Activities"
+              onClick={() => {
+                setView("Retrieve NUSMODS Activities");
+              }}
+            />
           </ListItem>
         </List>
       </Drawer>

@@ -102,14 +102,7 @@ const TimeTracker = () => {
 
   return (
     <Paper className={classes.root}>
-      <Grid
-        container
-        alignContent="center"
-        alignItems="center"
-        direction="column"
-        justify="center"
-        spacing={1}
-      >
+      <Grid container alignItems="center" direction="column" justify="center" spacing={1}>
         <Grid item xs>
           <Typography>Activity Tracker </Typography>
         </Grid>

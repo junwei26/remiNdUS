@@ -4,8 +4,7 @@ import { Grid, Typography, Snackbar } from "@material-ui/core";
 import Alert from "@material-ui/lab/Alert";
 import AlertTitle from "@material-ui/lab/AlertTitle";
 import LinearProgress from "@material-ui/core/LinearProgress";
-import { withStyles } from "@material-ui/core/styles";
-import PropTypes from "prop-types";
+import { withStyles, makeStyles } from "@material-ui/core/styles";
 import { ViewState, EditingState, IntegratedEditing } from "@devexpress/dx-react-scheduler";
 import {
   Scheduler,
@@ -22,10 +21,11 @@ import {
   Resources,
   CurrentTimeIndicator,
 } from "@devexpress/dx-react-scheduler-material-ui";
-import activityService from "../../../services/activityService";
-import reminderService from "../../../services/reminderService";
-import localService from "../../../services/localService";
-import userService from "../../../services/userService";
+import PropTypes from "prop-types";
+import activityService from "../../services/activityService";
+import reminderService from "../../services/reminderService";
+import localService from "../../services/localService";
+import userService from "../../services/userService";
 
 const getData = (setData, setLoading) => {
   setLoading(true);
@@ -58,7 +58,13 @@ const ToolbarWithLoading = withStyles(styles, { name: "Toolbar" })(
   )
 );
 
-const Planner = () => {
+const useStyles = makeStyles(() => ({
+  root: { height: "auto", width: "auto" },
+}));
+
+const Planner = (props) => {
+  const classes = useStyles();
+
   const [currentDateObj, setCurrentDateObj] = useState(new Date());
   const generateDate = (dateObj) => {
     const padZero = (num) => (num < 10 ? "0" + num.toString() : num.toString());
@@ -350,7 +356,7 @@ const Planner = () => {
   useEffect(() => {
     getData(setData, setLoading);
     setCurrentDateObj(currentDate);
-  }, [setData, currentViewName, currentDate]);
+  }, [setData, currentViewName, currentDate, props.plannerDataUpdate]);
 
   const handleChange = ({ added, changed, deleted }) => {
     if (added) {
@@ -399,8 +405,18 @@ const Planner = () => {
                 setCurrentAlert({ severity: "success", message: "Activity added!" });
                 setSnackbarOpen(true);
               })
-              .catch(() => {
-                setCurrentAlert({ severity: "error", message: "Error creating activity!" });
+              .catch((error) => {
+                if (error.response) {
+                  setCurrentAlert({
+                    severity: "error",
+                    message: `Error creating planned activity! Error status code: ${error.response.status}. ${error.response.data.message}`,
+                  });
+                } else {
+                  setCurrentAlert({
+                    severity: "error",
+                    message: `Error creating planned activity. ${error}`,
+                  });
+                }
                 setSnackbarOpen(true);
               });
           } else {
@@ -420,14 +436,34 @@ const Planner = () => {
                 setCurrentAlert({ severity: "success", message: "Activity added!" });
                 setSnackbarOpen(true);
               })
-              .catch(() => {
-                setCurrentAlert({ severity: "error", message: "Error creating activity!" });
+              .catch((error) => {
+                if (error.response) {
+                  setCurrentAlert({
+                    severity: "error",
+                    message: `Error creating recurring activity! Error status code: ${error.response.status}. ${error.response.data.message}`,
+                  });
+                } else {
+                  setCurrentAlert({
+                    severity: "error",
+                    message: `Error creating recurring activity. ${error}`,
+                  });
+                }
                 setSnackbarOpen(true);
               });
           }
         })
-        .catch(() => {
-          setCurrentAlert({ severity: "error", message: "Error creating new activity tag!" });
+        .catch((error) => {
+          if (error.response) {
+            setCurrentAlert({
+              severity: "error",
+              message: `Error creating new activity tag! Error status code: ${error.response.status}. ${error.response.data.message}`,
+            });
+          } else {
+            setCurrentAlert({
+              severity: "error",
+              message: `Error creating new activity tag. ${error}`,
+            });
+          }
           setSnackbarOpen(true);
         });
     }
@@ -435,7 +471,7 @@ const Planner = () => {
       data.map((event) => {
         if (changed[event.id]) {
           const updatedEvent = { ...event, ...changed[event.id] };
-          if (event.eventType === "1") {
+          if (event.eventType == "1") {
             if (updatedEvent.title === "") {
               alert("Please input a name");
               return;
@@ -484,10 +520,17 @@ const Planner = () => {
                       setSnackbarOpen(true);
                     })
                     .catch((error) => {
-                      setCurrentAlert({
-                        severity: "error",
-                        message: `Error updating activity! ${error}`,
-                      });
+                      if (error.response) {
+                        setCurrentAlert({
+                          severity: "error",
+                          message: `Error updating planned activity! Error status code: ${error.response.status}. ${error.response.data.message}`,
+                        });
+                      } else {
+                        setCurrentAlert({
+                          severity: "error",
+                          message: `Error updating planned activity. ${error}`,
+                        });
+                      }
                       setSnackbarOpen(true);
                     });
                 } else {
@@ -519,24 +562,50 @@ const Planner = () => {
                       getData(setData, setLoading);
                       setCurrentAlert({ severity: "success", message: "Activity updated!" });
                       setSnackbarOpen(true);
+                      if (
+                        new Date(event.startDate).getFullYear() !=
+                          updatedEvent.startDate.getFullYear() ||
+                        new Date(event.startDate).getMonth() != updatedEvent.startDate.getMonth() ||
+                        new Date(event.startDate).getDay() != updatedEvent.startDate.getDay()
+                      ) {
+                        setCurrentAlert({
+                          severity: "info",
+                          message: `Activity updated!. However note: For recurring activities, frequency/date has to be changed in the edit form instead.`,
+                        });
+                        setSnackbarOpen(true);
+                      } else {
+                        setCurrentAlert({ severity: "success", message: "Activity updated!" });
+                        setSnackbarOpen(true);
+                      }
                     })
                     .catch((error) => {
-                      alert(
-                        `Issue updating planned activity. Error status code: ${error.response.status}. ${error.response.data.message}`
-                      );
-                      // setCurrentAlert({
-                      //   severity: "error",
-                      //   message: `Error updating activity! ${error}`,
-                      // });
-                      // setSnackbarOpen(true);
+                      if (error.response) {
+                        setCurrentAlert({
+                          severity: "error",
+                          message: `Error updating recurring activity. Error status code: ${error.response.status}. ${error.response.data.message}`,
+                        });
+                      } else {
+                        setCurrentAlert({
+                          severity: "error",
+                          message: `Error updating recurring activity. ${error}`,
+                        });
+                      }
+                      setSnackbarOpen(true);
                     });
                 }
               })
               .catch((error) => {
-                setCurrentAlert({
-                  severity: "error",
-                  message: `Error updating activity tag! ${error}`,
-                });
+                if (error.response) {
+                  setCurrentAlert({
+                    severity: "error",
+                    message: `Error updating activity tag! Error status code: ${error.response.status}. ${error.response.data.message}`,
+                  });
+                } else {
+                  setCurrentAlert({
+                    severity: "error",
+                    message: `Error updating activity tag. ${error}`,
+                  });
+                }
                 setSnackbarOpen(true);
               });
           } else {
@@ -561,10 +630,17 @@ const Planner = () => {
                   setSnackbarOpen(true);
                 })
                 .catch((error) => {
-                  setCurrentAlert({
-                    severity: "error",
-                    message: `Error updating reminder! ${error}`,
-                  });
+                  if (error.response) {
+                    setCurrentAlert({
+                      severity: "error",
+                      message: `Error updating planned reminder! Error status code: ${error.response.status}. ${error.response.data.message}`,
+                    });
+                  } else {
+                    setCurrentAlert({
+                      severity: "error",
+                      message: `Error updating planned reminder. ${error}`,
+                    });
+                  }
                   setSnackbarOpen(true);
                 });
             } else {
@@ -586,18 +662,35 @@ const Planner = () => {
                 )
                 .then(() => {
                   getData(setData, setLoading);
-                  setCurrentAlert({ severity: "success", message: "Reminder updated!" });
-                  setSnackbarOpen(true);
+                  if (
+                    new Date(event.startDate).getFullYear() !=
+                      updatedEvent.startDate.getFullYear() ||
+                    new Date(event.startDate).getMonth() != updatedEvent.startDate.getMonth() ||
+                    new Date(event.startDate).getDay() != updatedEvent.startDate.getDay()
+                  ) {
+                    setCurrentAlert({
+                      severity: "info",
+                      message: `Reminder updated!. However note: For recurring reminders, frequency/date has to be changed in the edit form instead.`,
+                    });
+                    setSnackbarOpen(true);
+                  } else {
+                    setCurrentAlert({ severity: "success", message: "Reminder updated!" });
+                    setSnackbarOpen(true);
+                  }
                 })
                 .catch((error) => {
-                  alert(
-                    `Issue updating planned activity. Error status code: ${error.response.status}. ${error.response.data.message}`
-                  );
-                  // setCurrentAlert({
-                  //   severity: "error",
-                  //   message: `Error updating reminder! ${error}`,
-                  // });
-                  // setSnackbarOpen(true);
+                  if (error.response) {
+                    setCurrentAlert({
+                      severity: "error",
+                      message: `Error updating recurring reminder! Error status code: ${error.response.status}. ${error.response.data.message}`,
+                    });
+                  } else {
+                    setCurrentAlert({
+                      severity: "error",
+                      message: `Error updating recurring reminder. ${error}`,
+                    });
+                  }
+                  setSnackbarOpen(true);
                 });
             }
           }
@@ -979,7 +1072,7 @@ const Planner = () => {
   };
 
   return (
-    <Paper>
+    <Paper className={classes.root}>
       <Snackbar open={snackbarOpen} autoHideDuration={3000} onClose={handleSnackbarClose}>
         <Alert severity={currentAlert.severity}>
           <AlertTitle>{currentAlert.message}</AlertTitle>
@@ -1011,6 +1104,11 @@ const Planner = () => {
       </Scheduler>
     </Paper>
   );
+};
+
+Planner.propTypes = {
+  plannerDataUpdate: PropTypes.bool,
+  setPlannerDataUpdate: PropTypes.func,
 };
 
 export default Planner;

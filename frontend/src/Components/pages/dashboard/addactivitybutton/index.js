@@ -18,6 +18,7 @@ import {
   ListItemIcon,
   ListItemText,
 } from "@material-ui/core";
+import PropTypes from "prop-types";
 import DateFnsUtils from "@date-io/date-fns";
 import { MuiPickersUtilsProvider, DateTimePicker, TimePicker } from "@material-ui/pickers";
 import activityService from "../../services/activityService";
@@ -31,7 +32,7 @@ const useStyles = makeStyles(() => ({
   },
 }));
 
-const AddActivityButton = () => {
+const AddActivityButton = (props) => {
   const classes = useStyles();
 
   const nearestTime = 1000 * 60 * 15; // round up to nearest 15 minutes
@@ -184,6 +185,7 @@ const AddActivityButton = () => {
           )
           .then(() => {
             alert("Succesfully created activity");
+            props.setPlannerDataUpdate(!props.plannerDataUpdate);
             handleDialogClose();
           })
           .catch((error) => {
@@ -211,6 +213,7 @@ const AddActivityButton = () => {
           )
           .then(() => {
             alert("Succesfully created activity");
+            props.setPlannerDataUpdate(!props.plannerDataUpdate);
             handleDialogClose();
           })
           .catch((error) => {
@@ -536,6 +539,11 @@ const AddActivityButton = () => {
       </Dialog>
     </>
   );
+};
+
+AddActivityButton.propTypes = {
+  plannerDataUpdate: PropTypes.bool,
+  setPlannerDataUpdate: PropTypes.func,
 };
 
 export default AddActivityButton;
