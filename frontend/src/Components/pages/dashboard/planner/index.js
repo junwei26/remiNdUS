@@ -29,11 +29,9 @@ import userService from "../../services/userService";
 
 const getData = (setData, setLoading) => {
   setLoading(true);
-  return activityService.getAllActivities().then((activities) => {
-    reminderService.getAllReminders().then((reminders) => {
-      setData([...activities.data, ...reminders.data]);
-      setLoading(false);
-    });
+  return userService.getAllActivitiesAndReminders().then((response) => {
+    setData(response.data);
+    setLoading(false);
   });
 };
 
@@ -270,56 +268,6 @@ const Planner = (props) => {
 
   const [state, dispatch] = useReducer(reducer, initialState);
   const { data, loading, currentViewName, currentDate } = state;
-
-  useEffect(() => {
-    userService.getUserInfo().then((response) => {
-      const instances = response.data.tags
-        .map((tag) => {
-          return { id: tag, text: tag, fieldName: "tag" };
-        })
-        .concat({ id: "Reminder", text: "Reminder", fieldName: "tag", color: "#d50000" });
-      setResources([
-        {
-          fieldName: "tag",
-          title: "Tag",
-          instances,
-        },
-      ]);
-    });
-  }, [data]);
-
-  useEffect(() => {
-    activityService.getTemplateActivities().then((response) => {
-      const instances = response.data
-        .map((activityTemplate) => {
-          return {
-            id: activityTemplate.templateActivityId,
-            text: activityTemplate.name,
-            fieldName: "templateId",
-          };
-        })
-        .concat({ id: 0, text: "Create new activity", fieldName: "templateId" });
-      setTemplateActivities(response.data);
-      setTemplateActivitiesOptions(instances);
-    });
-  }, [data]);
-
-  useEffect(() => {
-    reminderService.getTemplateReminders().then((response) => {
-      const instances = response.data
-        .map((reminderTemplate) => {
-          return {
-            id: reminderTemplate.templateReminderId,
-            text: reminderTemplate.name,
-            fieldName: "templateId",
-          };
-        })
-        .concat({ id: 0, text: "Create new reminder", fieldName: "templateId" });
-      setTemplateReminders(response.data);
-      setTemplateRemindersOptions(instances);
-    });
-  }, [data]);
-
   const setCurrentViewName = useCallback(
     (nextViewName) =>
       dispatch({
@@ -352,6 +300,50 @@ const Planner = (props) => {
       }),
     [dispatch]
   );
+
+  const getDashboardInfo = () => {
+    userService.getDashboardInfo().then((response) => {
+      const payload = response.data;
+      const instances = payload.user.tags
+        .map((tag) => {
+          return { id: tag, text: tag, fieldName: "tag" };
+        })
+        .concat({ id: "Reminder", text: "Reminder", fieldName: "tag", color: "#d50000" });
+      setResources([
+        {
+          fieldName: "tag",
+          title: "Tag",
+          instances,
+        },
+      ]);
+      const activityTemplates = payload.templateActivities
+        .map((activityTemplate) => {
+          return {
+            id: activityTemplate.templateActivityId,
+            text: activityTemplate.name,
+            fieldName: "templateId",
+          };
+        })
+        .concat({ id: 0, text: "Create new activity", fieldName: "templateId" });
+      setTemplateActivities(payload.templateActivities);
+      setTemplateActivitiesOptions(activityTemplates);
+      const reminderTemplates = payload.templateReminders
+        .map((reminderTemplate) => {
+          return {
+            id: reminderTemplate.templateReminderId,
+            text: reminderTemplate.name,
+            fieldName: "templateId",
+          };
+        })
+        .concat({ id: 0, text: "Create new reminder", fieldName: "templateId" });
+      setTemplateReminders(payload.templateReminders);
+      setTemplateRemindersOptions(reminderTemplates);
+    });
+  };
+
+  useEffect(() => {
+    getDashboardInfo();
+  }, [setData]);
 
   useEffect(() => {
     getData(setData, setLoading);
@@ -402,6 +394,7 @@ const Planner = (props) => {
               )
               .then(() => {
                 getData(setData, setLoading);
+                getDashboardInfo();
                 setCurrentAlert({ severity: "success", message: "Activity added!" });
                 setSnackbarOpen(true);
               })
@@ -433,6 +426,7 @@ const Planner = (props) => {
               )
               .then(() => {
                 getData(setData, setLoading);
+                getDashboardInfo();
                 setCurrentAlert({ severity: "success", message: "Activity added!" });
                 setSnackbarOpen(true);
               })
@@ -516,6 +510,7 @@ const Planner = (props) => {
                     )
                     .then(() => {
                       getData(setData, setLoading);
+                      getDashboardInfo();
                       setCurrentAlert({ severity: "success", message: "Activity updated!" });
                       setSnackbarOpen(true);
                     })
@@ -560,6 +555,7 @@ const Planner = (props) => {
                     )
                     .then(() => {
                       getData(setData, setLoading);
+                      getDashboardInfo();
                       setCurrentAlert({ severity: "success", message: "Activity updated!" });
                       setSnackbarOpen(true);
                       if (
