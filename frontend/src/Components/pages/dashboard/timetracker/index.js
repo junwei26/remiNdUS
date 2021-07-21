@@ -1,10 +1,10 @@
-import React, { useState, useRef } from "react";
+import React, { useState, useRef, useEffect } from "react";
 import { Paper, Typography, Grid, Button } from "@material-ui/core";
 import { makeStyles } from "@material-ui/core/styles";
 import Popup from "reactjs-popup";
 import ActivitySelectorPopup from "./activityselectorpopup";
-import activityService from "../../services/activityService";
 import localService from "../../services/localService";
+import trackerService from "../../services/trackerService";
 
 const useStyles = makeStyles((theme) => ({
   root: { height: 250, width: 250 },
@@ -19,51 +19,68 @@ const useStyles = makeStyles((theme) => ({
 const TimeTracker = () => {
   const [timer, setTimer] = useState(0);
   const [isActive, setIsActive] = useState(false);
-  const [isPaused, setIsPaused] = useState(false);
   const [currentActivity, setCurrentActivity] = useState({});
   const increment = useRef(null);
 
   const classes = useStyles();
   const handleStart = (activity) => {
+    const currentDate = new Date();
     setIsActive(true);
-    setIsPaused(true);
     setCurrentActivity(activity);
+    if (!localStorage.getItem("CurrentTrackedActivity")) {
+      localStorage.setItem(
+        "CurrentTrackedActivity",
+        JSON.stringify({
+          ...activity,
+          actualStartDateTime: localService.convertDateToString(currentDate),
+        })
+      );
+    }
     increment.current = setInterval(() => {
       setTimer((timer) => timer + 1);
     }, 1000);
   };
-
-  const handlePause = () => {
-    clearInterval(increment.current);
-    setIsPaused(false);
-  };
-
-  const handleResume = () => {
-    setIsPaused(true);
-    increment.current = setInterval(() => {
-      setTimer((timer) => timer + 1);
-    }, 1000);
-  };
-
+  useEffect(() => {
+    const storedActivity = localStorage.getItem("CurrentTrackedActivity");
+    if (storedActivity) {
+      const parsedStoredActivity = JSON.parse(storedActivity);
+      const currentDateObj = new Date();
+      setTimer(
+        Math.round(
+          (currentDateObj -
+            localService.parseTimeToDate(parsedStoredActivity.actualStartDateTime)) /
+            1000
+        )
+      );
+      handleStart(parsedStoredActivity);
+    }
+  }, []);
   const handleStop = () => {
     clearInterval(increment.current);
     setIsActive(false);
-    setIsPaused(false);
-    //send tracking data to backend here
-    activityService
-      .updateActivity(
-        localService.parseTimeToString(currentActivity.startDateTime).toLocaleString(),
-        localService.parseTimeToString(currentActivity.endDateTime).toLocaleString(),
-        currentActivity.name,
-        currentActivity.description + `  (Time spent on activity : ${formatTime()})`,
-        currentActivity.activityId,
-        currentActivity.tag
-      )
-      .then(() => {
-        setTimer(0);
-        setCurrentActivity({});
-        alert("Time spent on activity successfully recorded!");
-      });
+    setTimer(0);
+    setCurrentActivity({});
+    const actualEndDateTime = localService.convertDateToString(new Date());
+    const currentDate = actualEndDateTime.slice(0, 8);
+    const trackedActivity = {
+      name: currentActivity.name,
+      tag: currentActivity.activityTag,
+      plannedStartDateTime:
+        currentActivity.activityType === "planned"
+          ? currentActivity.startDateTime
+          : currentDate + currentActivity.startTime,
+      plannedEndDateTime:
+        currentActivity.activityType === "planned"
+          ? currentActivity.endDateTime
+          : currentDate + currentActivity.endTime,
+      actualStartDateTime: currentActivity.actualStartDateTime,
+      actualEndDateTime,
+    };
+
+    trackerService.addTrackedActivity(trackedActivity).then(() => {
+      localStorage.removeItem("CurrentTrackedActivity");
+      alert("Activity tracked");
+    });
   };
 
   const formatTime = () => {
@@ -103,28 +120,25 @@ const TimeTracker = () => {
           <div className={classes.timeTracker}>{formatTime()}</div>
         </Grid>
         <Grid item xs>
-          {!isActive && !isPaused ? (
-            <Popup
-              contentStyle={{ width: "400px" }}
-              trigger={
-                <Button variant="outlined" color="primary" onClick={handleStart}>
-                  Start tracking
-                </Button>
-              }
-              closeOnDocumentClick={false}
-              modal
-            >
-              {(close) => <ActivitySelectorPopup start={handleStart} close={close} />}
-            </Popup>
-          ) : isPaused ? (
-            <Button variant="outlined" color="primary" onClick={handlePause}>
-              Pause tracking
-            </Button>
-          ) : (
-            <Button variant="outlined" color="primary" onClick={handleResume}>
-              Resume tracking
-            </Button>
-          )}
+          <Popup
+            contentStyle={{ width: "400px" }}
+            trigger={
+              <Button
+                variant="outlined"
+                color="primary"
+                onClick={(e) => {
+                  e.preventDefault();
+                }}
+                disabled={isActive}
+              >
+                Start tracking
+              </Button>
+            }
+            closeOnDocumentClick={false}
+            modal
+          >
+            {(close) => <ActivitySelectorPopup start={handleStart} close={close} />}
+          </Popup>
           <Button variant="outlined" color="primary" onClick={handleStop} disabled={!isActive}>
             Stop
           </Button>
