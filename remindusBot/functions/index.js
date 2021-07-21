@@ -185,9 +185,9 @@ bot.command("/start", async (ctx) => {
     );
 });
 
-bot.command("/addReminder", (ctx) => ctx.scene.enter("ADD_REMINDER_SCENE"));
+bot.command("/addreminder", (ctx) => ctx.scene.enter("ADD_REMINDER_SCENE"));
 
-bot.command("/addActivity", (ctx) => ctx.scene.enter("ADD_ACTIVITY_SCENE"));
+bot.command("/addactivity", (ctx) => ctx.scene.enter("ADD_ACTIVITY_SCENE"));
 
 bot.command("/retrieve", async (ctx) => {
   const convertLocaleDateString = (dateObj) => {
