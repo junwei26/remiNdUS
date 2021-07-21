@@ -5,6 +5,7 @@ import { DataGrid, GridToolbar } from "@material-ui/data-grid";
 import PropTypes from "prop-types";
 import RefreshIcon from "@material-ui/icons/Refresh";
 import AddBoxIcon from "@material-ui/icons/AddBox";
+import EditIcon from "@material-ui/icons/Edit";
 import reminderService from "../../../services/reminderService";
 import reminderPackageService from "../../../services/reminderPackageService";
 import localService from "../../../services/localService";
@@ -201,6 +202,7 @@ const CreatePackages = (props) => {
         )
         .then(() => {
           alert("Successfully updated reminder package!");
+          props.setView("Subscribed Packages");
         })
         .catch((error) => {
           alert(
@@ -295,7 +297,6 @@ const CreatePackages = (props) => {
                 label="Package Name"
                 value={packageName}
                 onChange={updatePackageName}
-                disabled={editingPackage}
                 required
                 fullWidth
               />
@@ -306,7 +307,6 @@ const CreatePackages = (props) => {
                 label="Description"
                 value={description}
                 onChange={updateDescription}
-                disabled={editingPackage}
                 required
                 fullWidth
               />
@@ -317,7 +317,6 @@ const CreatePackages = (props) => {
                 label="Package Tag (Optional)"
                 value={packageTag}
                 onChange={updatePackageTag}
-                disabled={editingPackage}
                 fullWidth
               />
             </Grid>
@@ -407,7 +406,7 @@ const CreatePackages = (props) => {
                   aria-label={editingPackage ? "update" : "create"}
                 >
                   <IconButton type="submit" variant="contained" color="primary">
-                    <AddBoxIcon />
+                    {editingPackage ? <EditIcon /> : <AddBoxIcon />}
                   </IconButton>
                 </Tooltip>
               </Grid>
@@ -422,6 +421,7 @@ const CreatePackages = (props) => {
 CreatePackages.propTypes = {
   reminderPackage: PropTypes.object,
   setSelectedReminderPackage: PropTypes.func,
+  setView: PropTypes.func,
 };
 
 export default CreatePackages;

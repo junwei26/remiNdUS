@@ -30,5 +30,6 @@ require("./src/routes/activity.routes")(app);
 require("./src/routes/user.routes")(app);
 require("./src/routes/reminderpackages.routes")(app);
 require("./src/routes/telegramBot.routes")(app);
+require("./src/routes/tracker.routes")(app);
 
 exports.backendAPI = functions.region("asia-southeast2").https.onRequest(app);

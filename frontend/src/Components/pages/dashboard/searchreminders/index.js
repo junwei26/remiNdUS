@@ -15,6 +15,7 @@ import {
   ListItemIcon,
   ListItemText,
 } from "@material-ui/core";
+import PropTypes from "prop-types";
 import { DataGrid, GridToolbar } from "@material-ui/data-grid";
 import reminderService from "../../services/reminderService";
 import localService from "../../services/localService";
@@ -39,7 +40,7 @@ const useStyles = makeStyles(() => ({
   },
 }));
 
-const SearchReminders = () => {
+const SearchReminders = (props) => {
   const reminderColumns = [
     {
       field: "name",
@@ -103,12 +104,10 @@ const SearchReminders = () => {
       id: 1,
       name: "Loading...",
       description: "Loading...",
-      packageTag: "Loading...",
-      ownerName: "Loading...",
-      public: "Loading...",
-      verified: "Loading...",
-      lastModified: "Loading...",
-      numberOfReminders: "Loading...",
+      endDateAndTime: "Loading...",
+      frequency: "Loading...",
+      reminderType: "Loading...",
+      subscribed: "Loading...",
     },
   ];
 
@@ -246,6 +245,9 @@ const SearchReminders = () => {
             setEditingReminder={setEditingReminder}
             setDialogMaxWidth={setDialogMaxWidth}
             setSelectedRow={setSelectedRow}
+            getAllReminders={getAllReminders}
+            plannerDataUpdate={props.plannerDataUpdate}
+            setPlannerDataUpdate={props.setPlannerDataUpdate}
           />
         ) : (
           <>
@@ -260,7 +262,7 @@ const SearchReminders = () => {
               >
                 <Grid item className={classes.gridItem}>
                   <TextField
-                    label="Search Packages (by name)"
+                    label="Search Reminders (by name)"
                     type="search"
                     value={searchText}
                     onChange={updateSearchText}
@@ -352,6 +354,11 @@ const SearchReminders = () => {
       </Dialog>
     </>
   );
+};
+
+SearchReminders.propTypes = {
+  plannerDataUpdate: PropTypes.bool,
+  setPlannerDataUpdate: PropTypes.func,
 };
 
 export default SearchReminders;

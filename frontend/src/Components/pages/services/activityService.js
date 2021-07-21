@@ -117,6 +117,13 @@ const addRecurringActivity = (
   });
 };
 
+const addActivities = (packagedActivities) => {
+  return axios.post(ACTIVITY_API_URL + "/create", {
+    uid: firebaseAuth.currentUser.uid,
+    activities: packagedActivities,
+  });
+};
+
 const getRangeActivity = (currentDateTime, endDateTime) => {
   return axios.get(ACTIVITY_API_URL + "/getRange", {
     params: {
@@ -127,13 +134,28 @@ const getRangeActivity = (currentDateTime, endDateTime) => {
   });
 };
 
+const getNusmodsModules = (moduleCodes, acadYear) => {
+  const promises = [];
+  moduleCodes.map((moduleCode) => {
+    promises.push(
+      axios.get(`https://api.nusmods.com/v2/${acadYear}/modules/${moduleCode}.json`).then((res) => {
+        return res.data;
+      })
+    );
+  });
+
+  return Promise.all(promises);
+};
+
 export default {
   getAllActivities,
   getTemplateActivities,
   deleteActivity,
   addPlannedActivity,
   addRecurringActivity,
+  addActivities,
   updatePlannedActivity,
   updateRecurringActivity,
   getRangeActivity,
+  getNusmodsModules,
 };

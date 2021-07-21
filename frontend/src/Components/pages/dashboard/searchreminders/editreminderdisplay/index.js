@@ -75,6 +75,8 @@ const EditReminderDisplay = (props) => {
     props.setEditingReminder(false);
     props.setSelectedRow(null);
     props.setDialogMaxWidth("lg");
+    props.getAllReminders();
+    props.setPlannerDataUpdate(!props.plannerDataUpdate);
   };
 
   const closeDialogUpdateReminder = () => {
@@ -103,9 +105,7 @@ const EditReminderDisplay = (props) => {
           props.reminder.reminderId
         )
         .then(() => {
-          alert(
-            "Successfully updated reminder. It may take up to a minute for changes to be reflected."
-          );
+          alert("Successfully updated reminder.");
           handleDialogBack();
           return;
         })
@@ -333,6 +333,9 @@ EditReminderDisplay.propTypes = {
   setEditingReminder: PropTypes.func,
   setDialogMaxWidth: PropTypes.func,
   setSelectedRow: PropTypes.func,
+  getAllReminders: PropTypes.func,
+  plannerDataUpdate: PropTypes.bool,
+  setPlannerDataUpdate: PropTypes.func,
 };
 
 export default EditReminderDisplay;

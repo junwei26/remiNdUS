@@ -279,6 +279,205 @@ const createRecurringActivity = (uid, templateActivityId, frequency, startTime, 
     .add({ templateActivityId, frequency, startTime, endTime, date });
 };
 
+const createActivity = (body, uid) => {
+  if (Array.isArray(body)) {
+    console.log(body);
+    // Only used for confirmed, first activity is confirmed to create a new templateActivity
+    // Actually only supports recurring activities now since this is only used for retrieving activities from NUSMODs
+
+    if (!uid) {
+      throw { status: 400, message: "You must be logged in to make this operation!" };
+    }
+    if (!body[0].name) {
+      throw { status: 400, message: "Activities must have a name!" };
+    }
+    if (!body[0].description) {
+      throw { status: 400, message: "Activities must have a description!" };
+    }
+    if (!body[0].activityTag) {
+      throw { status: 400, message: "Activities must have an activity tag" };
+    }
+    let promises = [];
+    return createTemplate(uid, body[0].name, body[0].description, body[0].activityTag)
+      .then((templateActivityDoc) => {
+        for (let i = 0; i < body.length; ++i) {
+          if (!body[i].frequency) {
+            throw { status: 400, message: "Recurring activity must have a frequency" };
+          }
+          if (!body[i].startTime) {
+            throw { status: 400, message: "Recurring activity must have a start time" };
+          }
+          if (!body[i].endTime) {
+            throw { status: 400, message: "Recurring activity must have an end time" };
+          }
+          if (!body[i].date) {
+            throw { status: 400, message: "Recurring activity must have a date" };
+          }
+
+          promises.push(
+            createRecurringActivity(
+              uid,
+              templateActivityDoc.id,
+              body[i].frequency,
+              body[i].startTime,
+              body[i].endTime,
+              body[i].date
+            )
+              .then(() => {})
+              .catch((error) => {
+                throw { status: 404, message: `Error creating recurring activity. ${error}` };
+              })
+          );
+        }
+        return Promise.all(promises)
+          .then(() => {
+            return {
+              status: 200,
+              message: "Recurring activities created successfully!",
+            };
+          })
+          .catch((error) => {
+            throw error;
+          });
+      })
+      .catch((error) => {
+        throw { status: 404, message: `Error creating template activity. ${error}` };
+      });
+  } else {
+    if (!uid) {
+      throw { status: 400, message: "You must be logged in to make this operation!" };
+    }
+
+    // If no templateActivityId provided, assume creating a brand new activity
+    if (!body.templateActivityId) {
+      if (!body.name) {
+        throw { status: 400, message: "Activities must have a name!" };
+      }
+      if (!body.description) {
+        throw { status: 400, message: "Activities must have a description!" };
+      }
+      if (!body.activityTag) {
+        throw { status: 400, message: "Activities must have an activity tag" };
+      }
+
+      // If there is no frequency specified, it is a planned activity, not recurring
+      if (!body.frequency) {
+        if (!body.startDateTime) {
+          throw { status: 400, message: "Planned Activity must have a start date and time" };
+        }
+        if (!body.endDateTime) {
+          throw { status: 400, message: "Planned activity must have an end date and time" };
+        }
+
+        if (body.endDateTime < body.startDateTime) {
+          throw { status: 400, message: "Activity start time must be before activity end time!" };
+        }
+        return createTemplate(uid, body.name, body.description, body.activityTag)
+          .then((templateActivityDoc) => {
+            return createPlannedActivity(
+              uid,
+              templateActivityDoc.id,
+              body.startDateTime,
+              body.endDateTime
+            )
+              .then(() => {
+                return {
+                  status: 200,
+                  message: "Planned activity created successfully!",
+                  templateId: templateActivityDoc.id,
+                };
+              })
+              .catch((error) => {
+                throw { status: 404, message: `Error creating planned activity. ${error}` };
+              });
+          })
+          .catch((error) => {
+            throw { status: 404, message: `Error creating template activity. ${error}` };
+          });
+      } else {
+        if (!body.startTime) {
+          throw { status: 400, message: "Recurring activity must have a start time" };
+        }
+        if (!body.endTime) {
+          throw { status: 400, message: "Recurring activity must have an end time" };
+        }
+        if (!body.date) {
+          throw { status: 400, message: "Recurring activity must have a date" };
+        }
+        return createTemplate(uid, body.name, body.description, body.activityTag)
+          .then((templateActivityDoc) => {
+            return createRecurringActivity(
+              uid,
+              templateActivityDoc.id,
+              body.frequency,
+              body.startTime,
+              body.endTime,
+              body.date
+            )
+              .then(() => {
+                return {
+                  status: 200,
+                  message: "Recurring activity created successfully!",
+                };
+              })
+              .catch((error) => {
+                throw { status: 404, message: `Error creating recurring activity. ${error}` };
+              });
+          })
+          .catch((error) => {
+            throw { status: 404, message: `Error creating template activity. ${error}` };
+          });
+      }
+    } else {
+      // If there is no frequency specified, it is a planned activity, not recurring
+      if (!body.frequency) {
+        if (!body.startDateTime) {
+          throw { status: 400, message: "Planned Activity must have a start date and time" };
+        }
+        if (!body.endDateTime) {
+          throw { status: 400, message: "Planned activity must have an end date and time" };
+        }
+        return createPlannedActivity(
+          uid,
+          body.templateActivityId,
+          body.startDateTime,
+          body.endDateTime
+        )
+          .then(() => {
+            return { status: 200, message: "Planned activity created successfully!" };
+          })
+          .catch((error) => {
+            throw { status: 404, message: `Error creating planned activity. ${error}` };
+          });
+      } else {
+        if (!body.startTime) {
+          throw { status: 400, message: "Recurring activity must have a start time" };
+        }
+        if (!body.endTime) {
+          throw { status: 400, message: "Recurring activity must have an end time" };
+        }
+        if (!body.date) {
+          throw { status: 400, message: "Recurring activity must have a date" };
+        }
+        return createRecurringActivity(
+          uid,
+          body.templateActivityId,
+          body.frequency,
+          body.startTime,
+          body.endTime,
+          body.date
+        )
+          .then(() => {
+            return { status: 200, message: "Recurring activity created successfully!" };
+          })
+          .catch((error) => {
+            throw { status: 400, message: `Error creating recurring activity. ${error}` };
+          });
+      }
+    }
+  }
+};
+
 /*
 uid: mandatory
 templateActivityId: required if not creating new templateActivity
@@ -292,137 +491,34 @@ startDateTime: required if creating plannedActivity
 endDateTime: required if creating plannedActivity
 */
 exports.create = (req, res) => {
-  if (!req.body.uid) {
-    return res.status(400).send({ message: "You must be logged in to make this operation!" });
-  }
-
-  // If no templateActivityId provided, assume creating a brand new activity
-  if (!req.body.templateActivityId) {
-    if (!req.body.name) {
-      return res.status(400).send({ message: "Activities must have a name!" });
-    }
-    if (!req.body.description) {
-      return res.status(400).send({ message: "Activities must have a description!" });
-    }
-    if (!req.body.activityTag) {
-      return res.status(400).send({ message: "Activities must have an activity tag" });
-    }
-
-    // If there is no frequency specified, it is a planned activity, not recurring
-    if (!req.body.frequency) {
-      if (!req.body.startDateTime) {
-        return res
-          .status(400)
-          .send({ message: "Planned Activity must have a start date and time" });
-      }
-      if (!req.body.endDateTime) {
-        return res.status(400).send({ message: "Planned activity must have an end date and time" });
-      }
-
-      if (req.body.endDateTime < req.body.startDateTime) {
-        return res
-          .status(400)
-          .send({ message: "Activity start time must be before activity end time!" });
-      }
-      createTemplate(req.body.uid, req.body.name, req.body.description, req.body.activityTag)
-        .then((templateActivityDoc) => {
-          createPlannedActivity(
-            req.body.uid,
-            templateActivityDoc.id,
-            req.body.startDateTime,
-            req.body.endDateTime
-          )
-            .then(() => {
-              return res.status(200).send({ message: "Planned activity created successfully!" });
-            })
-            .catch((error) => {
-              return res.status(404).send({ message: `Error creating planned activity. ${error}` });
-            });
-        })
-        .catch((error) => {
-          return res.status(404).send({ message: `Error creating template activity. ${error}` });
-        });
-    } else {
-      if (!req.body.startTime) {
-        return res.status(400).send({ message: "Recurring activity must have a start time" });
-      }
-      if (!req.body.endTime) {
-        return res.status(400).send({ message: "Recurring activity must have an end time" });
-      }
-      if (!req.body.date) {
-        return res.status(400).send({ message: "Recurring activity must have a date" });
-      }
-      createTemplate(req.body.uid, req.body.name, req.body.description, req.body.activityTag)
-        .then((templateActivityDoc) => {
-          createRecurringActivity(
-            req.body.uid,
-            templateActivityDoc.id,
-            req.body.frequency,
-            req.body.startTime,
-            req.body.endTime,
-            req.body.date
-          )
-            .then(() => {
-              return res.status(200).send({ message: "Recurring activity created successfully!" });
-            })
-            .catch((error) => {
-              return res
-                .status(404)
-                .send({ message: `Error creating recurring activity. ${error}` });
-            });
-        })
-        .catch((error) => {
-          return res.status(404).send({ message: `Error creating template activity. ${error}` });
-        });
-    }
+  if (!req.body.activities) {
+    createActivity(req.body)
+      .then((result) => {
+        return res.status(result.status).send(result.message);
+      })
+      .catch((result) => {
+        return res.status(result.status).send(result.message);
+      });
   } else {
-    // If there is no frequency specified, it is a planned activity, not recurring
-    if (!req.body.frequency) {
-      if (!req.body.startDateTime) {
-        return res
-          .status(400)
-          .send({ message: "Planned Activity must have a start date and time" });
-      }
-      if (!req.body.endDateTime) {
-        return res.status(400).send({ message: "Planned activity must have an end date and time" });
-      }
-      createPlannedActivity(
-        req.body.uid,
-        req.body.templateActivityId,
-        req.body.startDateTime,
-        req.body.endDateTime
-      )
-        .then(() => {
-          return res.status(200).send({ message: "Planned activity created successfully!" });
-        })
-        .catch((error) => {
-          return res.status(404).send({ message: `Error creating planned activity. ${error}` });
-        });
-    } else {
-      if (!req.body.startTime) {
-        return res.status(400).send({ message: "Recurring activity must have a start time" });
-      }
-      if (!req.body.endTime) {
-        return res.status(400).send({ message: "Recurring activity must have an end time" });
-      }
-      if (!req.body.date) {
-        return res.status(400).send({ message: "Recurring activity must have a date" });
-      }
-      createRecurringActivity(
-        req.body.uid,
-        req.body.templateActivityId,
-        req.body.frequency,
-        req.body.startTime,
-        req.body.endTime,
-        req.body.date
-      )
-        .then(() => {
-          return res.status(200).send({ message: "Recurring activity created successfully!" });
-        })
-        .catch((error) => {
-          return res.status(404).send({ message: `Error creating recurring activity. ${error}` });
-        });
+    let promises = [];
+    for (let i = 0; i < req.body.activities.length; ++i) {
+      console.log(i);
+      console.log(req.body.activities.length);
+      promises.push(
+        createActivity(req.body.activities[i], req.body.uid)
+          .then(() => {})
+          .catch((error) => {
+            throw error;
+          })
+      );
     }
+    Promise.all(promises)
+      .then(() => {
+        return res.status(200).send("Activities successfully created");
+      })
+      .catch((error) => {
+        return res.status(error.status).send(error.message);
+      });
   }
 };
 

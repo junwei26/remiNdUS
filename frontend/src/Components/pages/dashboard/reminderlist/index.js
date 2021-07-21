@@ -9,7 +9,7 @@ import reminderService from "../../services/reminderService";
 import localService from "../../services/localService";
 
 const useStyles = makeStyles(() => ({
-  root: { height: 400, width: 250, overflow: "auto" },
+  root: { height: 400, width: 250 },
   buttongroup: { height: 50, width: 250 },
 }));
 
@@ -27,7 +27,7 @@ const ReminderList = () => {
   }, [nextNumberOfDays]);
   const classes = useStyles();
   return (
-    <Grid container>
+    <Grid container direction="column" justify="flex-start" alignItems="center">
       <Grid item>
         <Typography>Upcoming Reminders</Typography>
       </Grid>
