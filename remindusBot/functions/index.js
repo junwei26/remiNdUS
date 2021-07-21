@@ -2,6 +2,7 @@ const functions = require("firebase-functions");
 const { Scenes, session, Telegraf } = require("telegraf");
 const Calendar = require("telegraf-calendar-telegram");
 const axios = require("axios");
+const utils = require("./utils.js");
 
 const bot = new Telegraf(functions.config().telegram.token, {
   telegram: { webhookReply: true },
@@ -38,6 +39,15 @@ const addReminderScene = new Scenes.WizardScene(
     return ctx.wizard.next();
   },
   (ctx) => {
+    if (!utils.checkTimeFormat(ctx.message.text)) {
+      ctx.reply("Please enter a time in the correct format(HHMM)");
+      return;
+    }
+    if (selectedDate === "") {
+      ctx.reply("Please select a date in the calendar");
+      return;
+    }
+
     ctx.wizard.state.reminder.time = ctx.message.text;
     ctx.reply("Please choose a name for your reminder");
     return ctx.wizard.next();
@@ -60,7 +70,10 @@ const addReminderScene = new Scenes.WizardScene(
 
     axios
       .post(backendURL + "/reminder/createByTelegram", reminder)
-      .then(() => ctx.reply("Reminder added successfully"))
+      .then(() => {
+        ctx.reply("Reminder added successfully");
+        selectedDate = "";
+      })
       .catch(() => ctx.reply("Error creating reminder, please try again."));
     return ctx.scene.leave();
   }
@@ -84,11 +97,27 @@ const addActivityScene = new Scenes.WizardScene(
     return ctx.wizard.next();
   },
   (ctx) => {
+    if (!utils.checkTimeFormat(ctx.message.text)) {
+      ctx.reply("Please enter a time in the correct format(HHMM)");
+      return;
+    }
+    if (selectedDate === "") {
+      ctx.reply("Please select a date in the calendar");
+      return;
+    }
     ctx.wizard.state.activity.startTime = ctx.message.text;
     ctx.reply("Please choose an end time (in HHMM format) for your activity");
     return ctx.wizard.next();
   },
   (ctx) => {
+    if (!utils.checkTimeFormat(ctx.message.text)) {
+      ctx.reply("Please enter a time in the correct format(HHMM)");
+      return;
+    }
+    if (parseInt(ctx.wizard.state.activity.startTime) > parseInt(ctx.message.text)) {
+      ctx.reply("Please choose an end time that is after the start time");
+      return;
+    }
     ctx.wizard.state.activity.endTime = ctx.message.text;
     ctx.reply("Please choose a name for your activity");
     return ctx.wizard.next();
@@ -113,12 +142,15 @@ const addActivityScene = new Scenes.WizardScene(
       description: ctx.wizard.state.activity.description,
       startDateTime: selectedDate.split("-").join("") + ctx.wizard.state.activity.startTime,
       endDateTime: selectedDate.split("-").join("") + ctx.wizard.state.activity.endTime,
-      tag: ctx.wizard.state.activity.tag,
+      activityTag: ctx.wizard.state.activity.tag,
     };
 
     axios
       .post(backendURL + "/activity/createByTelegram", activity)
-      .then(() => ctx.reply("Activity added successfully"))
+      .then(() => {
+        ctx.reply("Activity added successfully");
+        selectedDate = "";
+      })
       .catch(() => ctx.reply("Error creating activity, please try again."));
     return ctx.scene.leave();
   }
@@ -140,20 +172,29 @@ bot.catch((err, ctx) => {
 bot.command("/start", async (ctx) => {
   const user = await bot.telegram.getChat(ctx.chat.id);
   ctx.reply(`Hello ${user.username}! Welcome to the remiNdUS telegram bot!`);
+  axios
+    .post(backendURL + "/user/setChatId", {
+      telegramHandle: user.username,
+      chatId: ctx.chat.id,
+    })
+    .then(() => ctx.reply("Successfully Connected to our website!"))
+    .catch(() =>
+      ctx.reply(
+        "Error connecting to website, please do /start again and ensure that your telegram handle is registered on our website"
+      )
+    );
 });
 
-bot.hears("/addReminder", (ctx) => ctx.scene.enter("ADD_REMINDER_SCENE"));
+bot.command("/addreminder", (ctx) => ctx.scene.enter("ADD_REMINDER_SCENE"));
 
-bot.hears("/addActivity", (ctx) => ctx.scene.enter("ADD_ACTIVITY_SCENE"));
+bot.command("/addactivity", (ctx) => ctx.scene.enter("ADD_ACTIVITY_SCENE"));
 
 bot.command("/retrieve", async (ctx) => {
-  const convertLocaleDateString = (dateStr) => {
+  const convertLocaleDateString = (dateObj) => {
     const padZero = (num) => (num < 10 ? "0" + num.toString() : num.toString());
-
-    const date = new Date(dateStr);
-    const year = date.getFullYear().toString();
-    const month = padZero(date.getMonth() + 1);
-    const day = padZero(date.getDate());
+    const year = dateObj.getFullYear().toString();
+    const month = padZero(dateObj.getMonth() + 1);
+    const day = padZero(dateObj.getDate());
     const hour = "00";
     const min = "00";
     return year + month + day + hour + min;
@@ -167,8 +208,8 @@ bot.command("/retrieve", async (ctx) => {
     .get(backendURL + "/activity/getByTelegram", {
       params: {
         telegramHandle: user.username,
-        currentDateTime: convertLocaleDateString(currentDate.toLocaleString()),
-        endDateTime: convertLocaleDateString(endDate.toLocaleString()),
+        currentDateTime: convertLocaleDateString(currentDate),
+        endDateTime: convertLocaleDateString(endDate),
       },
     })
     .then((response) => {
@@ -224,24 +265,6 @@ bot.command("/retrieve", async (ctx) => {
         .catch((e) => ctx.reply(`Error retrieving reminders from database. ${e}`));
     })
     .catch(() => ctx.reply("Error retrieving activities from database."));
-});
-
-bot.command("/initialize", async (ctx) => {
-  ctx.reply("Connecting with remiNdUS website....");
-  const user = await bot.telegram.getChat(ctx.chat.id);
-  axios
-    .post(backendURL + "/user/setChatId", {
-      telegramHandle: user.username,
-      chatId: ctx.chat.id,
-    })
-    .then(() => ctx.reply("Successfully Connected!"))
-    .catch(() => ctx.reply("Error connecting to website"));
-});
-
-bot.command("/help", (ctx) => {
-  ctx.reply(
-    "Please do /initialize to connect the telegram bot to our website!\nList of commands:\n /addReminder  Adds a reminder to your planner\n /addActivity Adds an activity to your planner\n /retrieve Retrieves your activities and reminders for the day"
-  );
 });
 
 // handle all telegram updates with HTTPs trigger
