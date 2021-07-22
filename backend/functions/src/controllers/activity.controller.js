@@ -225,6 +225,9 @@ exports.range = (req, res) => {
   if (!req.query.currentDateTime) {
     return res.status(400).send({ message: "You must have a valid date time!" });
   }
+  if (!req.query.endDateTime) {
+    return res.status(400).send({ message: "You must have a valid date time!" });
+  }
 
   let activities = [];
   let userDoc = db.collection("users").doc(req.query.uid);
@@ -492,7 +495,7 @@ endDateTime: required if creating plannedActivity
 */
 exports.create = (req, res) => {
   if (!req.body.activities) {
-    createActivity(req.body)
+    createActivity(req.body, req.body.uid)
       .then((result) => {
         return res.status(result.status).send(result.message);
       })

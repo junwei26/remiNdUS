@@ -242,7 +242,7 @@ exports.update = (req, res) => {
 
       const userDoc = querySnapshot.docs[0].ref;
 
-      userDoc.get().then((documentSnapshot) => {
+      userDoc.get().then(() => {
         const updatedReminderPackage = {
           name: req.body.name,
           description: req.body.description,
@@ -254,9 +254,6 @@ exports.update = (req, res) => {
           recurringReminderIds: req.body.reminderIds.recurringReminderIds,
           packageTag: req.body.packageTag,
           ownerUid: req.body.uid,
-          ownerName: documentSnapshot.get("username"),
-          verified: documentSnapshot.get("verified"),
-          public: req.body.public,
         };
 
         userDoc
