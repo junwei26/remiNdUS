@@ -29,10 +29,15 @@ import userService from "../../services/userService";
 
 const getData = (setData, setLoading) => {
   setLoading(true);
-  return userService.getAllActivitiesAndReminders().then((response) => {
-    setData(response.data);
-    setLoading(false);
-  });
+  return userService
+    .getAllActivitiesAndReminders()
+    .then((response) => {
+      setData(response.data);
+      setLoading(false);
+    })
+    .catch(() => {
+      setLoading(false);
+    });
 };
 
 const styles = {

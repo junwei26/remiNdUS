@@ -141,6 +141,9 @@ const RetrieveActivities = () => {
       headerName: "End Date/Time",
       flex: 1,
       valueFormatter: (params) => {
+        if (params.value === "Loading...") {
+          return "Loading...";
+        }
         const endTime = params.row.endTime;
         if (!endTime) {
           return "";
@@ -154,6 +157,9 @@ const RetrieveActivities = () => {
       headerName: "Date",
       flex: 0.7,
       valueFormatter: (params) => {
+        if (params.value === "Loading...") {
+          return "Loading...";
+        }
         return params.getValue(params.id, "frequency") === "weekly"
           ? dateReverseMap[params.value - 1]
           : params.value;

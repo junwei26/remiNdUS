@@ -36,6 +36,7 @@ const SearchPackages = () => {
       ownerName: "Loading...",
       public: "Loading...",
       verified: "Loading...",
+      subscribed: "Loading...",
       lastModified: "Loading...",
       numberOfReminders: "Loading...",
     },
@@ -71,7 +72,7 @@ const SearchPackages = () => {
     },
     {
       field: "public",
-      headerName: "Public",
+      headerName: "Shared",
       flex: 0.8,
       hide: true,
     },
@@ -86,7 +87,9 @@ const SearchPackages = () => {
       headerName: "Last Modified",
       flex: 1,
       valueFormatter: (params) => {
-        return `${localService.parseTimeToString(params.value)}`;
+        return params.value === "Loading..."
+          ? params.value
+          : `${localService.parseTimeToString(params.value)}`;
       },
     },
     {

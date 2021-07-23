@@ -62,7 +62,9 @@ const SearchActivities = (props) => {
       headerName: "Start Date/Time",
       flex: 1,
       valueGetter: (params) => {
-        return params.getValue(params.id, "activityType") === "recurring"
+        return params.value === "Loading..."
+          ? params.value
+          : params.getValue(params.id, "activityType") === "recurring"
           ? `${params.getValue(params.id, "startTime").slice(0, 2)}:${params
               .getValue(params.id, "startTime")
               .slice(2, 4)}`
@@ -92,7 +94,9 @@ const SearchActivities = (props) => {
       headerName: "End Date/Time",
       flex: 1,
       valueGetter: (params) => {
-        return params.getValue(params.id, "activityType") === "recurring"
+        return params.value === "Loading..."
+          ? params.value
+          : params.getValue(params.id, "activityType") === "recurring"
           ? `${params.getValue(params.id, "endTime").slice(0, 2)}:${params
               .getValue(params.id, "endTime")
               .slice(2, 4)}`

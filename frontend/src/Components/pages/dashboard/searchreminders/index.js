@@ -57,7 +57,9 @@ const SearchReminders = (props) => {
       headerName: "End Date/Time",
       flex: 1,
       valueGetter: (params) => {
-        return params.getValue(params.id, "reminderType") === "recurring"
+        return params.value === "Loading..."
+          ? params.value
+          : params.getValue(params.id, "reminderType") === "recurring"
           ? `${params.getValue(params.id, "endTime").slice(0, 2)}:${params
               .getValue(params.id, "endTime")
               .slice(2, 4)}`

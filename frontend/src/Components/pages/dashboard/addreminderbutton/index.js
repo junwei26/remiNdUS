@@ -265,7 +265,7 @@ const addReminderButton = (props) => {
                   value={reminderName}
                   onChange={handleSetReminderName}
                   disabled={chosenTemplateReminder !== -1}
-                  autofocus
+                  autoFocus
                 />
               </Grid>
               <Grid item style={{ width: "100%" }}>
