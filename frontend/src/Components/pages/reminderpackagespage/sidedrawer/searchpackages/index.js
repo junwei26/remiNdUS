@@ -150,13 +150,35 @@ const SearchPackages = () => {
     }
 
     return reminderPackageService
-      .subscribeReminderPackages(ownerUids, reminderPackageIds)
+      .subscribeReminderPackages(ownerUids, reminderPackageIds, true)
       .then(() => {
         alert("Successfully subscribed to reminder packages");
+        getReminderPackages();
       })
       .catch((error) => {
         alert(
           `Issue subscribing to reminder packages. Error status code: ${error.response.status}. ${error.response.data.message}`
+        );
+      });
+  };
+
+  const unsubscribePackages = () => {
+    const ownerUids = [];
+    const reminderPackageIds = [];
+    for (let i = 0; i < selectedRows.length; ++i) {
+      ownerUids.push(selectedRows[i].ownerUid);
+      reminderPackageIds.push(selectedRows[i].reminderPackageId);
+    }
+
+    return reminderPackageService
+      .subscribeReminderPackages(ownerUids, reminderPackageIds, false)
+      .then(() => {
+        alert("Successfully unsubscribed from reminder packages");
+        getReminderPackages();
+      })
+      .catch((error) => {
+        alert(
+          `Issue unsubscribing from reminder packages. Error status code: ${error.response.status}. ${error.response.data.message}`
         );
       });
   };
@@ -244,10 +266,25 @@ const SearchPackages = () => {
                   </Tooltip>
                 </Grid>
               </Grid>
-              <Grid item>
-                <Button type="submit" variant="contained" color="primary">
-                  Subscribe
-                </Button>
+              <Grid
+                container
+                item
+                direction="row"
+                justify="center"
+                alignItems="center"
+                style={{ width: "auto", height: "100%" }}
+                spacing={2}
+              >
+                <Grid item>
+                  <Button onClick={unsubscribePackages} variant="contained" color="primary">
+                    Unsubscribe
+                  </Button>
+                </Grid>
+                <Grid item>
+                  <Button type="submit" variant="contained" color="primary">
+                    Subscribe
+                  </Button>
+                </Grid>
               </Grid>
             </Grid>
           </Grid>

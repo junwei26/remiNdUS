@@ -54,11 +54,12 @@ const shareReminderPackages = (reminderPackageIds, share) => {
   });
 };
 
-const subscribeReminderPackages = (ownerUids, reminderPackageIds) => {
+const subscribeReminderPackages = (ownerUids, reminderPackageIds, subscribe) => {
   return axios.post(REMINDERPACKAGES_API_URL + "/subscribe", {
     uid: firebaseAuth.currentUser.uid,
     ownerUids,
     reminderPackageIds,
+    subscribe,
   });
 };
 
