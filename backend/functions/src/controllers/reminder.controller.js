@@ -3,32 +3,37 @@ const db = admin.firestore();
 
 // reminderCollection should be "plannedReminders" or "recurringReminders"
 const getReminder = (userDoc, reminderId, reminderCollection, subscribed) => {
-  return userDoc
-    .collection(reminderCollection)
-    .doc(reminderId)
-    .get()
-    .then((documentSnapshot) => {
-      return userDoc
-        .collection("templateReminders")
-        .doc(documentSnapshot.get("templateReminderId"))
-        .get()
-        .then((templateDocumentSnapshot) => {
-          const reminderType = reminderCollection === "plannedReminders" ? "planned" : "recurring";
-          return {
-            ...documentSnapshot.data(),
-            ...templateDocumentSnapshot.data(),
-            reminderType,
-            reminderId,
-            subscribed,
-          };
-        })
-        .catch((error) => {
-          throw `Unable to retrieve template reminder. ${error}`;
-        });
-    })
-    .catch((error) => {
-      throw `Unable to retrieve ${reminderCollection}. ${error}`;
-    });
+  try {
+    userDoc
+      .collection(reminderCollection)
+      .doc(reminderId)
+      .get()
+      .then((documentSnapshot) => {
+        return userDoc
+          .collection("templateReminders")
+          .doc(documentSnapshot.get("templateReminderId"))
+          .get()
+          .then((templateDocumentSnapshot) => {
+            const reminderType =
+              reminderCollection === "plannedReminders" ? "planned" : "recurring";
+            return {
+              ...documentSnapshot.data(),
+              ...templateDocumentSnapshot.data(),
+              reminderType,
+              reminderId,
+              subscribed,
+            };
+          })
+          .catch((error) => {
+            throw `Unable to retrieve template reminder. ${error}`;
+          });
+      })
+      .catch((error) => {
+        throw `Unable to retrieve ${reminderCollection}. ${error}`;
+      });
+  } catch (error) {
+    return Promise.resolve({});
+  }
 };
 
 // Helper for getSubscribedPackages and get query

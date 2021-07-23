@@ -157,7 +157,6 @@ exports.getPublicPackages = (req, res) => {
                       data.ownerUid == subscribedOwnerUids[j] &&
                       queryDocumentSnapshot.id == subscribedPackageIds[j]
                     ) {
-                      console.log("true");
                       subscribed = true;
                     }
                   }
