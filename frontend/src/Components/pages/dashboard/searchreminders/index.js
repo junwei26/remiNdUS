@@ -60,10 +60,8 @@ const SearchReminders = (props) => {
         return params.value === "Loading..."
           ? params.value
           : params.getValue(params.id, "reminderType") === "recurring"
-          ? `${params.getValue(params.id, "endTime").slice(0, 2)}:${params
-              .getValue(params.id, "endTime")
-              .slice(2, 4)}`
-          : localService.parseTimeToString(params.getValue(params.id, "endDateTime"));
+          ? `${params.row.endTime.slice(0, 2)}:${params.row.endTime.slice(2, 4)}`
+          : localService.parseTimeToString(params.row.endDateTime);
       },
       sortComparator: (v1, v2) => {
         if (v1.length > 5) {

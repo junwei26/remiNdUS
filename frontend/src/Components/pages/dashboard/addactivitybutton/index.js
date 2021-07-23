@@ -265,7 +265,7 @@ const AddActivityButton = (props) => {
         ].concat(
           templateActivities.map((templateActivity, index) => (
             <MenuItem value={index} key={index}>
-              {templateActivity.name}
+              {`${templateActivity.name} (${templateActivity.activityTag})`}
             </MenuItem>
           ))
         )
