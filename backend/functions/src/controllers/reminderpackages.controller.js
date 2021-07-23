@@ -114,42 +114,81 @@ exports.getAll = (req, res) => {
 };
 
 exports.getPublicPackages = (req, res) => {
-  let promises = [];
-  db.collection("users")
-    .get()
-    .then((querySnapshot) => {
-      const userDocArray = querySnapshot.docs.map(
-        (queryDocumentSnapshot) => queryDocumentSnapshot.ref
-      );
-      for (let i = 0; i < userDocArray.length; ++i) {
-        promises.push(
-          userDocArray[i]
-            .collection("reminderPackages")
-            .where("public", "==", true)
-            .get()
-            .then((querySnapshot) => {
-              return querySnapshot.docs.map((queryDocumentSnapshot) => {
-                return {
-                  ...queryDocumentSnapshot.data(),
-                  reminderPackageId: queryDocumentSnapshot.id,
-                };
-              });
-            })
-            .catch((error) => {
-              return res.status(400).send({ message: `Error retrieving user details. ${error}` });
-            })
-        );
-      }
+  if (!req.query.uid) {
+    return res.status(400).send({ message: "You must be logged in to make this operation!" });
+  }
 
-      Promise.all(promises).then((publicPackagesArray) => {
-        const publicPackages = [].concat.apply([], publicPackagesArray);
-        res.send(publicPackages);
-        return res.status(200).send({ message: "Public reminder packages successfully retrieved" });
+  let promises = [];
+  const userSubscribedPackages = db
+    .collection("users")
+    .doc(req.query.uid)
+    .collection("subscribedPackages");
+
+  userSubscribedPackages.get().then((querySnapshot) => {
+    const subscribedPackages = querySnapshot.docs.map((queryDocumentSnapshot) =>
+      queryDocumentSnapshot.data()
+    );
+    const subscribedOwnerUids = subscribedPackages.map(
+      (subscribedPackage) => subscribedPackage.ownerUid
+    );
+    const subscribedPackageIds = subscribedPackages.map(
+      (subscribedPackage) => subscribedPackage.reminderPackageId
+    );
+
+    db.collection("users")
+      .get()
+      .then((querySnapshot) => {
+        const userDocArray = querySnapshot.docs.map(
+          (queryDocumentSnapshot) => queryDocumentSnapshot.ref
+        );
+        for (let i = 0; i < userDocArray.length; ++i) {
+          promises.push(
+            userDocArray[i]
+              .collection("reminderPackages")
+              .where("public", "==", true)
+              .get()
+              .then((querySnapshot) => {
+                return querySnapshot.docs.map((queryDocumentSnapshot) => {
+                  const data = queryDocumentSnapshot.data();
+                  let subscribed = false;
+
+                  for (let j = 0; j < subscribedOwnerUids.length; ++j) {
+                    if (
+                      data.ownerUid == subscribedOwnerUids[j] &&
+                      queryDocumentSnapshot.id == subscribedPackageIds[j]
+                    ) {
+                      console.log("true");
+                      subscribed = true;
+                    }
+                  }
+
+                  return {
+                    ...data,
+                    reminderPackageId: queryDocumentSnapshot.id,
+                    subscribed,
+                  };
+                });
+              })
+              .catch((error) => {
+                return res
+                  .status(400)
+                  .send({ message: `Error retrieving reminder packages. ${error}` });
+              })
+          );
+        }
+
+        Promise.all(promises).then((publicPackagesArray) => {
+          const publicPackages = [].concat.apply([], publicPackagesArray);
+          res.send(publicPackages);
+          return res
+            .status(200)
+            .send({ message: "Public reminder packages successfully retrieved" });
+        });
+      })
+      .catch((error) => {
+        return res.status(400).send({ message: `Error retrieving user details. ${error}` });
       });
-    })
-    .catch((error) => {
-      return res.status(400).send({ message: `Error retrieving user details. ${error}` });
-    });
+  });
 };
 
 exports.create = (req, res) => {

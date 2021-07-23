@@ -12,7 +12,9 @@ const getReminderPackages = () => {
 };
 
 const getPublicReminderPackages = () => {
-  return axios.get(REMINDERPACKAGES_API_URL + "/getpublic");
+  return axios.get(REMINDERPACKAGES_API_URL + "/getpublic", {
+    params: { uid: firebaseAuth.currentUser.uid },
+  });
 };
 
 const addReminderPackage = (packageName, description, packageTag, reminderIds) => {

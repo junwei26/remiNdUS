@@ -58,6 +58,12 @@ const SearchPackages = () => {
       flex: 0.7,
     },
     {
+      field: "subscribed",
+      headerName: "Subscribed",
+      flex: 0.8,
+      type: "boolean",
+    },
+    {
       field: "ownerName",
       headerName: "Owner",
       flex: 1,

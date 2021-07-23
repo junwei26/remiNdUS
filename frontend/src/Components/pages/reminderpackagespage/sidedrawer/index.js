@@ -93,10 +93,7 @@ const Sidedrawer = () => {
         <Divider />
         <List>
           <ListItem button key="Subscribed Packages">
-            <ListItemText
-              primary="Subscribed Packages"
-              onClick={() => setView("Subscribed Packages")}
-            />
+            <ListItemText primary="My Packages" onClick={() => setView("Subscribed Packages")} />
           </ListItem>
           <ListItem button key="Search Packages">
             <ListItemText primary="Search Packages" onClick={() => setView("Search Packages")} />
