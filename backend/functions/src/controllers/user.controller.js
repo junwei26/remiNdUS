@@ -369,7 +369,15 @@ exports.getAllActivitiesReminders = (req, res) => {
                     reminderController
                       .getSubscribedExport(req.query.uid)
                       .then((allSubscribedReminders) => {
-                        const allReminders = reminders.concat(allSubscribedReminders);
+                        const allReminders = reminders
+                          .concat(allSubscribedReminders)
+                          .filter((reminder) => {
+                            return !(
+                              reminder &&
+                              Object.keys(reminder).length === 0 &&
+                              reminder.constructor === Object
+                            );
+                          });
 
                         res.send([...activities, ...allReminders]);
                         return res.status(200).send({
