@@ -110,9 +110,7 @@ const Planner = (props) => {
     endDateObj.setDate(currentDateObj.getDate() + 7);
 
     if (recurringActivity.frequency === "weekly") {
-      activityDay.setDate(
-        currentDateObj.getDate() + recurringActivity.date - currentDateObj.getDay()
-      );
+      activityDay.setDate(activityDay.getDate() + recurringActivity.date - activityDay.getDay());
       timeInterval = weekMs;
     } else {
       activityDay.setDate(recurringActivity.date);
@@ -170,7 +168,7 @@ const Planner = (props) => {
 
     if (recurringReminder.frequency === "weekly") {
       reminderStartDay.setDate(
-        currentDateObj.getDate() + recurringReminder.date - currentDateObj.getDay()
+        reminderStartDay.getDate() + recurringReminder.date - reminderStartDay.getDay()
       );
       timeInterval = weekMs;
     } else {
