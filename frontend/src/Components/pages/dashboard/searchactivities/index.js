@@ -212,14 +212,14 @@ const SearchActivities = (props) => {
     if (dialogOpen === true) {
       getAllActivities();
     }
-  }, []);
+  }, [dialogOpen]);
 
   const handleEditActivity = () => {
     if (!selectedRow) {
       alert("Please select an activity to edit");
       return;
     } else {
-      setDialogMaxWidth("xs");
+      setDialogMaxWidth("sm");
       setEditingActivity(true);
       clearAllFields();
     }

@@ -3,12 +3,13 @@ import ChangeUserInfoButton from "./changeuserinfobutton";
 import DisplayUserInfo from "./displayuserinfo";
 import DisplaySettings from "./displaysettings";
 import { firebaseAuth } from "../../../firebase";
-import { Grid, Typography } from "@material-ui/core";
+import { Grid, Typography, TextField, Button } from "@material-ui/core";
 import axios from "axios";
-import ResetPasswordForm from "../../navigationbar/loginbutton/loginpopup/resetpasswordform";
+import { sendPasswordReset } from "../../../firebaseAuth/email";
+
+const { REACT_APP_BACKEND_URL } = process.env;
 
 const getSettings = (
-  dataUrl,
   uid,
   setUsername,
   setVerified,
@@ -20,7 +21,7 @@ const getSettings = (
   setLoading(true);
 
   return axios
-    .get(dataUrl, { params: { uid: uid } })
+    .get(REACT_APP_BACKEND_URL + "/user", { params: { uid: uid } })
     .then((response) => {
       setUsername(response.data.username);
       setVerified(response.data.verified);
@@ -54,12 +55,8 @@ const SettingsPage = () => {
 
   const [loading, setLoading] = useState("False");
 
-  const dataUrl = "https://asia-southeast2-remindus-76402.cloudfunctions.net/backendAPI/api/user/";
-  // const dataUrl = "http://localhost:5001/remindus-76402/asia-southeast2/backendAPI/api/user/";
-
   useEffect(() => {
     getSettings(
-      dataUrl,
       uid,
       setUsername,
       setVerified,
@@ -74,6 +71,11 @@ const SettingsPage = () => {
     setDisplayName(newName);
     setPhotoUrl(newPhotoUrl);
     setEmail(email);
+  };
+
+  const handleSendPasswordReset = (e) => {
+    e.preventDefault();
+    sendPasswordReset(e.target.email.value);
   };
 
   return (
@@ -112,7 +114,26 @@ const SettingsPage = () => {
           />
         </Grid>
         <Grid item xs={12} sm={6}>
-          <ResetPasswordForm />
+          <form noValidate onSubmit={handleSendPasswordReset}>
+            <Grid container direction="column" justify="center" alignItems="center" spacing={2}>
+              <Grid item style={{ width: "80%" }}>
+                <TextField
+                  variant="outlined"
+                  required
+                  fullWidth
+                  name="email"
+                  label="Email"
+                  color="primary"
+                  autoFocus
+                />
+              </Grid>
+              <Grid item style={{ width: "80%" }}>
+                <Button type="submit" fullWidth variant="contained" color="primary">
+                  Send Reset Password Email
+                </Button>
+              </Grid>
+            </Grid>
+          </form>
         </Grid>
       </Grid>
     </>

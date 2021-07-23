@@ -179,7 +179,7 @@ const SearchReminders = (props) => {
     if (dialogOpen === true) {
       getAllReminders();
     }
-  }, []);
+  }, [dialogOpen]);
 
   const handleEditReminders = () => {
     if (!selectedRow) {
@@ -191,7 +191,7 @@ const SearchReminders = (props) => {
       );
       return;
     } else {
-      setDialogMaxWidth("xs");
+      setDialogMaxWidth("sm");
       setEditingReminder(true);
       clearAllFields();
     }

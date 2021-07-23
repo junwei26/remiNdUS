@@ -36,13 +36,6 @@ const Sidedrawer = (props) => {
   const classes = useStyles();
 
   return (
-    // <Grid
-    //   container
-    //   direction="row"
-    //   justify="flex-start"
-    //   alignItems="flex-start"
-    //   className={classes.root}
-    // >
     <div style={{ width: drawerWidth }}>
       <CssBaseline />
       <Drawer
@@ -75,12 +68,6 @@ const Sidedrawer = (props) => {
         </List>
       </Drawer>
     </div>
-    //   <Grid item className={classes.appBar} style={{ width: "auto" }}>
-    //     <main className={classes.content}>
-    //       <Planner />
-    //     </main>
-    //   </Grid>
-    // </Grid>
   );
 };
 

@@ -82,7 +82,7 @@ const ChangeUsernameButton = (props) => {
               setUsername(e.target.value);
             }}
             color="primary"
-            autofocus
+            autoFocus
           />
         </DialogContent>
         <DialogActions>

@@ -73,11 +73,9 @@ const SignUpPopup = (props) => {
                   autoComplete="current-password"
                 />
               </Grid>
-              <Grid item style={{ width: "80%" }}>
-                <Button type="submit" fullWidth variant="contained" color="primary">
-                  Sign Up
-                </Button>
-              </Grid>
+              <Button type="submit" fullWidth variant="contained" color="primary">
+                Sign Up
+              </Button>
             </Grid>
           </form>
         </Grid>
