@@ -17,6 +17,7 @@ import {
   ListItem,
   ListItemIcon,
   ListItemText,
+  Snackbar,
 } from "@material-ui/core";
 import PropTypes from "prop-types";
 import DateFnsUtils from "@date-io/date-fns";
@@ -24,6 +25,8 @@ import { MuiPickersUtilsProvider, DateTimePicker, TimePicker } from "@material-u
 import reminderService from "../../services/reminderService";
 import localService from "../../services/localService";
 import AddIcon from "@material-ui/icons/Add";
+import Alert from "@material-ui/lab/Alert";
+import AlertTitle from "@material-ui/lab/AlertTitle";
 
 const useStyles = makeStyles(() => ({
   card: {
@@ -56,6 +59,15 @@ const addReminderButton = (props) => {
       Choose an existing reminder...
     </MenuItem>,
   ]);
+  const [currentAlert, setCurrentAlert] = useState({ severity: "", message: "" });
+  const [snackbarOpen, setSnackbarOpen] = useState(false);
+  const handleSnackbarClose = (event, reason) => {
+    if (reason === "clickaway") {
+      return;
+    }
+
+    setSnackbarOpen(false);
+  };
 
   const handleSelectFrequencyChange = (e) => {
     setDate(1);
@@ -94,10 +106,12 @@ const addReminderButton = (props) => {
 
   const closeDialogAddReminder = () => {
     if (reminderName === "") {
-      alert("Please input an reminder name");
+      setCurrentAlert({ severity: "error", message: "Please input an reminder name" });
+      setSnackbarOpen(true);
       return;
     } else if (description === "") {
-      alert("Please input an reminder description");
+      setCurrentAlert({ severity: "error", message: "Please input an reminder description" });
+      setSnackbarOpen(true);
       return;
     }
 
@@ -115,13 +129,16 @@ const addReminderButton = (props) => {
           templateReminderId
         )
         .then(() => {
-          alert("Succesfully created reminder");
+          setCurrentAlert({ severity: "success", message: "Succesfully created reminder" });
+          setSnackbarOpen(true);
           props.setPlannerDataUpdate(!props.plannerDataUpdate);
         })
         .catch((error) => {
-          alert(
-            `Issue creating planned reminder. Error status code: ${error.response.status}. ${error.response.data.message}`
-          );
+          setCurrentAlert({
+            severity: "error",
+            message: `Issue creating planned reminder. Error status code: ${error.response.status}. ${error.response.data.message}`,
+          });
+          setSnackbarOpen(true);
         });
     } else {
       reminderService
@@ -137,13 +154,16 @@ const addReminderButton = (props) => {
           templateReminderId
         )
         .then(() => {
-          alert("Succesfully created reminder");
+          setCurrentAlert({ severity: "success", message: "Succesfully created reminder" });
+          setSnackbarOpen(true);
           props.setPlannerDataUpdate(!props.plannerDataUpdate);
         })
         .catch((error) => {
-          alert(
-            `Issue creating recurring reminder. Error status code: ${error.response.status}. ${error.response.data.message}`
-          );
+          setCurrentAlert({
+            severity: "error",
+            message: `Issue creating recurring reminder. Error status code: ${error.response.status}. ${error.response.data.message}`,
+          });
+          setSnackbarOpen(true);
         });
     }
 
@@ -168,11 +188,14 @@ const addReminderButton = (props) => {
         setTemplateReminders(response.data);
       })
       .catch((error) => {
-        alert(
-          error === undefined
-            ? `Issue retrieving template reminders. Error status code ${error.response.status}. ${error.response.data.message}`
-            : "Error accessing API"
-        );
+        setCurrentAlert({
+          severity: "error",
+          message:
+            error === undefined
+              ? `Issue retrieving template reminders. Error status code ${error.response.status}. ${error.response.data.message}`
+              : "Error accessing API",
+        });
+        setSnackbarOpen(true);
       });
   };
 
@@ -221,6 +244,11 @@ const addReminderButton = (props) => {
 
   return (
     <>
+      <Snackbar open={snackbarOpen} autoHideDuration={3000} onClose={handleSnackbarClose}>
+        <Alert severity={currentAlert.severity}>
+          <AlertTitle>{currentAlert.message}</AlertTitle>
+        </Alert>
+      </Snackbar>
       <ListItem button onClick={handleDialogClickOpen} key="Add Reminder">
         <ListItemIcon>
           <AddIcon />

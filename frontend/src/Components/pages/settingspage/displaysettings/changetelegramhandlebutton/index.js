@@ -8,7 +8,10 @@ import {
   DialogActions,
   DialogContent,
   DialogTitle,
+  Snackbar,
 } from "@material-ui/core";
+import Alert from "@material-ui/lab/Alert";
+import AlertTitle from "@material-ui/lab/AlertTitle";
 import axios from "axios";
 import PropTypes from "prop-types";
 import { firebaseAuth } from "../../../../../firebase";
@@ -26,6 +29,15 @@ const ChangeTelegramHandleButton = (props) => {
   const [telegramHandle, setTelegramHandle] = useState(props.telegramHandle);
 
   const [dialogOpen, setDialogOpen] = useState(false);
+  const [currentAlert, setCurrentAlert] = useState({ severity: "", message: "" });
+  const [snackbarOpen, setSnackbarOpen] = useState(false);
+  const handleSnackbarClose = (event, reason) => {
+    if (reason === "clickaway") {
+      return;
+    }
+
+    setSnackbarOpen(false);
+  };
 
   const handleDialogClickOpen = () => {
     setDialogOpen(true);
@@ -47,19 +59,27 @@ const ChangeTelegramHandleButton = (props) => {
         updatedSettings
       )
       .then(() => {
-        alert("Succesfully updated telegram handle");
+        setCurrentAlert({ severity: "success", message: "Succesfully updated telegram handle" });
+        setSnackbarOpen(true);
         props.setTelegramHandle(telegramHandle);
       })
       .catch((error) => {
-        alert(
-          `Issue updating telegram handle. Error status code: ${error.response.status}. ${error.response.data.message}`
-        );
+        setCurrentAlert({
+          severity: "error",
+          message: `Issue updating telegram handle. Error status code: ${error.response.status}. ${error.response.data.message}`,
+        });
+        setSnackbarOpen(true);
       });
     handleDialogClose();
   };
 
   return (
     <>
+      <Snackbar open={snackbarOpen} autoHideDuration={3000} onClose={handleSnackbarClose}>
+        <Alert severity={currentAlert.severity}>
+          <AlertTitle>{currentAlert.message}</AlertTitle>
+        </Alert>
+      </Snackbar>
       <Button
         className={classes.button}
         variant="outlined"

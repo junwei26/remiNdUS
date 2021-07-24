@@ -8,8 +8,11 @@ import {
   DialogActions,
   DialogContent,
   DialogTitle,
+  Snackbar,
 } from "@material-ui/core";
 import axios from "axios";
+import Alert from "@material-ui/lab/Alert";
+import AlertTitle from "@material-ui/lab/AlertTitle";
 import PropTypes from "prop-types";
 import { firebaseAuth } from "../../../../../firebase";
 
@@ -24,6 +27,15 @@ const useStyles = makeStyles(() => ({
 const ChangeUsernameButton = (props) => {
   const classes = useStyles();
   const [username, setUsername] = useState(props.username);
+  const [currentAlert, setCurrentAlert] = useState({ severity: "", message: "" });
+  const [snackbarOpen, setSnackbarOpen] = useState(false);
+  const handleSnackbarClose = (event, reason) => {
+    if (reason === "clickaway") {
+      return;
+    }
+
+    setSnackbarOpen(false);
+  };
 
   const [dialogOpen, setDialogOpen] = useState(false);
 
@@ -47,19 +59,27 @@ const ChangeUsernameButton = (props) => {
         updatedSettings
       )
       .then(() => {
-        alert("Succesfully updated username");
+        setCurrentAlert({ severity: "success", message: "Succesfully updated username" });
+        setSnackbarOpen(true);
         props.setUsername(username);
       })
       .catch((error) => {
-        alert(
-          `Issue updating username. Error status code: ${error.response.status}. ${error.response.data.message}`
-        );
+        setCurrentAlert({
+          severity: "error",
+          message: `Issue updating username. Error status code: ${error.response.status}. ${error.response.data.message}`,
+        });
+        setSnackbarOpen(true);
       });
     handleDialogClose();
   };
 
   return (
     <>
+      <Snackbar open={snackbarOpen} autoHideDuration={3000} onClose={handleSnackbarClose}>
+        <Alert severity={currentAlert.severity}>
+          <AlertTitle>{currentAlert.message}</AlertTitle>
+        </Alert>
+      </Snackbar>
       <Button
         className={classes.button}
         variant="outlined"

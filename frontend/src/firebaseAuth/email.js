@@ -11,10 +11,7 @@ export function signInWithEmailPassword(email, password) {
   // [START auth_signin_password]
   firebaseAuth
     .signInWithEmailAndPassword(email, password)
-    .then((userCredential) => {
-      // Signed in
-      var user = userCredential.user;
-      alert(`Successfully logged in as user ${user.displayName}!`);
+    .then(() => {
       window.location.replace(REACT_APP_URL + "/dashboard");
       // ...
     })
@@ -22,6 +19,7 @@ export function signInWithEmailPassword(email, password) {
       var errorCode = error.code;
       var errorMessage = error.message;
       alert(`Error: Unable to login with error code ${errorCode}. ${errorMessage}`);
+      return false;
     });
   // [END auth_signin_password]
 }
@@ -49,6 +47,7 @@ export function signUpWithEmailPassword(email, password) {
         })
         .catch((error) => {
           alert(`Issue creating user database. Please inform the administrator ${error}`);
+          return false;
         });
 
       // ...
@@ -57,6 +56,7 @@ export function signUpWithEmailPassword(email, password) {
       var errorCode = error.code;
       var errorMessage = error.message;
       alert(`Error: Unable to sign up with error code ${errorCode}. ${errorMessage}`);
+      return false;
     });
   // [END auth_signup_password]
 }
@@ -66,6 +66,7 @@ export function sendEmailVerification() {
   firebaseAuth.currentUser.sendEmailVerification().then(() => {
     // Email verification sent!
     alert("Emails verification sent!");
+    return true;
   });
   // [END auth_send_email_verification]
 }
@@ -77,11 +78,13 @@ export function sendPasswordReset(email) {
     .then(() => {
       // Password reset email sent!
       alert(`Password reset email sent to ${email}`);
+      return true;
     })
     .catch((error) => {
       var errorCode = error.code;
       var errorMessage = error.message;
       alert(`Error: Unable to send password reset with error code ${errorCode}. ${errorMessage}`);
+      return false;
     });
   // [END auth_send_password_reset]
 }
@@ -91,10 +94,12 @@ export function confirmPasswordReset(code, newPassword) {
     .confirmPasswordReset(code, newPassword)
     .then(() => {
       alert("Password successfully reset");
+      return true;
     })
     .catch((error) => {
       var errorCode = error.code;
       var errorMessage = error.message;
       alert(`Error: Unable to confirm password reset ${errorCode}. ${errorMessage}`);
+      return false;
     });
 }
