@@ -6,6 +6,7 @@ import AddActivityButton from "../addactivitybutton";
 import AddReminderButton from "../addreminderbutton";
 import SearchActivities from "../searchactivities";
 import SearchReminders from "../searchreminders";
+import RetrieveActivities from "../retrieveactivities";
 const drawerWidth = 240;
 
 const useStyles = makeStyles((theme) => ({
@@ -62,6 +63,10 @@ const Sidedrawer = (props) => {
             setPlannerDataUpdate={props.setPlannerDataUpdate}
           />
           <SearchReminders
+            plannerDataUpdate={props.plannerDataUpdate}
+            setPlannerDataUpdate={props.setPlannerDataUpdate}
+          />
+          <RetrieveActivities
             plannerDataUpdate={props.plannerDataUpdate}
             setPlannerDataUpdate={props.setPlannerDataUpdate}
           />

@@ -71,7 +71,7 @@ const LoginPopup = () => {
                         name="email"
                         label="Email"
                         color="primary"
-                        autofocus
+                        autoFocus
                       />
                     </Grid>
                     <Grid item style={{ width: "80%" }}>
