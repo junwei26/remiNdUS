@@ -12,9 +12,12 @@ import {
   InputLabel,
   Select,
   MenuItem,
+  Snackbar,
 } from "@material-ui/core";
 import DateFnsUtils from "@date-io/date-fns";
 import { MuiPickersUtilsProvider, DateTimePicker, TimePicker } from "@material-ui/pickers";
+import Alert from "@material-ui/lab/Alert";
+import AlertTitle from "@material-ui/lab/AlertTitle";
 import PropTypes from "prop-types";
 import activityService from "../../../services/activityService";
 import localService from "../../../services/localService";
@@ -57,6 +60,15 @@ const EditActivityDisplay = (props) => {
       Create new activity tag
     </MenuItem>,
   ]);
+  const [currentAlert, setCurrentAlert] = useState({ severity: "", message: "" });
+  const [snackbarOpen, setSnackbarOpen] = useState(false);
+  const handleSnackbarClose = (event, reason) => {
+    if (reason === "clickaway") {
+      return;
+    }
+
+    setSnackbarOpen(false);
+  };
 
   const handleSelectFrequencyChange = (e) => {
     setDate(1);
@@ -120,16 +132,23 @@ const EditActivityDisplay = (props) => {
 
   const closeDialogUpdateActivity = () => {
     if (activityName === "") {
-      alert("Please input an activity name");
+      setCurrentAlert({ severity: "error", message: "Please input an activity name" });
+      setSnackbarOpen(true);
       return;
     } else if (description === "") {
-      alert("Please input an activity description");
+      setCurrentAlert({ severity: "error", message: "Please input an activity description" });
+      setSnackbarOpen(true);
       return;
     } else if (endDateTime.getTime() <= startDateTime.getTime()) {
-      alert("End datetime cannot be earlier than start datetime");
+      setCurrentAlert({
+        severity: "error",
+        message: "End datetime cannot be earlier than start datetime",
+      });
+      setSnackbarOpen(true);
       return;
     } else if (!activityTag) {
-      alert("Activity must have an associated tag");
+      setCurrentAlert({ severity: "error", message: "Activity must have an associated tag" });
+      setSnackbarOpen(true);
       return;
     }
 
@@ -138,7 +157,11 @@ const EditActivityDisplay = (props) => {
       description !== props.activity.description ||
       activityTag !== props.activity.activityTag
     ) {
-      alert("Note that changes to name, description or activity tag applies to all activities");
+      setCurrentAlert({
+        severity: "info",
+        message: "Note that changes to name, description or activity tag applies to all activities",
+      });
+      setSnackbarOpen(true);
     }
 
     userService.addTag(activityTag).then(() => {
@@ -154,14 +177,17 @@ const EditActivityDisplay = (props) => {
             props.activity.activityId
           )
           .then(() => {
-            alert("Successfully updated activity.");
+            setCurrentAlert({ severity: "success", message: "Successfully updated activity." });
+            setSnackbarOpen(true);
             handleDialogBack();
             return;
           })
           .catch((error) => {
-            alert(
-              `Issue updating planned activity. Error status code: ${error.response.status}. ${error.response.data.message}`
-            );
+            setCurrentAlert({
+              severity: "error",
+              message: `Issue updating planned activity. Error status code: ${error.response.status}. ${error.response.data.message}`,
+            });
+            setSnackbarOpen(true);
           });
       } else {
         activityService
@@ -183,14 +209,17 @@ const EditActivityDisplay = (props) => {
             props.activity.activityId
           )
           .then(() => {
-            alert("Successfully updated activity");
+            setCurrentAlert({ severity: "success", message: "Successfully updated activity." });
+            setSnackbarOpen(true);
             handleDialogBack();
             return;
           })
           .catch((error) => {
-            alert(
-              `Issue updating recurring activity. Error status code: ${error.response.status}. ${error.response.data.message}`
-            );
+            setCurrentAlert({
+              severity: "error",
+              message: `Issue updating recurring activity. Error status code: ${error.response.status}. ${error.response.data.message}`,
+            });
+            setSnackbarOpen(true);
           });
       }
     });
@@ -204,11 +233,14 @@ const EditActivityDisplay = (props) => {
         return response.data.tags;
       })
       .catch((error) => {
-        alert(
-          error === undefined
-            ? "Error accessing API"
-            : `Issue retrieving activity tags. Error status code ${error.response.status}. ${error.response.data.message}`
-        );
+        setCurrentAlert({
+          severity: "error",
+          message:
+            error === undefined
+              ? "Error accessing API"
+              : `Issue retrieving activity tags. Error status code ${error.response.status}. ${error.response.data.message}`,
+        });
+        setSnackbarOpen(true);
       });
   };
 
@@ -272,6 +304,11 @@ const EditActivityDisplay = (props) => {
 
   return (
     <>
+      <Snackbar open={snackbarOpen} autoHideDuration={3000} onClose={handleSnackbarClose}>
+        <Alert severity={currentAlert.severity}>
+          <AlertTitle>{currentAlert.message}</AlertTitle>
+        </Alert>
+      </Snackbar>
       <DialogContent>
         <MuiPickersUtilsProvider utils={DateFnsUtils}>
           <Grid

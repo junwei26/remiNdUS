@@ -1,6 +1,5 @@
 import React, { useState } from "react";
 import { makeStyles } from "@material-ui/core/styles";
-// import { makeStyles } from "@material-ui/core/styles";
 import {
   Grid,
   Typography,
@@ -15,12 +14,14 @@ import {
   DialogTitle,
   ListItem,
   ListItemText,
+  Snackbar,
 } from "@material-ui/core";
 import { DataGrid, GridToolbar } from "@material-ui/data-grid";
-// Tooltip, IconButton
+import PropTypes from "prop-types";
 import activityService from "../../services/activityService";
 import userService from "../../services/userService";
-import PropTypes from "prop-types";
+import Alert from "@material-ui/lab/Alert";
+import AlertTitle from "@material-ui/lab/AlertTitle";
 const useStyles = makeStyles(() => ({
   root: {
     width: "100%",
@@ -64,6 +65,15 @@ const RetrieveActivities = (props) => {
       : `${currentDate.getFullYear()}-${currentDate.getFullYear() + 1}`
   );
   const [semester, setSemester] = useState(1);
+  const [currentAlert, setCurrentAlert] = useState({ severity: "", message: "" });
+  const [snackbarOpen, setSnackbarOpen] = useState(false);
+  const handleSnackbarClose = (event, reason) => {
+    if (reason === "clickaway") {
+      return;
+    }
+
+    setSnackbarOpen(false);
+  };
   const dateMap = {
     Monday: 1,
     Tuesday: 2,
@@ -321,11 +331,17 @@ const RetrieveActivities = (props) => {
       })
       .catch((error) => {
         if (error.response) {
-          alert(
-            `Error getting activities from NUSMODS. Error status code: ${error.response.status}. ${error.response.data.message}`
-          );
+          setCurrentAlert({
+            severity: "error",
+            message: `Error getting activities from NUSMODS. Error status code: ${error.response.status}. ${error.response.data.message}`,
+          });
+          setSnackbarOpen(true);
         } else {
-          alert(`Error getting activities from NUSMODS. ${error}`);
+          setCurrentAlert({
+            severity: "error",
+            message: `Error getting activities from NUSMODS. ${error}`,
+          });
+          setSnackbarOpen(true);
         }
       });
   };
@@ -419,23 +435,35 @@ const RetrieveActivities = (props) => {
         return activityService
           .addActivities(accountForDuplicatedTemplates(selectedRows))
           .then(() => {
-            alert("Successfully added activities from NUSMODS");
+            setCurrentAlert({
+              severity: "success",
+              message: "Successfully added activities from NUSMODS",
+            });
+            setSnackbarOpen(true);
             props.setPlannerDataUpdate(!props.plannerDataUpdate);
             clearAllFields();
           })
           .catch((error) => {
-            alert(
-              `Issue adding activities. Error status code: ${error.response.status}. ${error.response.data.message}`
-            );
+            setCurrentAlert({
+              severity: "error",
+              message: `Issue adding activities. Error status code: ${error.response.status}. ${error.response.data.message}`,
+            });
+            setSnackbarOpen(true);
           });
       })
       .catch((error) => {
         if (error.response) {
-          alert(
-            `Error creating activity tag. Error status code: ${error.response.status}. ${error.response.data.message}`
-          );
+          setCurrentAlert({
+            severity: "error",
+            message: `Error creating activity tag. Error status code: ${error.response.status}. ${error.response.data.message}`,
+          });
+          setSnackbarOpen(true);
         } else {
-          alert(`Error getting activities from NUSMODS. ${error}`);
+          setCurrentAlert({
+            severity: "error",
+            message: `Error getting activities from NUSMODS. ${error}`,
+          });
+          setSnackbarOpen(true);
         }
       });
   };
@@ -458,6 +486,11 @@ const RetrieveActivities = (props) => {
   };
   return (
     <>
+      <Snackbar open={snackbarOpen} autoHideDuration={3000} onClose={handleSnackbarClose}>
+        <Alert severity={currentAlert.severity}>
+          <AlertTitle>{currentAlert.message}</AlertTitle>
+        </Alert>
+      </Snackbar>
       <ListItem button key="Retrieve from NUSMODS">
         <ListItemText primary="Retrieve from NUSMODS" onClick={handleDialogClickOpen} />
       </ListItem>
@@ -488,7 +521,7 @@ const RetrieveActivities = (props) => {
               >
                 <Grid item className={classes.gridItem}>
                   <TextField
-                    label="Enter NUSMODS link. E.g. 'https://nusmods.com/timetable/sem-1/share?CS1101S=TUT:09E,REC:07A,LEC:1'"
+                    label="Enter NUSMODS link"
                     value={modsLink}
                     onChange={handleModsLinkChange}
                     required
@@ -504,52 +537,80 @@ const RetrieveActivities = (props) => {
                   alignItems="center"
                   spacing={2}
                 >
-                  <Grid item>
-                    <Select value={acadYear} onChange={handleChangeAcadYear}>
-                      {acadYearMenuItems}
-                    </Select>
+                  <Grid
+                    container
+                    className={classes.root}
+                    direction="column"
+                    justify="flex-start"
+                    alignItems="center"
+                    spacing={2}
+                  >
+                    <Grid item className={classes.gridItem}>
+                      <TextField
+                        label="Enter NUSMODS link. E.g. 'https://nusmods.com/timetable/sem-1/share?CS1101S=TUT:09E,REC:07A,LEC:1'"
+                        value={modsLink}
+                        onChange={handleModsLinkChange}
+                        required
+                        fullWidth
+                      />
+                    </Grid>
+                    <Grid
+                      container
+                      item
+                      className={classes.gridItem}
+                      direction="row"
+                      justify="space-between"
+                      alignItems="center"
+                      spacing={2}
+                    >
+                      <Grid item>
+                        <Select value={acadYear} onChange={handleChangeAcadYear}>
+                          {acadYearMenuItems}
+                        </Select>
+                      </Grid>
+                      <Grid item>
+                        <Select value={semester} onChange={handleChangeSemester}>
+                          <MenuItem value={1}>Semester: 1</MenuItem>
+                          <MenuItem value={2}>Semester: 2</MenuItem>
+                        </Select>
+                      </Grid>
+                      <Grid item></Grid>
+                      <Grid item>
+                        <Button type="submit" color="primary">
+                          Get Activities
+                        </Button>
+                      </Grid>
+                    </Grid>
+                    <Grid item className={classes.gridItem}>
+                      <TextField
+                        label="Search Activities (by name)"
+                        type="search"
+                        value={searchText}
+                        onChange={updateSearchText}
+                        fullWidth
+                        autoFocus
+                      />
+                    </Grid>
+                    <Grid item className={classes.gridItem}>
+                      <Typography>Retrieved Activities</Typography>
+                      <DataGrid
+                        className={classes.dataGridActivities}
+                        rows={activityList}
+                        columns={activityColumns}
+                        autoPageSize
+                        checkboxSelection
+                        filterModel={{
+                          items: [
+                            { columnField: "name", operatorValue: "contains", value: searchText },
+                          ],
+                        }}
+                        onSelectionModelChange={handleDataGridSelectionChange}
+                        selectionModel={selectionModelModules}
+                        style={{ overflowX: "auto" }}
+                        components={{ Toolbar: GridToolbar }}
+                      />
+                    </Grid>
                   </Grid>
-                  <Grid item>
-                    <Select value={semester} onChange={handleChangeSemester}>
-                      <MenuItem value={1}>Semester: 1</MenuItem>
-                      <MenuItem value={2}>Semester: 2</MenuItem>
-                    </Select>
-                  </Grid>
-                  <Grid item></Grid>
-                  <Grid item>
-                    <Button type="submit" color="primary">
-                      Get Activities
-                    </Button>
-                  </Grid>
-                </Grid>
-                <Grid item className={classes.gridItem}>
-                  <TextField
-                    label="Search Activities (by name)"
-                    type="search"
-                    value={searchText}
-                    onChange={updateSearchText}
-                    fullWidth
-                    autoFocus
-                  />
-                </Grid>
-                <Grid item className={classes.gridItem}>
-                  <Typography>Retrieved Activities</Typography>
-                  <DataGrid
-                    className={classes.dataGridActivities}
-                    rows={activityList}
-                    columns={activityColumns}
-                    autoPageSize
-                    checkboxSelection
-                    filterModel={{
-                      items: [
-                        { columnField: "name", operatorValue: "contains", value: searchText },
-                      ],
-                    }}
-                    onSelectionModelChange={handleDataGridSelectionChange}
-                    selectionModel={selectionModelModules}
-                    style={{ overflowX: "auto" }}
-                    components={{ Toolbar: GridToolbar }}
-                  />
                 </Grid>
               </Grid>
             </form>

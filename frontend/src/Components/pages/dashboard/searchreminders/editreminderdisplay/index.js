@@ -12,7 +12,10 @@ import {
   InputLabel,
   Select,
   MenuItem,
+  Snackbar,
 } from "@material-ui/core";
+import Alert from "@material-ui/lab/Alert";
+import AlertTitle from "@material-ui/lab/AlertTitle";
 import DateFnsUtils from "@date-io/date-fns";
 import { MuiPickersUtilsProvider, DateTimePicker, TimePicker } from "@material-ui/pickers";
 import PropTypes from "prop-types";
@@ -44,6 +47,15 @@ const EditReminderDisplay = (props) => {
   const [recurring, setRecurring] = useState(false);
 
   const [frequency, setFrequency] = useState("weekly");
+  const [currentAlert, setCurrentAlert] = useState({ severity: "", message: "" });
+  const [snackbarOpen, setSnackbarOpen] = useState(false);
+  const handleSnackbarClose = (event, reason) => {
+    if (reason === "clickaway") {
+      return;
+    }
+
+    setSnackbarOpen(false);
+  };
   const handleSelectFrequencyChange = (e) => {
     setDate(1);
     setFrequency(e.target.value);
@@ -81,18 +93,28 @@ const EditReminderDisplay = (props) => {
 
   const closeDialogUpdateReminder = () => {
     if (reminderName === "") {
-      alert("Please input an reminder name");
+      setCurrentAlert({ severity: "error", message: "Please input an reminder name" });
+      setSnackbarOpen(true);
       return;
     } else if (description === "") {
-      alert("Please input an reminder description");
+      setCurrentAlert({ severity: "error", message: "Please input an reminder description" });
+      setSnackbarOpen(true);
       return;
     } else if (endDateTime.getTime() < currentDateTime.getTime()) {
-      alert("Datetime cannot be earlier than current datetime");
+      setCurrentAlert({
+        severity: "error",
+        message: "Datetime cannot be earlier than current datetime",
+      });
+      setSnackbarOpen(true);
       return;
     }
 
     if (reminderName !== props.reminder.name || description !== props.reminder.description) {
-      alert("Note that changes to name or description applies to all reminders");
+      setCurrentAlert({
+        severity: "info",
+        message: "Note that changes to name or description applies to all reminders",
+      });
+      setSnackbarOpen(true);
     }
 
     if (!recurring) {
@@ -105,14 +127,20 @@ const EditReminderDisplay = (props) => {
           props.reminder.reminderId
         )
         .then(() => {
-          alert("Successfully updated reminder.");
+          setCurrentAlert({
+            severity: "success",
+            message: "Successfully updated reminder.",
+          });
+          setSnackbarOpen(true);
           handleDialogBack();
           return;
         })
         .catch((error) => {
-          alert(
-            `Issue updating planned reminder. Error status code: ${error.response.status}. ${error.response.data.message}`
-          );
+          setCurrentAlert({
+            severity: "error",
+            message: `Issue updating planned reminder. Error status code: ${error.response.status}. ${error.response.data.message}`,
+          });
+          setSnackbarOpen(true);
         });
     } else {
       reminderService
@@ -129,14 +157,19 @@ const EditReminderDisplay = (props) => {
           props.reminder.reminderId
         )
         .then(() => {
-          alert("Successfully updated reminder");
+          setCurrentAlert({
+            severity: "success",
+            message: "Successfully updated reminder.",
+          });
           handleDialogBack();
           return;
         })
         .catch((error) => {
-          alert(
-            `Issue updating recurring reminder. Error status code: ${error.response.status}. ${error.response.data.message}`
-          );
+          setCurrentAlert({
+            severity: "error",
+            message: `Issue updating recurring reminder. Error status code: ${error.response.status}. ${error.response.data.message}`,
+          });
+          setSnackbarOpen(true);
         });
     }
   };
@@ -176,6 +209,11 @@ const EditReminderDisplay = (props) => {
 
   return (
     <>
+      <Snackbar open={snackbarOpen} autoHideDuration={3000} onClose={handleSnackbarClose}>
+        <Alert severity={currentAlert.severity}>
+          <AlertTitle>{currentAlert.message}</AlertTitle>
+        </Alert>
+      </Snackbar>
       <DialogContent>
         <MuiPickersUtilsProvider utils={DateFnsUtils}>
           <Grid

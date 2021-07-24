@@ -240,13 +240,19 @@ const Planner = (props) => {
       let tag = added.tag;
 
       if (added.title === "") {
-        alert("Please input a name");
+        setCurrentAlert({ severity: "error", message: "Please input a name" });
+        setSnackbarOpen(true);
         return;
       } else if (added.description === "") {
-        alert("Please input a description");
+        setCurrentAlert({ severity: "error", message: "Please input a description" });
+        setSnackbarOpen(true);
         return;
       } else if (new Date(added.endDate).getTime() <= new Date(added.startDate).getTime()) {
-        alert("End datetime cannot be earlier than start datetime");
+        setCurrentAlert({
+          severity: "error",
+          message: "End datetime cannot be earlier than start datetime",
+        });
+        setSnackbarOpen(true);
         return;
       }
 
@@ -351,15 +357,21 @@ const Planner = (props) => {
           const updatedEvent = { ...event, ...changed[event.id] };
           if (event.eventType == "1") {
             if (updatedEvent.title === "") {
-              alert("Please input a name");
+              setCurrentAlert({ severity: "error", message: "Please input a name" });
+              setSnackbarOpen(true);
               return;
             } else if (updatedEvent.description === "") {
-              alert("Please input a description");
+              setCurrentAlert({ severity: "error", message: "Please input a description" });
+              setSnackbarOpen(true);
               return;
             } else if (
               new Date(updatedEvent.endDate).getTime() <= new Date(updatedEvent.startDate).getTime()
             ) {
-              alert("End datetime cannot be earlier than start datetime");
+              setCurrentAlert({
+                severity: "error",
+                message: "End datetime cannot be earlier than start datetime",
+              });
+              setSnackbarOpen(true);
               return;
             }
             let tagFunction = Promise.resolve(null);

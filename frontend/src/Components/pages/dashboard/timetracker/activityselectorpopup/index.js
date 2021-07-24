@@ -1,7 +1,9 @@
 import React, { useState, useEffect } from "react";
 import PropTypes from "prop-types";
 import { makeStyles } from "@material-ui/core/styles";
-import { Button, Grid, Select, MenuItem, Card, Typography } from "@material-ui/core";
+import { Button, Grid, Select, MenuItem, Card, Typography, Snackbar } from "@material-ui/core";
+import Alert from "@material-ui/lab/Alert";
+import AlertTitle from "@material-ui/lab/AlertTitle";
 import activityService from "../../../services/activityService";
 import localService from "../../../services/localService";
 
@@ -29,7 +31,15 @@ const ActivitySelectorPopup = (props) => {
   const classes = useStyles();
   const [activity, setActivity] = useState("");
   const [activities, setActivities] = useState([]);
-  activities;
+  const [currentAlert, setCurrentAlert] = useState({ severity: "", message: "" });
+  const [snackbarOpen, setSnackbarOpen] = useState(false);
+  const handleSnackbarClose = (event, reason) => {
+    if (reason === "clickaway") {
+      return;
+    }
+
+    setSnackbarOpen(false);
+  };
   useEffect(() => {
     const currentDate = new Date();
     currentDate.setHours(0, 0, 0, 0);
@@ -55,11 +65,22 @@ const ActivitySelectorPopup = (props) => {
 
         setActivities(response.data.filter(filterActivities));
       })
-      .catch((e) => alert(`Error retrieving activities.${e.response.data.message}`));
+      .catch((e) => {
+        setCurrentAlert({
+          severity: "error",
+          message: `Error retrieving activities.${e.response.data.message}`,
+        });
+        setSnackbarOpen(true);
+      });
   }, []);
 
   return (
     <Card>
+      <Snackbar open={snackbarOpen} autoHideDuration={3000} onClose={handleSnackbarClose}>
+        <Alert severity={currentAlert.severity}>
+          <AlertTitle>{currentAlert.message}</AlertTitle>
+        </Alert>
+      </Snackbar>
       <Grid
         container
         className={classes.card}

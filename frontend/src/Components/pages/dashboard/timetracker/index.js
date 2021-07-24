@@ -1,5 +1,7 @@
 import React, { useState, useRef, useEffect } from "react";
-import { Paper, Typography, Grid, Button } from "@material-ui/core";
+import { Paper, Typography, Grid, Button, Snackbar } from "@material-ui/core";
+import Alert from "@material-ui/lab/Alert";
+import AlertTitle from "@material-ui/lab/AlertTitle";
 import { makeStyles } from "@material-ui/core/styles";
 import Popup from "reactjs-popup";
 import ActivitySelectorPopup from "./activityselectorpopup";
@@ -21,6 +23,15 @@ const TimeTracker = () => {
   const [isActive, setIsActive] = useState(false);
   const [currentActivity, setCurrentActivity] = useState({});
   const increment = useRef(null);
+  const [currentAlert, setCurrentAlert] = useState({ severity: "", message: "" });
+  const [snackbarOpen, setSnackbarOpen] = useState(false);
+  const handleSnackbarClose = (event, reason) => {
+    if (reason === "clickaway") {
+      return;
+    }
+
+    setSnackbarOpen(false);
+  };
 
   const classes = useStyles();
   const handleStart = (activity) => {
@@ -79,7 +90,8 @@ const TimeTracker = () => {
 
     trackerService.addTrackedActivity(trackedActivity).then(() => {
       localStorage.removeItem("CurrentTrackedActivity");
-      alert("Activity tracked");
+      setCurrentAlert({ severity: "success", message: "Activity tracked" });
+      setSnackbarOpen(true);
     });
   };
 
@@ -102,6 +114,11 @@ const TimeTracker = () => {
 
   return (
     <Paper className={classes.root}>
+      <Snackbar open={snackbarOpen} autoHideDuration={3000} onClose={handleSnackbarClose}>
+        <Alert severity={currentAlert.severity}>
+          <AlertTitle>{currentAlert.message}</AlertTitle>
+        </Alert>
+      </Snackbar>
       <Grid container alignItems="center" direction="column" justify="center" spacing={1}>
         <Grid item xs>
           <Typography>Activity Tracker </Typography>

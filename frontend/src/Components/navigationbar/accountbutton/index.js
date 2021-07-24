@@ -1,6 +1,8 @@
 import React, { useState } from "react";
-import { Button, Menu, MenuItem } from "@material-ui/core";
+import { Button, Menu, MenuItem, Snackbar } from "@material-ui/core";
 import { makeStyles } from "@material-ui/core/styles";
+import Alert from "@material-ui/lab/Alert";
+import AlertTitle from "@material-ui/lab/AlertTitle";
 import * as userSettings from "../../../firebaseAuth/userSettings";
 
 const { REACT_APP_URL } = process.env;
@@ -16,6 +18,16 @@ const AccountButton = () => {
 
   const [anchorEl, setAnchorEl] = useState(null);
 
+  const [currentAlert, setCurrentAlert] = useState({ severity: "", message: "" });
+  const [snackbarOpen, setSnackbarOpen] = useState(false);
+  const handleSnackbarClose = (event, reason) => {
+    if (reason === "clickaway") {
+      return;
+    }
+
+    setSnackbarOpen(false);
+  };
+
   const handleClick = (e) => {
     setAnchorEl(e.currentTarget);
   };
@@ -29,11 +41,19 @@ const AccountButton = () => {
   };
 
   const handleLogout = () => {
-    userSettings.signOut();
+    if (userSettings.signOut()) {
+      setCurrentAlert({ severity: "success", message: "Sign Out Successful. See you again!" });
+      setSnackbarOpen(true);
+    }
   };
 
   return (
     <>
+      <Snackbar open={snackbarOpen} autoHideDuration={3000} onClose={handleSnackbarClose}>
+        <Alert severity={currentAlert.severity}>
+          <AlertTitle>{currentAlert.message}</AlertTitle>
+        </Alert>
+      </Snackbar>
       <Button
         aria-controls="simple-menu"
         aria-haspopup="true"

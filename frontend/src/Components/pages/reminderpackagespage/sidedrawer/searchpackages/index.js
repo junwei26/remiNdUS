@@ -1,6 +1,17 @@
 import React, { useEffect, useState } from "react";
 import { makeStyles } from "@material-ui/core/styles";
-import { Grid, Typography, TextField, Paper, Button, Tooltip, IconButton } from "@material-ui/core";
+import {
+  Grid,
+  Typography,
+  TextField,
+  Paper,
+  Button,
+  Tooltip,
+  IconButton,
+  Snackbar,
+} from "@material-ui/core";
+import Alert from "@material-ui/lab/Alert";
+import AlertTitle from "@material-ui/lab/AlertTitle";
 import { DataGrid, GridToolbar } from "@material-ui/data-grid";
 import RefreshIcon from "@material-ui/icons/Refresh";
 import reminderPackageService from "../../../services/reminderPackageService";
@@ -42,6 +53,15 @@ const SearchPackages = () => {
     },
   ];
   const [packageList, setPackageList] = useState(loadingPackageList);
+  const [currentAlert, setCurrentAlert] = useState({ severity: "", message: "" });
+  const [snackbarOpen, setSnackbarOpen] = useState(false);
+  const handleSnackbarClose = (event, reason) => {
+    if (reason === "clickaway") {
+      return;
+    }
+
+    setSnackbarOpen(false);
+  };
   const packageColumns = [
     {
       field: "name",
@@ -131,9 +151,11 @@ const SearchPackages = () => {
         setPackageList(tempPackageList);
       })
       .catch((error) => {
-        alert(
-          `Issue getting public reminder packages. Error status code: ${error.response.status}. ${error.response.data.message}`
-        );
+        setCurrentAlert({
+          severity: "error",
+          message: `Issue getting public reminder packages. Error status code: ${error.response.status}. ${error.response.data.message}`,
+        });
+        setSnackbarOpen(true);
       });
   };
 
@@ -155,13 +177,19 @@ const SearchPackages = () => {
     return reminderPackageService
       .subscribeReminderPackages(ownerUids, reminderPackageIds, true)
       .then(() => {
-        alert("Successfully subscribed to reminder packages");
+        setCurrentAlert({
+          severity: "success",
+          message: "Successfully subscribed to reminder packages",
+        });
+        setSnackbarOpen(true);
         getReminderPackages();
       })
       .catch((error) => {
-        alert(
-          `Issue subscribing to reminder packages. Error status code: ${error.response.status}. ${error.response.data.message}`
-        );
+        setCurrentAlert({
+          severity: "error",
+          message: `Issue subscribing to reminder packages. Error status code: ${error.response.status}. ${error.response.data.message}`,
+        });
+        setSnackbarOpen(true);
       });
   };
 
@@ -193,6 +221,11 @@ const SearchPackages = () => {
 
   return (
     <>
+      <Snackbar open={snackbarOpen} autoHideDuration={3000} onClose={handleSnackbarClose}>
+        <Alert severity={currentAlert.severity}>
+          <AlertTitle>{currentAlert.message}</AlertTitle>
+        </Alert>
+      </Snackbar>
       <Typography>Search Public Packages</Typography>
       <Paper elevation={2} variant="outlined" style={{ height: "780px" }}>
         <form
