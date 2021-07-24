@@ -104,7 +104,7 @@ const ChangeTelegramHandleButton = (props) => {
               setTelegramHandle(e.target.value);
             }}
             color="primary"
-            autofocus
+            autoFocus
           />
         </DialogContent>
         <DialogActions>

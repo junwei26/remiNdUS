@@ -89,9 +89,8 @@ const SubscribedPackages = (props) => {
     },
     {
       field: "public",
-      headerName: "Public",
+      headerName: "Shared",
       flex: 0.8,
-      hide: true,
     },
     {
       field: "verified",
@@ -104,7 +103,9 @@ const SubscribedPackages = (props) => {
       headerName: "Last Modified",
       flex: 1,
       valueFormatter: (params) => {
-        return `${localService.parseTimeToString(params.value)}`;
+        return params.value === "Loading..."
+          ? params.value
+          : `${localService.parseTimeToString(params.value)}`;
       },
     },
     {

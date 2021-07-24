@@ -60,11 +60,11 @@ const SearchReminders = (props) => {
       headerName: "End Date/Time",
       flex: 1,
       valueGetter: (params) => {
-        return params.getValue(params.id, "reminderType") === "recurring"
-          ? `${params.getValue(params.id, "endTime").slice(0, 2)}:${params
-              .getValue(params.id, "endTime")
-              .slice(2, 4)}`
-          : localService.parseTimeToString(params.getValue(params.id, "endDateTime"));
+        return params.value === "Loading..."
+          ? params.value
+          : params.getValue(params.id, "reminderType") === "recurring"
+          ? `${params.row.endTime.slice(0, 2)}:${params.row.endTime.slice(2, 4)}`
+          : localService.parseTimeToString(params.row.endDateTime);
       },
       sortComparator: (v1, v2) => {
         if (v1.length > 5) {
@@ -191,7 +191,7 @@ const SearchReminders = (props) => {
     if (dialogOpen === true) {
       getAllReminders();
     }
-  }, []);
+  }, [dialogOpen]);
 
   const handleEditReminders = () => {
     if (!selectedRow) {
@@ -207,7 +207,7 @@ const SearchReminders = (props) => {
       setSnackbarOpen(true);
       return;
     } else {
-      setDialogMaxWidth("xs");
+      setDialogMaxWidth("sm");
       setEditingReminder(true);
       clearAllFields();
     }

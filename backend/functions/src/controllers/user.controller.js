@@ -302,31 +302,28 @@ exports.getDashboardInfo = (req, res) => {
     return res.status(400).send({ message: "You must be logged in to make this operation!" });
   }
 
-  db.collection("users")
-    .doc(req.query.uid)
+  const userDoc = db.collection("users").doc(req.query.uid);
+
+  userDoc
     .collection("templateActivities")
     .get()
     .then((querySnapshot) => {
       const templateActivities = querySnapshot.docs.map((doc) => {
         return { ...doc.data(), templateActivityId: doc.id };
       });
-      db.collection("users")
-        .doc(req.query.uid)
+      userDoc
         .collection("templateReminders")
         .get()
         .then((querySnapshot) => {
           const templateReminders = querySnapshot.docs.map((doc) => {
             return { ...doc.data(), templateReminderId: doc.id };
           });
-          db.collection("users")
-            .doc(req.query.uid)
-            .get()
-            .then((doc) => {
-              const user = doc.data();
-              const payload = { templateActivities, templateReminders, user };
-              res.send(payload);
-              return res.status(200).send();
-            });
+          userDoc.get().then((doc) => {
+            const user = doc.data();
+            const payload = { templateActivities, templateReminders, user };
+            res.send(payload);
+            return res.status(200).send();
+          });
         });
     })
 
@@ -369,7 +366,15 @@ exports.getAllActivitiesReminders = (req, res) => {
                     reminderController
                       .getSubscribedExport(req.query.uid)
                       .then((allSubscribedReminders) => {
-                        const allReminders = reminders.concat(allSubscribedReminders);
+                        const allReminders = reminders
+                          .concat(allSubscribedReminders)
+                          .filter((reminder) => {
+                            return !(
+                              reminder &&
+                              Object.keys(reminder).length === 0 &&
+                              reminder.constructor === Object
+                            );
+                          });
 
                         res.send([...activities, ...allReminders]);
                         return res.status(200).send({

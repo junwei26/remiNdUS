@@ -29,10 +29,15 @@ import userService from "../../services/userService";
 
 const getData = (setData, setLoading) => {
   setLoading(true);
-  return userService.getAllActivitiesAndReminders().then((response) => {
-    setData(response.data);
-    setLoading(false);
-  });
+  return userService
+    .getAllActivitiesAndReminders()
+    .then((response) => {
+      setData(response.data);
+      setLoading(false);
+    })
+    .catch(() => {
+      setLoading(false);
+    });
 };
 
 const styles = {
@@ -64,13 +69,6 @@ const Planner = (props) => {
   const classes = useStyles();
 
   const [currentDateObj, setCurrentDateObj] = useState(new Date());
-  const generateDate = (dateObj) => {
-    const padZero = (num) => (num < 10 ? "0" + num.toString() : num.toString());
-    const year = dateObj.getFullYear().toString();
-    const month = padZero(dateObj.getMonth() + 1);
-    const day = padZero(dateObj.getDate());
-    return year + month + day;
-  };
 
   const [templateActivities, setTemplateActivities] = useState([]);
   const [templateActivitiesOptions, setTemplateActivitiesOptions] = useState([]);
@@ -93,123 +91,11 @@ const Planner = (props) => {
     setSnackbarOpen(false);
   };
 
-  const recurringActivitiesGenerator = (recurringActivity) => {
-    const generatedActivities = [];
-    let daysInMonths = [31, 28, 31, 30, 31, 30, 31, 31, 30, 31, 30, 31];
-    const year = currentDateObj.getFullYear();
-
-    if ((year % 4 === 0 && year % 100 !== 0) || year % 400 === 0) {
-      daysInMonths[1] = 29;
-    }
-
-    const weekMs = 6.048e8;
-    var monthMs = daysInMonths[currentDateObj.getMonth()] * 8.64e7;
-    var timeInterval = 0;
-    const endDateObj = new Date(currentDateObj.getTime());
-    const activityDay = new Date();
-    endDateObj.setDate(currentDateObj.getDate() + 7);
-
-    if (recurringActivity.frequency === "weekly") {
-      activityDay.setDate(activityDay.getDate() + recurringActivity.date - activityDay.getDay());
-      timeInterval = weekMs;
-    } else {
-      activityDay.setDate(recurringActivity.date);
-      timeInterval = monthMs;
-    }
-
-    let startMs = activityDay.getTime();
-    const endMs = endDateObj.getTime();
-
-    while (startMs <= endMs) {
-      const activity = {
-        id: recurringActivity.activityId,
-        startDate: localService.parseTimeToString(
-          generateDate(new Date(startMs)) + recurringActivity.startTime
-        ),
-        endDate: localService.parseTimeToString(
-          generateDate(new Date(startMs)) + recurringActivity.endTime
-        ),
-        title: recurringActivity.name,
-        description: recurringActivity.description,
-        eventType: recurringActivity.eventType,
-        tag: recurringActivity.activityTag,
-        frequency: recurringActivity.frequency,
-        date: recurringActivity.date,
-        type: recurringActivity.activityType,
-        templateId: recurringActivity.templateActivityId,
-      };
-
-      if (recurringActivity.frequency === "monthly") {
-        timeInterval = daysInMonths[new Date(startMs).getMonth()] * 8.64e7;
-      }
-
-      startMs += timeInterval;
-      generatedActivities.push(activity);
-    }
-
-    return generatedActivities;
-  };
-
-  const recurringRemindersGenerator = (recurringReminder) => {
-    const generatedReminders = [];
-    let daysInMonths = [31, 28, 31, 30, 31, 30, 31, 31, 30, 31, 30, 31];
-    const year = currentDateObj.getFullYear();
-
-    if ((year % 4 === 0 && year % 100 !== 0) || year % 400 === 0) {
-      daysInMonths[1] = 29;
-    }
-
-    const weekMs = 6.048e8;
-    var monthMs = daysInMonths[currentDateObj.getMonth()] * 8.64e7;
-    var timeInterval = 0;
-    const endDateObj = new Date(currentDateObj.getTime());
-    const reminderStartDay = new Date();
-    endDateObj.setDate(currentDateObj.getDate() + 7);
-
-    if (recurringReminder.frequency === "weekly") {
-      reminderStartDay.setDate(
-        reminderStartDay.getDate() + recurringReminder.date - reminderStartDay.getDay()
-      );
-      timeInterval = weekMs;
-    } else {
-      reminderStartDay.setDate(recurringReminder.date);
-      timeInterval = monthMs;
-    }
-
-    let startMs = reminderStartDay.getTime();
-
-    const endMs = endDateObj.getTime();
-
-    while (startMs <= endMs) {
-      const reminder = {
-        id: recurringReminder.reminderId,
-        startDate: localService.parseTimeToString(
-          generateDate(new Date(startMs)) + recurringReminder.endTime
-        ),
-        title: recurringReminder.name,
-        description: recurringReminder.description,
-        eventType: recurringReminder.eventType,
-        tag: "Reminder",
-        frequency: recurringReminder.frequency,
-        date: recurringReminder.date,
-        type: recurringReminder.reminderType,
-        templateId: recurringReminder.templateReminderId,
-      };
-
-      if (recurringReminder.frequency === "monthly") {
-        timeInterval = daysInMonths[new Date(startMs).getMonth()] * 8.64e7;
-      }
-
-      startMs += timeInterval;
-      generatedReminders.push(reminder);
-    }
-    return generatedReminders;
-  };
-
   const mapAppointmentData = (appointment) => {
     if (appointment.frequency) {
-      if (appointment.eventType === "1") return recurringActivitiesGenerator(appointment);
-      else return recurringRemindersGenerator(appointment);
+      if (appointment.eventType === "1")
+        return localService.recurringActivitiesGenerator(appointment, currentDateObj, 30);
+      else return localService.recurringRemindersGenerator(appointment, currentDateObj, 30);
     }
 
     if (appointment.eventType === "1") {

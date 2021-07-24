@@ -11,6 +11,7 @@ import localService from "../../services/localService";
 const useStyles = makeStyles(() => ({
   root: { height: 400, width: 250 },
   buttongroup: { height: 50, width: 250 },
+  list: { height: 350, width: 250, overflow: "auto" },
 }));
 
 const ReminderList = () => {
@@ -23,9 +24,33 @@ const ReminderList = () => {
     endDate.setDate(currentDate.getDate() + nextNumberOfDays);
     reminderService
       .getRangeReminder(currentDate.toLocaleString(), endDate.toLocaleString())
-      .then((response) => setReminders(response.data));
+      .then((response) => {
+        const reminders = response.data.map((reminder) => {
+          if (reminder.reminderType === "recurring") {
+            return localService
+              .recurringRemindersGenerator(reminder, currentDate, nextNumberOfDays)
+              .map((reminder) => {
+                return {
+                  ...reminder,
+                  name: reminder.title,
+                  endDateTime: localService.convertDateToString(new Date(reminder.startDate)),
+                };
+              });
+          } else {
+            return [reminder];
+          }
+        });
+
+        const fullReminderList = [].concat.apply([], reminders).sort((left, right) => {
+          return left.endDateTime < right.endDateTime ? -1 : 1;
+        });
+
+        setReminders(fullReminderList);
+      });
   }, [nextNumberOfDays]);
+
   const classes = useStyles();
+
   return (
     <Grid container direction="column" justify="flex-start" alignItems="center">
       <Grid item>
@@ -77,27 +102,23 @@ const ReminderList = () => {
       </Grid>
       <Grid item>
         <Paper className={classes.root}>
-          <List>
-            {reminders
-              .filter((reminder) => reminder.reminderType === "planned")
-              .map((reminder) => {
-                const reminderDisplayText = (
-                  <Tooltip title={"Description: " + reminder.description}>
-                    <div>
-                      {localService.convertDateToShorterString(
-                        localService.parseTimeToDate(reminder.endDateTime)
-                      )}
-                      <br />
-                      {reminder.name}
-                    </div>
-                  </Tooltip>
-                );
-                return (
-                  <ListItem key={reminder.reminderId} divider={true}>
-                    <ListItemText primary={reminderDisplayText} />
-                  </ListItem>
-                );
-              })}
+          <List className={classes.list}>
+            {reminders.map((reminder, index) => {
+              const reminderDisplayText = (
+                <Tooltip title={"Description: " + reminder.description} key={index}>
+                  <div key={index}>
+                    {localService.parseTimeToString(reminder.endDateTime)}
+                    <br />
+                    {reminder.name}
+                  </div>
+                </Tooltip>
+              );
+              return (
+                <ListItem key={index} divider={true}>
+                  <ListItemText primary={reminderDisplayText} />
+                </ListItem>
+              );
+            })}
           </List>
         </Paper>
       </Grid>

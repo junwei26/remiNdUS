@@ -56,9 +56,9 @@ const DisplaySettings = (props) => {
 
 DisplaySettings.propTypes = {
   username: PropTypes.string,
-  verified: PropTypes.bool,
+  verified: PropTypes.oneOfType([PropTypes.string, PropTypes.bool]),
   telegramHandle: PropTypes.string,
-  telegramSendReminders: PropTypes.bool,
+  telegramSendReminders: PropTypes.oneOfType([PropTypes.string, PropTypes.bool]),
   telegramReminderTiming: PropTypes.string,
   setUsername: PropTypes.func,
   setTelegramHandle: PropTypes.func,

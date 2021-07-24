@@ -65,11 +65,11 @@ const SearchActivities = (props) => {
       headerName: "Start Date/Time",
       flex: 1,
       valueGetter: (params) => {
-        return params.getValue(params.id, "activityType") === "recurring"
-          ? `${params.getValue(params.id, "startTime").slice(0, 2)}:${params
-              .getValue(params.id, "startTime")
-              .slice(2, 4)}`
-          : localService.parseTimeToString(params.getValue(params.id, "startDateTime"));
+        return params.value === "Loading..."
+          ? params.value
+          : params.getValue(params.id, "activityType") === "recurring"
+          ? `${params.row.startTime.slice(0, 2)}:${params.row.startTime.slice(2, 4)}`
+          : localService.parseTimeToString(params.row.startDateTime);
       },
       sortComparator: (v1, v2) => {
         if (v1.length > 5) {
@@ -95,11 +95,11 @@ const SearchActivities = (props) => {
       headerName: "End Date/Time",
       flex: 1,
       valueGetter: (params) => {
-        return params.getValue(params.id, "activityType") === "recurring"
-          ? `${params.getValue(params.id, "endTime").slice(0, 2)}:${params
-              .getValue(params.id, "endTime")
-              .slice(2, 4)}`
-          : localService.parseTimeToString(params.getValue(params.id, "endDateTime"));
+        return params.value === "Loading..."
+          ? params.value
+          : params.getValue(params.id, "activityType") === "recurring"
+          ? `${params.row.endTime.slice(0, 2)}:${params.row.endTime.slice(2, 4)}`
+          : localService.parseTimeToString(params.row.endDateTime);
       },
       sortComparator: (v1, v2) => {
         if (v1.length > 5) {
@@ -222,7 +222,7 @@ const SearchActivities = (props) => {
     if (dialogOpen === true) {
       getAllActivities();
     }
-  }, []);
+  }, [dialogOpen]);
 
   const handleEditActivity = () => {
     if (!selectedRow) {
@@ -233,7 +233,7 @@ const SearchActivities = (props) => {
       setSnackbarOpen(true);
       return;
     } else {
-      setDialogMaxWidth("xs");
+      setDialogMaxWidth("sm");
       setEditingActivity(true);
       clearAllFields();
     }

@@ -6,6 +6,7 @@ import AddActivityButton from "../addactivitybutton";
 import AddReminderButton from "../addreminderbutton";
 import SearchActivities from "../searchactivities";
 import SearchReminders from "../searchreminders";
+import RetrieveActivities from "../retrieveactivities";
 const drawerWidth = 240;
 
 const useStyles = makeStyles((theme) => ({
@@ -36,13 +37,6 @@ const Sidedrawer = (props) => {
   const classes = useStyles();
 
   return (
-    // <Grid
-    //   container
-    //   direction="row"
-    //   justify="flex-start"
-    //   alignItems="flex-start"
-    //   className={classes.root}
-    // >
     <div style={{ width: drawerWidth }}>
       <CssBaseline />
       <Drawer
@@ -72,15 +66,13 @@ const Sidedrawer = (props) => {
             plannerDataUpdate={props.plannerDataUpdate}
             setPlannerDataUpdate={props.setPlannerDataUpdate}
           />
+          <RetrieveActivities
+            plannerDataUpdate={props.plannerDataUpdate}
+            setPlannerDataUpdate={props.setPlannerDataUpdate}
+          />
         </List>
       </Drawer>
     </div>
-    //   <Grid item className={classes.appBar} style={{ width: "auto" }}>
-    //     <main className={classes.content}>
-    //       <Planner />
-    //     </main>
-    //   </Grid>
-    // </Grid>
   );
 };
 

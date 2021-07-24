@@ -353,6 +353,10 @@ const EditActivityDisplay = (props) => {
               >
                 {activityTagMenuItemArray}
               </Select>
+              <Typography>
+                Note: Changing the name, description or activity tag affects all activities
+                associated with the same template
+              </Typography>
             </Grid>
             {chosenActivityTag == -2 ? (
               <Grid item style={{ width: "100%" }}>

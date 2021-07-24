@@ -248,6 +248,10 @@ const EditReminderDisplay = (props) => {
                 value={description}
                 onChange={handleSetDescription}
               />
+              <Typography>
+                Note: Changing the name or description affects all reminders associated with the
+                same template
+              </Typography>
             </Grid>
             <Grid
               container

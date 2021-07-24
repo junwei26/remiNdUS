@@ -8,11 +8,19 @@ const getReminder = (userDoc, reminderId, reminderCollection, subscribed) => {
     .doc(reminderId)
     .get()
     .then((documentSnapshot) => {
+      if (!documentSnapshot.exists) {
+        return Promise.resolve({});
+      }
+
       return userDoc
         .collection("templateReminders")
         .doc(documentSnapshot.get("templateReminderId"))
         .get()
         .then((templateDocumentSnapshot) => {
+          if (!templateDocumentSnapshot.exists) {
+            return Promise.resolve({});
+          }
+
           const reminderType = reminderCollection === "plannedReminders" ? "planned" : "recurring";
           return {
             ...documentSnapshot.data(),
@@ -128,7 +136,7 @@ const getPackageReminderIds = (uid, reminderPackageId) => {
     .get()
     .then((querySnapshot) => {
       if (querySnapshot.empty) {
-        throw "No user found. Please contact the administrator";
+        return {};
       }
 
       let promises = [];
@@ -140,6 +148,9 @@ const getPackageReminderIds = (uid, reminderPackageId) => {
             .doc(reminderPackageId)
             .get()
             .then((documentSnapshot) => {
+              if (documentSnapshot.empty) {
+                return {};
+              }
               return {
                 plannedReminderIds: documentSnapshot.get("plannedReminderIds"),
                 recurringReminderIds: documentSnapshot.get("recurringReminderIds"),
@@ -152,11 +163,19 @@ const getPackageReminderIds = (uid, reminderPackageId) => {
         let plannedReminderIds = [];
         let recurringReminderIds = [];
         reminderIdsArray.map((packageReminderIds) => {
-          plannedReminderIds = plannedReminderIds.concat(packageReminderIds.plannedReminderIds);
-          recurringReminderIds = recurringReminderIds.concat(
-            packageReminderIds.recurringReminderIds
-          );
-          return packageReminderIds;
+          if (
+            packageReminderIds &&
+            Object.keys(packageReminderIds).length === 0 &&
+            packageReminderIds.constructor === Object
+          ) {
+            return packageReminderIds;
+          } else {
+            plannedReminderIds = plannedReminderIds.concat(packageReminderIds.plannedReminderIds);
+            recurringReminderIds = recurringReminderIds.concat(
+              packageReminderIds.recurringReminderIds
+            );
+            return packageReminderIds;
+          }
         });
 
         return { plannedReminderIds, recurringReminderIds };
@@ -208,6 +227,14 @@ const getSubscribed = (
                   subscribedPackage.ownerUid,
                   subscribedPackage.reminderPackageId
                 ).then((reminderIds) => {
+                  if (
+                    reminderIds &&
+                    Object.keys(reminderIds).length === 0 &&
+                    reminderIds.constructor === Object
+                  ) {
+                    return Promise.resolve({});
+                  }
+
                   return getRemindersByIds(
                     subscribedPackage.ownerUid,
                     reminderIds.plannedReminderIds,
@@ -220,7 +247,13 @@ const getSubscribed = (
               );
             }
             return Promise.all(promises).then((values) => {
-              allSubscribedReminders = [].concat.apply([], values);
+              allSubscribedReminders = [].concat.apply([], values).filter((subscribedReminders) => {
+                return !(
+                  subscribedReminders &&
+                  Object.keys(subscribedReminders).length === 0 &&
+                  subscribedReminders.constructor === Object
+                );
+              });
               return allSubscribedReminders.filter(reminderFilter);
             });
           });
@@ -244,7 +277,13 @@ exports.getAll = (req, res) => {
           .then((reminders) => {
             getSubscribed(req.query.uid)
               .then((allSubscribedReminders) => {
-                const allReminders = reminders.concat(allSubscribedReminders);
+                const allReminders = reminders.concat(allSubscribedReminders).filter((reminder) => {
+                  return !(
+                    reminder &&
+                    Object.keys(reminder).length === 0 &&
+                    reminder.constructor === Object
+                  );
+                });
 
                 res.send(allReminders);
                 return res.status(200).send({

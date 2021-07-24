@@ -123,7 +123,7 @@ const ChangeTelegramSendReminderButton = (props) => {
 };
 
 ChangeTelegramSendReminderButton.propTypes = {
-  telegramSendReminders: PropTypes.bool,
+  telegramSendReminders: PropTypes.oneOfType([PropTypes.string, PropTypes.bool]),
   setTelegramSendReminders: PropTypes.func,
 };
 

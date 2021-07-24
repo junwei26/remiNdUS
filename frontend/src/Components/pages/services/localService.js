@@ -42,9 +42,128 @@ const convertDateToString = (date) => {
     .padStart(2, "0")}${date.getMinutes().toString().padStart(2, "0")}`;
 };
 
+const generateDate = (dateObj) => {
+  const padZero = (num) => (num < 10 ? "0" + num.toString() : num.toString());
+  const year = dateObj.getFullYear().toString();
+  const month = padZero(dateObj.getMonth() + 1);
+  const day = padZero(dateObj.getDate());
+  return year + month + day;
+};
+
+const recurringActivitiesGenerator = (recurringActivity, currentDateObj, daysToGenerate = 7) => {
+  const generatedActivities = [];
+  let daysInMonths = [31, 28, 31, 30, 31, 30, 31, 31, 30, 31, 30, 31];
+  const year = currentDateObj.getFullYear();
+
+  if ((year % 4 === 0 && year % 100 !== 0) || year % 400 === 0) {
+    daysInMonths[1] = 29;
+  }
+
+  const weekMs = 6.048e8;
+  var monthMs = daysInMonths[currentDateObj.getMonth()] * 8.64e7;
+  var timeInterval = 0;
+  const endDateObj = new Date(currentDateObj.getTime());
+  const activityDay = new Date();
+  endDateObj.setDate(currentDateObj.getDate() + daysToGenerate);
+
+  if (recurringActivity.frequency === "weekly") {
+    activityDay.setDate(
+      currentDateObj.getDate() + recurringActivity.date - currentDateObj.getDay()
+    );
+    timeInterval = weekMs;
+  } else {
+    activityDay.setDate(recurringActivity.date);
+    timeInterval = monthMs;
+  }
+
+  let startMs = activityDay.getTime();
+  const endMs = endDateObj.getTime();
+
+  while (startMs <= endMs) {
+    const activity = {
+      id: recurringActivity.activityId,
+      startDate: parseTimeToString(generateDate(new Date(startMs)) + recurringActivity.startTime),
+      endDate: parseTimeToString(generateDate(new Date(startMs)) + recurringActivity.endTime),
+      title: recurringActivity.name,
+      description: recurringActivity.description,
+      eventType: recurringActivity.eventType,
+      tag: recurringActivity.activityTag,
+      frequency: recurringActivity.frequency,
+      date: recurringActivity.date,
+      type: recurringActivity.activityType,
+      templateId: recurringActivity.templateActivityId,
+    };
+
+    if (recurringActivity.frequency === "monthly") {
+      timeInterval = daysInMonths[new Date(startMs).getMonth()] * 8.64e7;
+    }
+
+    startMs += timeInterval;
+    generatedActivities.push(activity);
+  }
+
+  return generatedActivities;
+};
+
+const recurringRemindersGenerator = (recurringReminder, currentDateObj, daysToGenerate = 7) => {
+  const generatedReminders = [];
+  let daysInMonths = [31, 28, 31, 30, 31, 30, 31, 31, 30, 31, 30, 31];
+  const year = currentDateObj.getFullYear();
+
+  if ((year % 4 === 0 && year % 100 !== 0) || year % 400 === 0) {
+    daysInMonths[1] = 29;
+  }
+
+  const weekMs = 6.048e8;
+  var monthMs = daysInMonths[currentDateObj.getMonth()] * 8.64e7;
+  var timeInterval = 0;
+  const endDateObj = new Date(currentDateObj.getTime());
+  const reminderStartDay = new Date();
+  endDateObj.setDate(currentDateObj.getDate() + daysToGenerate);
+
+  if (recurringReminder.frequency === "weekly") {
+    reminderStartDay.setDate(
+      currentDateObj.getDate() + recurringReminder.date - currentDateObj.getDay()
+    );
+    timeInterval = weekMs;
+  } else {
+    reminderStartDay.setDate(recurringReminder.date);
+    timeInterval = monthMs;
+  }
+
+  let startMs = reminderStartDay.getTime();
+
+  const endMs = endDateObj.getTime();
+
+  while (startMs <= endMs) {
+    const reminder = {
+      id: recurringReminder.reminderId,
+      startDate: parseTimeToString(generateDate(new Date(startMs)) + recurringReminder.endTime),
+      title: recurringReminder.name,
+      description: recurringReminder.description,
+      eventType: recurringReminder.eventType,
+      tag: "Reminder",
+      frequency: recurringReminder.frequency,
+      date: recurringReminder.date,
+      type: recurringReminder.reminderType,
+      templateId: recurringReminder.templateReminderId,
+    };
+
+    if (recurringReminder.frequency === "monthly") {
+      timeInterval = daysInMonths[new Date(startMs).getMonth()] * 8.64e7;
+    }
+
+    startMs += timeInterval;
+    generatedReminders.push(reminder);
+  }
+  return generatedReminders;
+};
+
 export default {
   parseTimeToString,
   parseTimeToDate,
   convertDateToShorterString,
   convertDateToString,
+  recurringActivitiesGenerator,
+  recurringRemindersGenerator,
 };

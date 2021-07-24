@@ -47,6 +47,7 @@ const SearchPackages = () => {
       ownerName: "Loading...",
       public: "Loading...",
       verified: "Loading...",
+      subscribed: "Loading...",
       lastModified: "Loading...",
       numberOfReminders: "Loading...",
     },
@@ -78,6 +79,12 @@ const SearchPackages = () => {
       flex: 0.7,
     },
     {
+      field: "subscribed",
+      headerName: "Subscribed",
+      flex: 0.8,
+      type: "boolean",
+    },
+    {
       field: "ownerName",
       headerName: "Owner",
       flex: 1,
@@ -85,7 +92,7 @@ const SearchPackages = () => {
     },
     {
       field: "public",
-      headerName: "Public",
+      headerName: "Shared",
       flex: 0.8,
       hide: true,
     },
@@ -100,7 +107,9 @@ const SearchPackages = () => {
       headerName: "Last Modified",
       flex: 1,
       valueFormatter: (params) => {
-        return `${localService.parseTimeToString(params.value)}`;
+        return params.value === "Loading..."
+          ? params.value
+          : `${localService.parseTimeToString(params.value)}`;
       },
     },
     {
@@ -166,13 +175,14 @@ const SearchPackages = () => {
     }
 
     return reminderPackageService
-      .subscribeReminderPackages(ownerUids, reminderPackageIds)
+      .subscribeReminderPackages(ownerUids, reminderPackageIds, true)
       .then(() => {
         setCurrentAlert({
           severity: "success",
           message: "Successfully subscribed to reminder packages",
         });
         setSnackbarOpen(true);
+        getReminderPackages();
       })
       .catch((error) => {
         setCurrentAlert({
@@ -180,6 +190,27 @@ const SearchPackages = () => {
           message: `Issue subscribing to reminder packages. Error status code: ${error.response.status}. ${error.response.data.message}`,
         });
         setSnackbarOpen(true);
+      });
+  };
+
+  const unsubscribePackages = () => {
+    const ownerUids = [];
+    const reminderPackageIds = [];
+    for (let i = 0; i < selectedRows.length; ++i) {
+      ownerUids.push(selectedRows[i].ownerUid);
+      reminderPackageIds.push(selectedRows[i].reminderPackageId);
+    }
+
+    return reminderPackageService
+      .subscribeReminderPackages(ownerUids, reminderPackageIds, false)
+      .then(() => {
+        alert("Successfully unsubscribed from reminder packages");
+        getReminderPackages();
+      })
+      .catch((error) => {
+        alert(
+          `Issue unsubscribing from reminder packages. Error status code: ${error.response.status}. ${error.response.data.message}`
+        );
       });
   };
 
@@ -271,10 +302,25 @@ const SearchPackages = () => {
                   </Tooltip>
                 </Grid>
               </Grid>
-              <Grid item>
-                <Button type="submit" variant="contained" color="primary">
-                  Subscribe
-                </Button>
+              <Grid
+                container
+                item
+                direction="row"
+                justify="center"
+                alignItems="center"
+                style={{ width: "auto", height: "100%" }}
+                spacing={2}
+              >
+                <Grid item>
+                  <Button onClick={unsubscribePackages} variant="contained" color="primary">
+                    Unsubscribe
+                  </Button>
+                </Grid>
+                <Grid item>
+                  <Button type="submit" variant="contained" color="primary">
+                    Subscribe
+                  </Button>
+                </Grid>
               </Grid>
             </Grid>
           </Grid>

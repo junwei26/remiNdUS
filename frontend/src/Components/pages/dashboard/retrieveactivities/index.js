@@ -8,13 +8,20 @@ import {
   Button,
   Select,
   MenuItem,
+  Dialog,
+  DialogContent,
+  DialogActions,
+  DialogTitle,
+  ListItem,
+  ListItemText,
   Snackbar,
 } from "@material-ui/core";
 import { DataGrid, GridToolbar } from "@material-ui/data-grid";
+import PropTypes from "prop-types";
+import activityService from "../../services/activityService";
+import userService from "../../services/userService";
 import Alert from "@material-ui/lab/Alert";
 import AlertTitle from "@material-ui/lab/AlertTitle";
-import activityService from "../../../services/activityService";
-import userService from "../../../services/userService";
 const useStyles = makeStyles(() => ({
   root: {
     width: "100%",
@@ -22,14 +29,10 @@ const useStyles = makeStyles(() => ({
     padding: "20px",
   },
   paper: {
-    height: "1180px",
+    height: "800px",
   },
   gridItem: {
     width: "90%",
-  },
-  dataGridModules: {
-    width: "100%",
-    height: "280px",
   },
   dataGridActivities: {
     width: "100%",
@@ -37,7 +40,7 @@ const useStyles = makeStyles(() => ({
   },
 }));
 
-const RetrieveActivities = () => {
+const RetrieveActivities = (props) => {
   const classes = useStyles();
 
   const [modsLink, setModsLink] = useState("");
@@ -45,6 +48,17 @@ const RetrieveActivities = () => {
   const [activityList, setActivityList] = useState([]);
   const [selectionModelModules, setSelectionModelModules] = useState([]);
   const currentDate = new Date();
+
+  const [dialogOpen, setDialogOpen] = useState(false);
+
+  const handleDialogClickOpen = () => {
+    setDialogOpen(true);
+  };
+
+  const handleDialogClose = () => {
+    setDialogOpen(false);
+  };
+
   const [acadYear, setAcadYear] = useState(
     currentDate.getMonth() <= 7
       ? `${currentDate.getFullYear() - 1}-${currentDate.getFullYear()}`
@@ -92,39 +106,6 @@ const RetrieveActivities = () => {
     },
   ];
 
-  const modColumns = [
-    {
-      field: "name",
-      headerName: "Name",
-      flex: 1,
-    },
-    {
-      field: "lec",
-      headerName: "Lecture",
-      flex: 1,
-    },
-    {
-      field: "tut",
-      headerName: "Tutorial",
-      flex: 1,
-    },
-    {
-      field: "rec",
-      headerName: "Recitation",
-      flex: 1,
-    },
-    {
-      field: "sec",
-      headerName: "Sectional",
-      flex: 1,
-    },
-    {
-      field: "lab",
-      headerName: "Laboratory",
-      flex: 1,
-    },
-  ];
-
   const activityColumns = [
     {
       field: "name",
@@ -159,6 +140,9 @@ const RetrieveActivities = () => {
       headerName: "End Date/Time",
       flex: 1,
       valueFormatter: (params) => {
+        if (params.value === "Loading...") {
+          return "Loading...";
+        }
         const endTime = params.row.endTime;
         if (!endTime) {
           return "";
@@ -172,6 +156,9 @@ const RetrieveActivities = () => {
       headerName: "Date",
       flex: 0.7,
       valueFormatter: (params) => {
+        if (params.value === "Loading...") {
+          return "Loading...";
+        }
         return params.getValue(params.id, "frequency") === "weekly"
           ? dateReverseMap[params.value - 1]
           : params.value;
@@ -375,10 +362,6 @@ const RetrieveActivities = () => {
     setAcadYear(e.target.value);
   };
 
-  const handleCheckModules = () => {
-    parseLink();
-  };
-
   const handleModsLinkChange = (e) => {
     setModsLink(e.target.value);
   };
@@ -457,6 +440,7 @@ const RetrieveActivities = () => {
               message: "Successfully added activities from NUSMODS",
             });
             setSnackbarOpen(true);
+            props.setPlannerDataUpdate(!props.plannerDataUpdate);
             clearAllFields();
           })
           .catch((error) => {
@@ -500,7 +484,6 @@ const RetrieveActivities = () => {
   const clearSelectionModelModules = () => {
     setSelectionModelModules([]);
   };
-
   return (
     <>
       <Snackbar open={snackbarOpen} autoHideDuration={3000} onClose={handleSnackbarClose}>
@@ -508,108 +491,147 @@ const RetrieveActivities = () => {
           <AlertTitle>{currentAlert.message}</AlertTitle>
         </Alert>
       </Snackbar>
-      <Typography>Retrieve activities from NUSMODS</Typography>
-      <Paper elevation={2} variant="outlined" className={classes.paper}>
-        <form
-          noValidate
-          autoComplete="off"
-          onSubmit={handleRetrieveActivities}
-          style={{ width: "100%", height: "100%" }}
-        >
-          <Grid
-            container
-            className={classes.root}
-            direction="column"
-            justify="flex-start"
-            alignItems="center"
-            spacing={2}
-          >
-            <Grid item className={classes.gridItem}>
-              <TextField
-                label="Enter NUSMODS link"
-                value={modsLink}
-                onChange={handleModsLinkChange}
-                required
-                fullWidth
-              />
-            </Grid>
-            <Grid
-              container
-              item
-              className={classes.gridItem}
-              direction="row"
-              justify="space-between"
-              alignItems="center"
-              spacing={2}
+      <ListItem button key="Retrieve from NUSMODS">
+        <ListItemText primary="Retrieve from NUSMODS" onClick={handleDialogClickOpen} />
+      </ListItem>
+      <Dialog
+        open={dialogOpen}
+        onClose={handleDialogClose}
+        aria-labelledby="form-dialog-title"
+        maxWidth="lg"
+        fullWidth
+      >
+        <DialogTitle id="form-dialog-title">Add Activity</DialogTitle>
+        <DialogContent>
+          <Typography>Retrieve activities from NUSMODS</Typography>
+          <Paper elevation={2} variant="outlined" className={classes.paper}>
+            <form
+              noValidate
+              autoComplete="off"
+              onSubmit={handleRetrieveActivities}
+              style={{ width: "100%", height: "100%" }}
             >
-              <Grid item>
-                <Select value={acadYear} onChange={handleChangeAcadYear}>
-                  {acadYearMenuItems}
-                </Select>
+              <Grid
+                container
+                className={classes.root}
+                direction="column"
+                justify="flex-start"
+                alignItems="center"
+                spacing={2}
+              >
+                <Grid item className={classes.gridItem}>
+                  <TextField
+                    label="Enter NUSMODS link"
+                    value={modsLink}
+                    onChange={handleModsLinkChange}
+                    required
+                    fullWidth
+                  />
+                </Grid>
+                <Grid
+                  container
+                  item
+                  className={classes.gridItem}
+                  direction="row"
+                  justify="space-between"
+                  alignItems="center"
+                  spacing={2}
+                >
+                  <Grid
+                    container
+                    className={classes.root}
+                    direction="column"
+                    justify="flex-start"
+                    alignItems="center"
+                    spacing={2}
+                  >
+                    <Grid item className={classes.gridItem}>
+                      <TextField
+                        label="Enter NUSMODS link. E.g. 'https://nusmods.com/timetable/sem-1/share?CS1101S=TUT:09E,REC:07A,LEC:1'"
+                        value={modsLink}
+                        onChange={handleModsLinkChange}
+                        required
+                        fullWidth
+                      />
+                    </Grid>
+                    <Grid
+                      container
+                      item
+                      className={classes.gridItem}
+                      direction="row"
+                      justify="space-between"
+                      alignItems="center"
+                      spacing={2}
+                    >
+                      <Grid item>
+                        <Select value={acadYear} onChange={handleChangeAcadYear}>
+                          {acadYearMenuItems}
+                        </Select>
+                      </Grid>
+                      <Grid item>
+                        <Select value={semester} onChange={handleChangeSemester}>
+                          <MenuItem value={1}>Semester: 1</MenuItem>
+                          <MenuItem value={2}>Semester: 2</MenuItem>
+                        </Select>
+                      </Grid>
+                      <Grid item></Grid>
+                      <Grid item>
+                        <Button type="submit" color="primary">
+                          Get Activities
+                        </Button>
+                      </Grid>
+                    </Grid>
+                    <Grid item className={classes.gridItem}>
+                      <TextField
+                        label="Search Activities (by name)"
+                        type="search"
+                        value={searchText}
+                        onChange={updateSearchText}
+                        fullWidth
+                        autoFocus
+                      />
+                    </Grid>
+                    <Grid item className={classes.gridItem}>
+                      <Typography>Retrieved Activities</Typography>
+                      <DataGrid
+                        className={classes.dataGridActivities}
+                        rows={activityList}
+                        columns={activityColumns}
+                        autoPageSize
+                        checkboxSelection
+                        filterModel={{
+                          items: [
+                            { columnField: "name", operatorValue: "contains", value: searchText },
+                          ],
+                        }}
+                        onSelectionModelChange={handleDataGridSelectionChange}
+                        selectionModel={selectionModelModules}
+                        style={{ overflowX: "auto" }}
+                        components={{ Toolbar: GridToolbar }}
+                      />
+                    </Grid>
+                  </Grid>
+                </Grid>
               </Grid>
-              <Grid item>
-                <Select value={semester} onChange={handleChangeSemester}>
-                  <MenuItem value={1}>Semester: 1</MenuItem>
-                  <MenuItem value={2}>Semester: 2</MenuItem>
-                </Select>
-              </Grid>
-              <Grid item>
-                <Button onClick={handleCheckModules} color="primary">
-                  Check Modules
-                </Button>
-              </Grid>
-              <Grid item>
-                <Button type="submit" color="primary">
-                  Get Activities
-                </Button>
-              </Grid>
-            </Grid>
-            <Grid item className={classes.gridItem}>
-              <Typography>Detected Modules</Typography>
-              <DataGrid
-                className={classes.dataGridModules}
-                rows={modsList}
-                columns={modColumns}
-                autoPageSize
-              />
-            </Grid>
-            <Grid item className={classes.gridItem}>
-              <TextField
-                label="Search Activities (by name)"
-                type="search"
-                value={searchText}
-                onChange={updateSearchText}
-                fullWidth
-                autoFocus
-              />
-            </Grid>
-            <Grid item className={classes.gridItem}>
-              <Typography>Retrieved Activities</Typography>
-              <DataGrid
-                className={classes.dataGridActivities}
-                rows={activityList}
-                columns={activityColumns}
-                autoPageSize
-                checkboxSelection
-                filterModel={{
-                  items: [{ columnField: "name", operatorValue: "contains", value: searchText }],
-                }}
-                onSelectionModelChange={handleDataGridSelectionChange}
-                selectionModel={selectionModelModules}
-                style={{ overflowX: "auto" }}
-                components={{ Toolbar: GridToolbar }}
-              />
-            </Grid>
-            <Grid item>
-              <Button onClick={handleAddActivities} variant="contained" color="primary">
-                Add selected activities
-              </Button>
-            </Grid>
-          </Grid>
-        </form>
-      </Paper>
+            </form>
+          </Paper>
+        </DialogContent>
+        <DialogActions>
+          <Button onClick={handleDialogClose} variant="contained" color="primary">
+            Close
+          </Button>
+          <Button onClick={handleAddActivities} variant="contained" color="primary">
+            Add selected activities
+          </Button>
+        </DialogActions>
+      </Dialog>
     </>
   );
+};
+
+RetrieveActivities.propTypes = {
+  plannerDataUpdate: PropTypes.bool,
+  setPlannerDataUpdate: PropTypes.func,
 };
 
 export default RetrieveActivities;
