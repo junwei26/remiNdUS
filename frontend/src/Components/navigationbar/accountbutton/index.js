@@ -44,9 +44,6 @@ const AccountButton = () => {
     if (userSettings.signOut()) {
       setCurrentAlert({ severity: "success", message: "Sign Out Successful. See you again!" });
       setSnackbarOpen(true);
-    } else {
-      setCurrentAlert({ severity: "error", message: "Error: Unable to sign out" });
-      setSnackbarOpen(true);
     }
   };
 
