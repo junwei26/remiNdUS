@@ -4,7 +4,6 @@ import * as userSettings from "../../firebaseAuth/userSettings";
 import { makeStyles } from "@material-ui/core/styles";
 import { AppBar, Toolbar, Typography, Grid, IconButton, Button } from "@material-ui/core";
 import AccountButton from "./accountbutton";
-import SignupButton from "./signupbutton";
 import LoginButton from "./loginbutton";
 import HomeIcon from "@material-ui/icons/Home";
 
@@ -88,9 +87,6 @@ const NavigationBar = () => {
             <Grid container direction="row" justify="center" alignItems="center">
               <Grid item>
                 <LoginButton />
-              </Grid>
-              <Grid item>
-                <SignupButton />
               </Grid>
             </Grid>
           </div>

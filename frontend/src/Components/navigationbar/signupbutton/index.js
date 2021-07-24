@@ -11,8 +11,17 @@ import {
   TextField,
 } from "@material-ui/core";
 import { signUpWithEmailPassword } from "../../../firebaseAuth/email";
+import { makeStyles } from "@material-ui/core/styles";
+
+const useStyles = makeStyles(() => ({
+  listItemText: {
+    fontSize: "1.7em",
+    color: "white", //Insert your required size
+  },
+}));
 
 const SignupButton = () => {
+  const classes = useStyles();
   const [dialogOpen, setDialogOpen] = useState(false);
 
   const handleDialogClickOpen = () => {
@@ -30,8 +39,19 @@ const SignupButton = () => {
 
   return (
     <>
-      <ListItem button onClick={handleDialogClickOpen} key="Sign Up">
-        <ListItemText primary="SIGN UP" />
+      <ListItem
+        button
+        onClick={handleDialogClickOpen}
+        key="Sign Up"
+        color="primary"
+        style={{
+          borderRadius: 10,
+          backgroundColor: "#3f51b5",
+          padding: "5px 15px",
+          fontSize: "18px",
+        }}
+      >
+        <ListItemText primary="Get Started" classes={{ primary: classes.listItemText }} />
       </ListItem>
       <Dialog
         open={dialogOpen}
