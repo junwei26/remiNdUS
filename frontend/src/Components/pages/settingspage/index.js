@@ -3,39 +3,11 @@ import ChangeUserInfoButton from "./changeuserinfobutton";
 import DisplayUserInfo from "./displayuserinfo";
 import DisplaySettings from "./displaysettings";
 import { firebaseAuth } from "../../../firebase";
-import { Grid, Typography } from "@material-ui/core";
+import { Grid, Typography, Snackbar } from "@material-ui/core";
+import Alert from "@material-ui/lab/Alert";
+import AlertTitle from "@material-ui/lab/AlertTitle";
 import axios from "axios";
 import ResetPasswordForm from "../../navigationbar/loginbutton/loginpopup/resetpasswordform";
-
-const getSettings = (
-  dataUrl,
-  uid,
-  setUsername,
-  setVerified,
-  setTelegramHandle,
-  setTelegramSendReminders,
-  setTelegramReminderTiming,
-  setLoading
-) => {
-  setLoading(true);
-
-  return axios
-    .get(dataUrl, { params: { uid: uid } })
-    .then((response) => {
-      setUsername(response.data.username);
-      setVerified(response.data.verified);
-      setTelegramHandle(response.data.telegramHandle);
-      setTelegramSendReminders(response.data.telegramSendReminders);
-      setTelegramReminderTiming(response.data.telegramReminderTiming);
-      setLoading(false);
-      alert("Successfully got user settings from the database");
-    })
-    .catch((error) => {
-      alert(
-        `Issue getting user settings. Error status code: ${error.response.status}. ${error.response.data.message}`
-      );
-    });
-};
 
 const SettingsPage = () => {
   const user = firebaseAuth.currentUser;
@@ -47,15 +19,54 @@ const SettingsPage = () => {
   const [telegramReminderTiming, setTelegramReminderTiming] = useState("Loading");
   const [email, setEmail] = useState(user.email);
   const [photoUrl, setPhotoUrl] = useState(user.photoURL);
+  const [currentAlert, setCurrentAlert] = useState({ severity: "", message: "" });
+  const [snackbarOpen, setSnackbarOpen] = useState(false);
+  const handleSnackbarClose = (event, reason) => {
+    if (reason === "clickaway") {
+      return;
+    }
+
+    setSnackbarOpen(false);
+  };
   const emailVerified = user.emailVerified;
-  const uid = user.uid; // The user's ID, unique to the Firebase project. Do NOT use
-  // this value to authenticate with your backend server, if
-  // you have one. Use User.getToken() instead.
+  const uid = user.uid;
 
   const [loading, setLoading] = useState("False");
 
   const dataUrl = "https://asia-southeast2-remindus-76402.cloudfunctions.net/backendAPI/api/user/";
-  // const dataUrl = "http://localhost:5001/remindus-76402/asia-southeast2/backendAPI/api/user/";
+  const getSettings = (
+    dataUrl,
+    uid,
+    setUsername,
+    setVerified,
+    setTelegramHandle,
+    setTelegramSendReminders,
+    setTelegramReminderTiming,
+    setLoading
+  ) => {
+    setLoading(true);
+
+    return axios
+      .get(dataUrl, { params: { uid: uid } })
+      .then((response) => {
+        setUsername(response.data.username);
+        setVerified(response.data.verified);
+        setTelegramHandle(response.data.telegramHandle);
+        setTelegramSendReminders(response.data.telegramSendReminders);
+        setTelegramReminderTiming(response.data.telegramReminderTiming);
+        setLoading(false);
+        setCurrentAlert({ severity: "info", message: "Retrieved user settings from database" });
+        setSnackbarOpen(true);
+      })
+      .catch((error) => {
+        setCurrentAlert({
+          severity: "error",
+          message: `Error retrieving user settings from database 
+         Error status code: ${error.response.status}. ${error.response.data.message}`,
+        });
+        setSnackbarOpen(true);
+      });
+  };
 
   useEffect(() => {
     getSettings(
@@ -78,6 +89,11 @@ const SettingsPage = () => {
 
   return (
     <>
+      <Snackbar open={snackbarOpen} autoHideDuration={3000} onClose={handleSnackbarClose}>
+        <Alert severity={currentAlert.severity}>
+          <AlertTitle>{currentAlert.message}</AlertTitle>
+        </Alert>
+      </Snackbar>
       <Grid container direction="column" justify="center" alignItems="center" spacing={2}>
         <Grid item>
           <Typography>Welcome to the Settings Page</Typography>

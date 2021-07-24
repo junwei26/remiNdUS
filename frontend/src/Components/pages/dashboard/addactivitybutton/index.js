@@ -17,9 +17,12 @@ import {
   ListItem,
   ListItemIcon,
   ListItemText,
+  Snackbar,
 } from "@material-ui/core";
 import PropTypes from "prop-types";
 import DateFnsUtils from "@date-io/date-fns";
+import Alert from "@material-ui/lab/Alert";
+import AlertTitle from "@material-ui/lab/AlertTitle";
 import { MuiPickersUtilsProvider, DateTimePicker, TimePicker } from "@material-ui/pickers";
 import activityService from "../../services/activityService";
 import localService from "../../services/localService";
@@ -71,6 +74,15 @@ const AddActivityButton = (props) => {
       Create new activity tag
     </MenuItem>,
   ]);
+  const [currentAlert, setCurrentAlert] = useState({ severity: "", message: "" });
+  const [snackbarOpen, setSnackbarOpen] = useState(false);
+  const handleSnackbarClose = (event, reason) => {
+    if (reason === "clickaway") {
+      return;
+    }
+
+    setSnackbarOpen(false);
+  };
 
   const handleSelectFrequencyChange = (e) => {
     setDate(1);
@@ -154,16 +166,32 @@ const AddActivityButton = (props) => {
 
   const closeDialogAddActivity = () => {
     if (activityName === "") {
-      alert("Please input an activity name");
+      setCurrentAlert({
+        severity: "error",
+        message: "Please input an activity name",
+      });
+      setSnackbarOpen(true);
       return;
     } else if (description === "") {
-      alert("Please input an activity description");
+      setCurrentAlert({
+        severity: "error",
+        message: "Please input an activity description",
+      });
+      setSnackbarOpen(true);
       return;
     } else if (endDateTime.getTime() <= startDateTime.getTime()) {
-      alert("End datetime cannot be earlier than start datetime");
+      setCurrentAlert({
+        severity: "error",
+        message: "End datetime cannot be earlier than start datetime",
+      });
+      setSnackbarOpen(true);
       return;
     } else if (!activityTag) {
-      alert("Activity must have an associated tag");
+      setCurrentAlert({
+        severity: "error",
+        message: "Activity must have an associated tag",
+      });
+      setSnackbarOpen(true);
       return;
     }
 
@@ -184,14 +212,17 @@ const AddActivityButton = (props) => {
             templateActivityId
           )
           .then(() => {
-            alert("Succesfully created activity");
+            setCurrentAlert({ severity: "success", message: "Succesfully created activity" });
+            setSnackbarOpen(true);
             props.setPlannerDataUpdate(!props.plannerDataUpdate);
             handleDialogClose();
           })
           .catch((error) => {
-            alert(
-              `Issue creating planned activity. Error status code: ${error.response.status}. ${error.response.data.message}`
-            );
+            setCurrentAlert({
+              severity: "error",
+              message: `Issue creating planned activity. Error status code: ${error.response.status}. ${error.response.data.message}`,
+            });
+            setSnackbarOpen(true);
           });
       } else {
         activityService
@@ -212,14 +243,20 @@ const AddActivityButton = (props) => {
             templateActivityId
           )
           .then(() => {
-            alert("Succesfully created activity");
+            setCurrentAlert({
+              severity: "success",
+              message: "Succesfully created activity",
+            });
+            setSnackbarOpen(true);
             props.setPlannerDataUpdate(!props.plannerDataUpdate);
             handleDialogClose();
           })
           .catch((error) => {
-            alert(
-              `Issue creating recurring activity. Error status code: ${error.response.status}. ${error.response.data.message}`
-            );
+            setCurrentAlert({
+              severity: "error",
+              message: `Issue creating recurring activity. Error status code: ${error.response.status}. ${error.response.data.message}`,
+            });
+            setSnackbarOpen(true);
           });
       }
     });
@@ -232,11 +269,14 @@ const AddActivityButton = (props) => {
         setTemplateActivities(response.data);
       })
       .catch((error) => {
-        alert(
-          error === undefined
-            ? "Error accessing API"
-            : `Issue retrieving template activities. Error status code ${error.response.status}. ${error.response.data.message}`
-        );
+        setCurrentAlert({
+          severity: "error",
+          message:
+            error === undefined
+              ? "Error accessing API"
+              : `Issue retrieving template activities. Error status code ${error.response.status}. ${error.response.data.message}`,
+        });
+        setSnackbarOpen(true);
       });
   };
 
@@ -247,11 +287,14 @@ const AddActivityButton = (props) => {
         setActivityTags(response.data.tags);
       })
       .catch((error) => {
-        alert(
-          error === undefined
-            ? "Error accessing API"
-            : `Issue retrieving activity tags. Error status code ${error.response.status}. ${error.response.data.message}`
-        );
+        setCurrentAlert({
+          severity: "error",
+          message:
+            error === undefined
+              ? "Error accessing API"
+              : `Issue retrieving activity tags. Error status code ${error.response.status}. ${error.response.data.message}`,
+        });
+        setSnackbarOpen(true);
       });
   };
 
@@ -322,6 +365,11 @@ const AddActivityButton = (props) => {
 
   return (
     <>
+      <Snackbar open={snackbarOpen} autoHideDuration={3000} onClose={handleSnackbarClose}>
+        <Alert severity={currentAlert.severity}>
+          <AlertTitle>{currentAlert.message}</AlertTitle>
+        </Alert>
+      </Snackbar>
       <ListItem button onClick={handleDialogClickOpen} key="Add Activity">
         <ListItemIcon>
           <AddIcon />

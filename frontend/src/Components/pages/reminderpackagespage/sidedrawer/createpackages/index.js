@@ -1,6 +1,17 @@
 import React, { useState, useEffect } from "react";
 import { makeStyles } from "@material-ui/core/styles";
-import { Grid, Typography, TextField, Paper, Button, Tooltip, IconButton } from "@material-ui/core";
+import {
+  Grid,
+  Typography,
+  TextField,
+  Paper,
+  Button,
+  Tooltip,
+  IconButton,
+  Snackbar,
+} from "@material-ui/core";
+import Alert from "@material-ui/lab/Alert";
+import AlertTitle from "@material-ui/lab/AlertTitle";
 import { DataGrid, GridToolbar } from "@material-ui/data-grid";
 import PropTypes from "prop-types";
 import RefreshIcon from "@material-ui/icons/Refresh";
@@ -50,6 +61,15 @@ const CreatePackages = (props) => {
   ];
   const [reminderList, setReminderList] = useState(loadingReminderList);
   const [editingPackage, setEditingPackage] = useState(Boolean(props.reminderPackage));
+  const [currentAlert, setCurrentAlert] = useState({ severity: "", message: "" });
+  const [snackbarOpen, setSnackbarOpen] = useState(false);
+  const handleSnackbarClose = (event, reason) => {
+    if (reason === "clickaway") {
+      return;
+    }
+
+    setSnackbarOpen(false);
+  };
 
   const reminderColumns = [
     {
@@ -201,13 +221,19 @@ const CreatePackages = (props) => {
           props.reminderPackage.public
         )
         .then(() => {
-          alert("Successfully updated reminder package!");
+          setCurrentAlert({
+            severity: "success",
+            message: "Successfully updated reminder package!",
+          });
+          setSnackbarOpen(true);
           props.setView("Subscribed Packages");
         })
         .catch((error) => {
-          alert(
-            `Issue updating reminder package. Error status code: ${error.response.status}. ${error.response.data.message}`
-          );
+          setCurrentAlert({
+            severity: "error",
+            message: `Issue updating reminder package. Error status code: ${error.response.status}. ${error.response.data.message}`,
+          });
+          setSnackbarOpen(true);
         });
     } else {
       reminderPackageService
@@ -216,13 +242,19 @@ const CreatePackages = (props) => {
           recurringReminderIds,
         })
         .then(() => {
-          alert("Successfully created reminder package!");
+          setCurrentAlert({
+            severity: "success",
+            message: "Successfully created reminder package!",
+          });
+          setSnackbarOpen(true);
           clearAllFields();
         })
         .catch((error) => {
-          alert(
-            `Issue creating new reminder package. Error status code: ${error.response.status}. ${error.response.data.message}`
-          );
+          setCurrentAlert({
+            severity: "error",
+            message: `Issue creating new reminder package. Error status code: ${error.response.status}. ${error.response.data.message}`,
+          });
+          setSnackbarOpen(true);
         });
     }
   };
@@ -245,9 +277,11 @@ const CreatePackages = (props) => {
         return tempReminderList;
       })
       .catch((error) => {
-        alert(
-          `Issue getting reminder packages. Error status code: ${error.response.status}. ${error.response.data.message}`
-        );
+        setCurrentAlert({
+          severity: "error",
+          message: `Issue getting reminder packages. Error status code: ${error.response.status}. ${error.response.data.message}`,
+        });
+        setSnackbarOpen(true);
       });
   };
 
@@ -274,6 +308,11 @@ const CreatePackages = (props) => {
 
   return (
     <>
+      <Snackbar open={snackbarOpen} autoHideDuration={3000} onClose={handleSnackbarClose}>
+        <Alert severity={currentAlert.severity}>
+          <AlertTitle>{currentAlert.message}</AlertTitle>
+        </Alert>
+      </Snackbar>
       <Typography>
         {editingPackage ? "Edit Reminder Package" : "Create Reminder Packages"}
       </Typography>

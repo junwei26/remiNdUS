@@ -14,7 +14,10 @@ import {
   ListItem,
   ListItemIcon,
   ListItemText,
+  Snackbar,
 } from "@material-ui/core";
+import Alert from "@material-ui/lab/Alert";
+import AlertTitle from "@material-ui/lab/AlertTitle";
 import PropTypes from "prop-types";
 import { DataGrid, GridToolbar } from "@material-ui/data-grid";
 import reminderService from "../../services/reminderService";
@@ -120,6 +123,15 @@ const SearchReminders = (props) => {
   const [selectionModel, setSelectionModel] = useState([]);
   const [selectedRow, setSelectedRow] = useState(null);
   const [dialogMaxWidth, setDialogMaxWidth] = useState("lg");
+  const [currentAlert, setCurrentAlert] = useState({ severity: "", message: "" });
+  const [snackbarOpen, setSnackbarOpen] = useState(false);
+  const handleSnackbarClose = (event, reason) => {
+    if (reason === "clickaway") {
+      return;
+    }
+
+    setSnackbarOpen(false);
+  };
 
   const handleDialogClickOpen = () => {
     setDialogOpen(true);
@@ -160,9 +172,11 @@ const SearchReminders = (props) => {
         setReminderList(tempReminderList);
       })
       .catch((error) => {
-        alert(
-          `Issue getting reminders. Error status code: ${error.response.status}. ${error.response.data.message}`
-        );
+        setCurrentAlert({
+          severity: "error",
+          message: `Issue getting reminders. Error status code: ${error.response.status}. ${error.response.data.message}`,
+        });
+        setSnackbarOpen(true);
       });
   };
 
@@ -181,12 +195,16 @@ const SearchReminders = (props) => {
 
   const handleEditReminders = () => {
     if (!selectedRow) {
-      alert("Please select an reminder to edit");
+      setCurrentAlert({ severity: "error", message: "Please select an reminder to edit" });
+      setSnackbarOpen(true);
       return;
     } else if (selectedRow.subscribed === true) {
-      alert(
-        "You cannot delete a reminder from a reminder package that you are subscribed. Please unsubscribe from the respective reminder package instead."
-      );
+      setCurrentAlert({
+        severity: "error",
+        message:
+          "You cannot edit a reminder from a reminder package that you do not own. Please unsubscribe from the respective reminder package or request the package owner to edit it.",
+      });
+      setSnackbarOpen(true);
       return;
     } else {
       setDialogMaxWidth("xs");
@@ -197,12 +215,16 @@ const SearchReminders = (props) => {
 
   const handleDeleteReminder = () => {
     if (!selectedRow) {
-      alert("Please select an reminder to delete");
+      setCurrentAlert({ severity: "error", message: "Please select an reminder to delete" });
+      setSnackbarOpen(true);
       return;
     } else if (selectedRow.subscribed === true) {
-      alert(
-        "You cannot delete a reminder from a reminder package that you are subscribed. Please unsubscribe from the respective reminder package instead."
-      );
+      setCurrentAlert({
+        severity: "error",
+        message:
+          "You cannot delete a reminder from a reminder package that you are subscribed. Please unsubscribe from the respective reminder package instead.",
+      });
+      setSnackbarOpen(true);
       return;
     } else {
       reminderService
@@ -211,18 +233,26 @@ const SearchReminders = (props) => {
           selectedRow.reminderType === "planned" ? "plannedReminders" : "recurringReminders"
         )
         .then(() => {
-          alert("Successfully deleted reminder");
+          setCurrentAlert({ severity: "success", message: "Successfully deleted reminder" });
+          setSnackbarOpen(true);
         })
         .catch((error) => {
-          alert(
-            `Issue deleting reminder. Error status code: ${error.response.status}. ${error.response.data.message}`
-          );
+          setCurrentAlert({
+            severity: "error",
+            message: `Issue deleting reminder. Error status code: ${error.response.status}. ${error.response.data.message}`,
+          });
+          setSnackbarOpen(true);
         });
     }
   };
 
   return (
     <>
+      <Snackbar open={snackbarOpen} autoHideDuration={3000} onClose={handleSnackbarClose}>
+        <Alert severity={currentAlert.severity}>
+          <AlertTitle>{currentAlert.message}</AlertTitle>
+        </Alert>
+      </Snackbar>
       <ListItem button onClick={handleDialogClickOpen} key="Search Reminder">
         <ListItemIcon>
           <SearchIcon />

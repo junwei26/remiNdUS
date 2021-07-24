@@ -14,7 +14,10 @@ import {
   ListItem,
   ListItemIcon,
   ListItemText,
+  Snackbar,
 } from "@material-ui/core";
+import Alert from "@material-ui/lab/Alert";
+import AlertTitle from "@material-ui/lab/AlertTitle";
 import PropTypes from "prop-types";
 import { DataGrid, GridToolbar } from "@material-ui/data-grid";
 import activityService from "../../services/activityService";
@@ -151,6 +154,15 @@ const SearchActivities = (props) => {
   const [selectionModel, setSelectionModel] = useState([]);
   const [selectedRow, setSelectedRow] = useState(null);
   const [dialogMaxWidth, setDialogMaxWidth] = useState("lg");
+  const [currentAlert, setCurrentAlert] = useState({ severity: "", message: "" });
+  const [snackbarOpen, setSnackbarOpen] = useState(false);
+  const handleSnackbarClose = (event, reason) => {
+    if (reason === "clickaway") {
+      return;
+    }
+
+    setSnackbarOpen(false);
+  };
 
   const handleDialogClickOpen = () => {
     setDialogOpen(true);
@@ -191,9 +203,11 @@ const SearchActivities = (props) => {
         setActivityList(tempActivityList);
       })
       .catch((error) => {
-        alert(
-          `Issue getting activities. Error status code: ${error.response.status}. ${error.response.data.message}`
-        );
+        setCurrentAlert({
+          severity: "error",
+          message: `Issue getting activities. Error status code: ${error.response.status}. ${error.response.data.message}`,
+        });
+        setSnackbarOpen(true);
       });
   };
 
@@ -212,7 +226,11 @@ const SearchActivities = (props) => {
 
   const handleEditActivity = () => {
     if (!selectedRow) {
-      alert("Please select an activity to edit");
+      setCurrentAlert({
+        severity: "error",
+        message: "Please select an activity to edit",
+      });
+      setSnackbarOpen(true);
       return;
     } else {
       setDialogMaxWidth("xs");
@@ -223,7 +241,11 @@ const SearchActivities = (props) => {
 
   const handleDeleteActivity = () => {
     if (!selectedRow) {
-      alert("Please select an activity to delete");
+      setCurrentAlert({
+        severity: "error",
+        message: "Please select an activity to delete",
+      });
+      setSnackbarOpen(true);
       return;
     } else {
       activityService
@@ -232,19 +254,30 @@ const SearchActivities = (props) => {
           selectedRow.activityType === "planned" ? "plannedActivities" : "recurringActivities"
         )
         .then(() => {
-          alert("Successfully deleted activity");
+          setCurrentAlert({
+            severity: "success",
+            message: "Successfully deleted activity",
+          });
+          setSnackbarOpen(true);
           props.setPlannerDataUpdate(!props.plannerDataUpdate);
         })
         .catch((error) => {
-          alert(
-            `Issue deleting activity. Error status code: ${error.response.status}. ${error.response.data.message}`
-          );
+          setCurrentAlert({
+            severity: "error",
+            message: `Issue deleting activity. Error status code: ${error.response.status}. ${error.response.data.message}`,
+          });
+          setSnackbarOpen(true);
         });
     }
   };
 
   return (
     <>
+      <Snackbar open={snackbarOpen} autoHideDuration={3000} onClose={handleSnackbarClose}>
+        <Alert severity={currentAlert.severity}>
+          <AlertTitle>{currentAlert.message}</AlertTitle>
+        </Alert>
+      </Snackbar>
       <ListItem button onClick={handleDialogClickOpen} key="Search Activity">
         <ListItemIcon>
           <SearchIcon />

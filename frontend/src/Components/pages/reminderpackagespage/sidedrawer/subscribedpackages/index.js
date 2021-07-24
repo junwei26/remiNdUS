@@ -1,6 +1,17 @@
 import React, { useEffect, useState } from "react";
 import { makeStyles } from "@material-ui/core/styles";
-import { Grid, Typography, TextField, Paper, Button, IconButton, Tooltip } from "@material-ui/core";
+import {
+  Grid,
+  Typography,
+  TextField,
+  Paper,
+  Button,
+  IconButton,
+  Tooltip,
+  Snackbar,
+} from "@material-ui/core";
+import Alert from "@material-ui/lab/Alert";
+import AlertTitle from "@material-ui/lab/AlertTitle";
 import { DataGrid, GridToolbar } from "@material-ui/data-grid";
 import PropTypes from "prop-types";
 import RefreshIcon from "@material-ui/icons/Refresh";
@@ -45,6 +56,15 @@ const SubscribedPackages = (props) => {
     },
   ];
   const [packageList, setPackageList] = useState(loadingPackageList);
+  const [currentAlert, setCurrentAlert] = useState({ severity: "", message: "" });
+  const [snackbarOpen, setSnackbarOpen] = useState(false);
+  const handleSnackbarClose = (event, reason) => {
+    if (reason === "clickaway") {
+      return;
+    }
+
+    setSnackbarOpen(false);
+  };
   const packageColumns = [
     {
       field: "name",
@@ -127,11 +147,14 @@ const SubscribedPackages = (props) => {
       })
       .catch((error) => {
         if (!error.response) {
-          alert("Issue accessing reminder package API");
+          setCurrentAlert({ severity: "error", message: "Issue accessing reminder package API" });
+          setSnackbarOpen(true);
         } else {
-          alert(
-            `Issue getting reminder packages. Error status code: ${error.response.status}. ${error.response.data.message}`
-          );
+          setCurrentAlert({
+            severity: "error",
+            message: `Issue getting reminder packages. Error status code: ${error.response.status}. ${error.response.data.message}`,
+          });
+          setSnackbarOpen(true);
         }
       });
   };
@@ -145,7 +168,11 @@ const SubscribedPackages = (props) => {
   const handleSubmitEditPackage = (e) => {
     e.preventDefault();
     if (selectedRows.length !== 1) {
-      alert("Please select only one reminder package when choosing to edit");
+      setCurrentAlert({
+        severity: "error",
+        message: "Please select only one reminder package when choosing to edit",
+      });
+      setSnackbarOpen(true);
       return;
     } else {
       props.setSelectedReminderPackage(selectedRows[0]);
@@ -167,13 +194,19 @@ const SubscribedPackages = (props) => {
     reminderPackageService
       .deleteReminderPackages(reminderPackageIds)
       .then(() => {
-        alert("Successfully deleted reminder packages!");
+        setCurrentAlert({
+          severity: "success",
+          message: "Successfully deleted reminder packages!",
+        });
+        setSnackbarOpen(true);
         refreshPackages();
       })
       .catch((error) => {
-        alert(
-          `Issue deleting reminder package. Error status code: ${error.response.status}. ${error.response.data.message}`
-        );
+        setCurrentAlert({
+          severity: "error",
+          message: `Issue deleting reminder package. Error status code: ${error.response.status}. ${error.response.data.message}`,
+        });
+        setSnackbarOpen(true);
       });
   };
 
@@ -186,13 +219,19 @@ const SubscribedPackages = (props) => {
     reminderPackageService
       .shareReminderPackages(reminderPackageIds, true)
       .then(() => {
-        alert("Successfully shared reminder packages!");
+        setCurrentAlert({
+          severity: "success",
+          message: "Successfully shared reminder packages!",
+        });
+        setSnackbarOpen(true);
         refreshPackages();
       })
       .catch((error) => {
-        alert(
-          `Issue sharing reminder package. Error status code: ${error.response.status}. ${error.response.data.message}`
-        );
+        setCurrentAlert({
+          severity: "error",
+          message: `Issue sharing reminder package. Error status code: ${error.response.status}. ${error.response.data.message}`,
+        });
+        setSnackbarOpen(true);
       });
   };
 
@@ -208,6 +247,11 @@ const SubscribedPackages = (props) => {
 
   return (
     <>
+      <Snackbar open={snackbarOpen} autoHideDuration={3000} onClose={handleSnackbarClose}>
+        <Alert severity={currentAlert.severity}>
+          <AlertTitle>{currentAlert.message}</AlertTitle>
+        </Alert>
+      </Snackbar>
       <Typography>Your Reminder Packages</Typography>
       <Paper elevation={2} variant="outlined" style={{ height: "780px" }}>
         <form

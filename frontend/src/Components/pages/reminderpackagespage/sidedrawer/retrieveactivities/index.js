@@ -1,9 +1,18 @@
 import React, { useState } from "react";
 import { makeStyles } from "@material-ui/core/styles";
-// import { makeStyles } from "@material-ui/core/styles";
-import { Grid, Typography, TextField, Paper, Button, Select, MenuItem } from "@material-ui/core";
+import {
+  Grid,
+  Typography,
+  TextField,
+  Paper,
+  Button,
+  Select,
+  MenuItem,
+  Snackbar,
+} from "@material-ui/core";
 import { DataGrid, GridToolbar } from "@material-ui/data-grid";
-// Tooltip, IconButton
+import Alert from "@material-ui/lab/Alert";
+import AlertTitle from "@material-ui/lab/AlertTitle";
 import activityService from "../../../services/activityService";
 import userService from "../../../services/userService";
 const useStyles = makeStyles(() => ({
@@ -42,6 +51,15 @@ const RetrieveActivities = () => {
       : `${currentDate.getFullYear()}-${currentDate.getFullYear() + 1}`
   );
   const [semester, setSemester] = useState(1);
+  const [currentAlert, setCurrentAlert] = useState({ severity: "", message: "" });
+  const [snackbarOpen, setSnackbarOpen] = useState(false);
+  const handleSnackbarClose = (event, reason) => {
+    if (reason === "clickaway") {
+      return;
+    }
+
+    setSnackbarOpen(false);
+  };
   const dateMap = {
     Monday: 1,
     Tuesday: 2,
@@ -326,11 +344,17 @@ const RetrieveActivities = () => {
       })
       .catch((error) => {
         if (error.response) {
-          alert(
-            `Error getting activities from NUSMODS. Error status code: ${error.response.status}. ${error.response.data.message}`
-          );
+          setCurrentAlert({
+            severity: "error",
+            message: `Error getting activities from NUSMODS. Error status code: ${error.response.status}. ${error.response.data.message}`,
+          });
+          setSnackbarOpen(true);
         } else {
-          alert(`Error getting activities from NUSMODS. ${error}`);
+          setCurrentAlert({
+            severity: "error",
+            message: `Error getting activities from NUSMODS. ${error}`,
+          });
+          setSnackbarOpen(true);
         }
       });
   };
@@ -428,22 +452,34 @@ const RetrieveActivities = () => {
         return activityService
           .addActivities(accountForDuplicatedTemplates(selectedRows))
           .then(() => {
-            alert("Successfully added activities from NUSMODS");
+            setCurrentAlert({
+              severity: "success",
+              message: "Successfully added activities from NUSMODS",
+            });
+            setSnackbarOpen(true);
             clearAllFields();
           })
           .catch((error) => {
-            alert(
-              `Issue adding activities. Error status code: ${error.response.status}. ${error.response.data.message}`
-            );
+            setCurrentAlert({
+              severity: "error",
+              message: `Issue adding activities. Error status code: ${error.response.status}. ${error.response.data.message}`,
+            });
+            setSnackbarOpen(true);
           });
       })
       .catch((error) => {
         if (error.response) {
-          alert(
-            `Error creating activity tag. Error status code: ${error.response.status}. ${error.response.data.message}`
-          );
+          setCurrentAlert({
+            severity: "error",
+            message: `Error creating activity tag. Error status code: ${error.response.status}. ${error.response.data.message}`,
+          });
+          setSnackbarOpen(true);
         } else {
-          alert(`Error getting activities from NUSMODS. ${error}`);
+          setCurrentAlert({
+            severity: "error",
+            message: `Error getting activities from NUSMODS. ${error}`,
+          });
+          setSnackbarOpen(true);
         }
       });
   };
@@ -467,6 +503,11 @@ const RetrieveActivities = () => {
 
   return (
     <>
+      <Snackbar open={snackbarOpen} autoHideDuration={3000} onClose={handleSnackbarClose}>
+        <Alert severity={currentAlert.severity}>
+          <AlertTitle>{currentAlert.message}</AlertTitle>
+        </Alert>
+      </Snackbar>
       <Typography>Retrieve activities from NUSMODS</Typography>
       <Paper elevation={2} variant="outlined" className={classes.paper}>
         <form
