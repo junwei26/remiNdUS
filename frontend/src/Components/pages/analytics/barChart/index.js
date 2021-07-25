@@ -74,7 +74,13 @@ const BarChart = (props) => {
         date,
       })
     );
-    return result;
+    return result.sort((data1, data2) => {
+      const date1 = data1.date.split("/");
+      const date2 = data2.date.split("/");
+      return (
+        new Date(date1[2], date1[1] - 1, date1[0]) - new Date(date2[2], date2[1] - 1, date2[0])
+      );
+    });
   };
   const dataArr = processActivityData(props.data);
   const Content = ({ text, targetItem, ...restProps }) => {
