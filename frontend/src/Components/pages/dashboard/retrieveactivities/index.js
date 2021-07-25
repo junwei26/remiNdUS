@@ -29,14 +29,14 @@ const useStyles = makeStyles(() => ({
     padding: "20px",
   },
   paper: {
-    height: "800px",
+    height: "750px",
   },
   gridItem: {
     width: "90%",
   },
   dataGridActivities: {
     width: "100%",
-    height: "520px",
+    height: "480px",
   },
 }));
 
@@ -501,9 +501,8 @@ const RetrieveActivities = (props) => {
         maxWidth="lg"
         fullWidth
       >
-        <DialogTitle id="form-dialog-title">Add Activity</DialogTitle>
+        <DialogTitle id="form-dialog-title">Retrieve Activities</DialogTitle>
         <DialogContent>
-          <Typography>Retrieve activities from NUSMODS</Typography>
           <Paper elevation={2} variant="outlined" className={classes.paper}>
             <form
               noValidate
@@ -521,7 +520,7 @@ const RetrieveActivities = (props) => {
               >
                 <Grid item className={classes.gridItem}>
                   <TextField
-                    label="Enter NUSMODS link"
+                    label="Enter NUSMODS link. E.g. 'https://nusmods.com/timetable/sem-1/share?CS1101S=TUT:09E,REC:07A,LEC:1'"
                     value={modsLink}
                     onChange={handleModsLinkChange}
                     required
@@ -537,80 +536,52 @@ const RetrieveActivities = (props) => {
                   alignItems="center"
                   spacing={2}
                 >
-                  <Grid
-                    container
-                    className={classes.root}
-                    direction="column"
-                    justify="flex-start"
-                    alignItems="center"
-                    spacing={2}
-                  >
-                    <Grid item className={classes.gridItem}>
-                      <TextField
-                        label="Enter NUSMODS link. E.g. 'https://nusmods.com/timetable/sem-1/share?CS1101S=TUT:09E,REC:07A,LEC:1'"
-                        value={modsLink}
-                        onChange={handleModsLinkChange}
-                        required
-                        fullWidth
-                      />
-                    </Grid>
-                    <Grid
-                      container
-                      item
-                      className={classes.gridItem}
-                      direction="row"
-                      justify="space-between"
-                      alignItems="center"
-                      spacing={2}
-                    >
-                      <Grid item>
-                        <Select value={acadYear} onChange={handleChangeAcadYear}>
-                          {acadYearMenuItems}
-                        </Select>
-                      </Grid>
-                      <Grid item>
-                        <Select value={semester} onChange={handleChangeSemester}>
-                          <MenuItem value={1}>Semester: 1</MenuItem>
-                          <MenuItem value={2}>Semester: 2</MenuItem>
-                        </Select>
-                      </Grid>
-                      <Grid item></Grid>
-                      <Grid item>
-                        <Button type="submit" color="primary">
-                          Get Activities
-                        </Button>
-                      </Grid>
-                    </Grid>
-                    <Grid item className={classes.gridItem}>
-                      <TextField
-                        label="Search Activities (by name)"
-                        type="search"
-                        value={searchText}
-                        onChange={updateSearchText}
-                        fullWidth
-                        autoFocus
-                      />
-                    </Grid>
-                    <Grid item className={classes.gridItem}>
-                      <Typography>Retrieved Activities</Typography>
-                      <DataGrid
-                        className={classes.dataGridActivities}
-                        rows={activityList}
-                        columns={activityColumns}
-                        autoPageSize
-                        checkboxSelection
-                        filterModel={{
-                          items: [
-                            { columnField: "name", operatorValue: "contains", value: searchText },
-                          ],
-                        }}
-                        onSelectionModelChange={handleDataGridSelectionChange}
-                        selectionModel={selectionModelModules}
-                        style={{ overflowX: "auto" }}
-                        components={{ Toolbar: GridToolbar }}
-                      />
-                    </Grid>
+                  <Grid item>
+                    <Select value={acadYear} onChange={handleChangeAcadYear}>
+                      {acadYearMenuItems}
+                    </Select>
                   </Grid>
+                  <Grid item>
+                    <Select value={semester} onChange={handleChangeSemester}>
+                      <MenuItem value={1}>Semester: 1</MenuItem>
+                      <MenuItem value={2}>Semester: 2</MenuItem>
+                    </Select>
+                  </Grid>
+                  <Grid item></Grid>
+                  <Grid item>
+                    <Button type="submit" color="primary">
+                      Get Activities
+                    </Button>
+                  </Grid>
+                </Grid>
+                <Grid item className={classes.gridItem}>
+                  <TextField
+                    label="Search Activities (by name)"
+                    type="search"
+                    value={searchText}
+                    onChange={updateSearchText}
+                    fullWidth
+                    autoFocus
+                  />
+                </Grid>
+                <Grid item className={classes.gridItem}>
+                  <Typography>Retrieved Activities</Typography>
+                  <DataGrid
+                    className={classes.dataGridActivities}
+                    rows={activityList}
+                    columns={activityColumns}
+                    autoPageSize
+                    checkboxSelection
+                    filterModel={{
+                      items: [
+                        { columnField: "name", operatorValue: "contains", value: searchText },
+                      ],
+                    }}
+                    onSelectionModelChange={handleDataGridSelectionChange}
+                    selectionModel={selectionModelModules}
+                    style={{ overflowX: "auto" }}
+                    components={{ Toolbar: GridToolbar }}
+                  />
                 </Grid>
               </Grid>
             </form>
