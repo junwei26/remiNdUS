@@ -67,16 +67,14 @@ const recurringActivitiesGenerator = (recurringActivity, currentDateObj, daysToG
   endDateObj.setDate(currentDateObj.getDate() + daysToGenerate);
 
   if (recurringActivity.frequency === "weekly") {
-    activityDay.setDate(
-      currentDateObj.getDate() + recurringActivity.date - currentDateObj.getDay()
-    );
+    activityDay.setDate(activityDay.getDate() + recurringActivity.date - activityDay.getDay());
     timeInterval = weekMs;
   } else {
     activityDay.setDate(recurringActivity.date);
     timeInterval = monthMs;
   }
 
-  let startMs = activityDay.getTime();
+  let startMs = activityDay.getTime() - weekMs;
   const endMs = endDateObj.getTime();
 
   while (startMs <= endMs) {
@@ -123,7 +121,7 @@ const recurringRemindersGenerator = (recurringReminder, currentDateObj, daysToGe
 
   if (recurringReminder.frequency === "weekly") {
     reminderStartDay.setDate(
-      currentDateObj.getDate() + recurringReminder.date - currentDateObj.getDay()
+      reminderStartDay.getDate() + recurringReminder.date - reminderStartDay.getDay()
     );
     timeInterval = weekMs;
   } else {
@@ -131,7 +129,7 @@ const recurringRemindersGenerator = (recurringReminder, currentDateObj, daysToGe
     timeInterval = monthMs;
   }
 
-  let startMs = reminderStartDay.getTime();
+  let startMs = reminderStartDay.getTime() - weekMs;
 
   const endMs = endDateObj.getTime();
 
