@@ -391,7 +391,7 @@ exports.subscribe = (req, res) => {
                 .get()
                 .then((querySnapshot) => {
                   // If a document with exactly the same uid and reminderpackageId already exists (i.e. already subscribed)
-                  querySnapshot.size > 0
+                  return querySnapshot.size > 0
                     ? Promise.resolve(0)
                     : Promise.all(
                         collection.add({
