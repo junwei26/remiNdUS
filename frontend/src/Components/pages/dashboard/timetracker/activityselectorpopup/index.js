@@ -133,7 +133,7 @@ const ActivitySelectorPopup = (props) => {
                 >
                   {activities.map((activity) => (
                     <MenuItem value={activity} key={activity.id}>
-                      {activity.name}
+                      {`${activity.name} (${activity.activityTag})`}
                     </MenuItem>
                   ))}
                 </Select>
