@@ -235,8 +235,8 @@ bot.command("/retrieve", async (ctx) => {
         .get(backendURL + "/reminder/getByTelegram", {
           params: {
             telegramHandle: user.username,
-            currentDateTime: convertLocaleDateString(currentDate.toLocaleString()),
-            endDateTime: convertLocaleDateString(endDate.toLocaleString()),
+            currentDateTime: convertLocaleDateString(currentDate),
+            endDateTime: convertLocaleDateString(endDate),
           },
         })
         .then((response) => {
@@ -264,7 +264,7 @@ bot.command("/retrieve", async (ctx) => {
         })
         .catch((e) => ctx.reply(`Error retrieving reminders from database. ${e}`));
     })
-    .catch(() => ctx.reply("Error retrieving activities from database."));
+    .catch((e) => ctx.reply(`Error retrieving activities from database. ${e}`));
 });
 
 // handle all telegram updates with HTTPs trigger
