@@ -391,14 +391,12 @@ exports.subscribe = (req, res) => {
                 .get()
                 .then((querySnapshot) => {
                   // If a document with exactly the same uid and reminderpackageId already exists (i.e. already subscribed)
-                  querySnapshot.size > 0
-                    ? Promise.resolve(0)
-                    : Promise.all(
-                        collection.add({
-                          ownerUid: req.body.ownerUids[i],
-                          reminderPackageId: req.body.reminderPackageIds[i],
-                        })
-                      );
+                  return querySnapshot.empty
+                    ? collection.add({
+                        ownerUid: req.body.ownerUids[i],
+                        reminderPackageId: req.body.reminderPackageIds[i],
+                      })
+                    : Promise.resolve(0);
                 })
                 .catch((error) => {
                   return res

@@ -204,13 +204,20 @@ const SearchPackages = () => {
     return reminderPackageService
       .subscribeReminderPackages(ownerUids, reminderPackageIds, false)
       .then(() => {
-        alert("Successfully unsubscribed from reminder packages");
+        alert("");
+        setCurrentAlert({
+          severity: "success",
+          message: "Successfully unsubscribed from reminder packages",
+        });
+        setSnackbarOpen(true);
         getReminderPackages();
       })
       .catch((error) => {
-        alert(
-          `Issue unsubscribing from reminder packages. Error status code: ${error.response.status}. ${error.response.data.message}`
-        );
+        setCurrentAlert({
+          severity: "error",
+          message: `Issue unsubscribing from reminder packages. Error status code: ${error.response.status}. ${error.response.data.message}`,
+        });
+        setSnackbarOpen(true);
       });
   };
 
