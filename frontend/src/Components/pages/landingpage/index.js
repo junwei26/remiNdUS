@@ -2,8 +2,17 @@ import React from "react";
 import { Grid } from "@material-ui/core";
 import SignupButton from "../../navigationbar/signupbutton";
 import LandingPageCarousel from "./landingpagecarousel";
+import { firebaseAuth } from "../../../firebase";
+
+const { REACT_APP_URL } = process.env;
 
 const LandingPage = () => {
+  firebaseAuth.onAuthStateChanged((user) => {
+    if (user) {
+      window.location.replace(REACT_APP_URL + "/dashboard");
+    }
+  });
+
   return (
     <Grid container alignItems="center" justify="center" direction="column" spacing={5}>
       <Grid item xs>
