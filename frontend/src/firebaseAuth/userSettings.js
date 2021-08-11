@@ -10,6 +10,7 @@ export const signOut = () => {
     .then(() => {
       // Sign-out successful.
       alert("Sign Out Successful. See you again!");
+      localStorage.setItem("isLoggedIn", "false");
       return true; // Clarify if this is okay? Returning success/failure. If so, then can add this to email.js as well
     })
     .catch((error) => {

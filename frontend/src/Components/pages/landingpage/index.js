@@ -1,17 +1,16 @@
-import React from "react";
+import React, { useEffect } from "react";
 import { Grid } from "@material-ui/core";
 import SignupButton from "../../navigationbar/signupbutton";
 import LandingPageCarousel from "./landingpagecarousel";
-import { firebaseAuth } from "../../../firebase";
 
 const { REACT_APP_URL } = process.env;
 
 const LandingPage = () => {
-  firebaseAuth.onAuthStateChanged((user) => {
-    if (user) {
+  useEffect(() => {
+    if (localStorage.getItem("isLoggedIn") === true) {
       window.location.replace(REACT_APP_URL + "/dashboard");
     }
-  });
+  }, []);
 
   return (
     <Grid container alignItems="center" justify="center" direction="column" spacing={5}>

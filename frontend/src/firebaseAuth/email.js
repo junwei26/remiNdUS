@@ -12,6 +12,7 @@ export function signInWithEmailPassword(email, password) {
   firebaseAuth
     .signInWithEmailAndPassword(email, password)
     .then(() => {
+      localStorage.setItem("isLoggedIn", "true");
       window.location.replace(REACT_APP_URL + "/dashboard");
       // ...
     })
@@ -43,6 +44,7 @@ export function signUpWithEmailPassword(email, password) {
         .then(() => {
           updateProfile(userDetails.username, null);
           alert(`Signed up as user ${user.uid}. Please check your email for email verification.`);
+          localStorage.setItem("isLoggedIn", "true");
           window.location.replace(REACT_APP_URL + "/dashboard");
         })
         .catch((error) => {
