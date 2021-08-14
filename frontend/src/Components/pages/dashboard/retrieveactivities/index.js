@@ -29,14 +29,14 @@ const useStyles = makeStyles(() => ({
     padding: "20px",
   },
   paper: {
-    height: "750px",
+    height: "710px",
   },
   gridItem: {
     width: "90%",
   },
   dataGridActivities: {
     width: "100%",
-    height: "480px",
+    height: "420px",
   },
 }));
 
@@ -491,8 +491,8 @@ const RetrieveActivities = (props) => {
           <AlertTitle>{currentAlert.message}</AlertTitle>
         </Alert>
       </Snackbar>
-      <ListItem button key="Retrieve from NUSMODS">
-        <ListItemText primary="Retrieve from NUSMODS" onClick={handleDialogClickOpen} />
+      <ListItem button key="NUSMODS">
+        <ListItemText primary="NUSMODS" onClick={handleDialogClickOpen} />
       </ListItem>
       <Dialog
         open={dialogOpen}
@@ -519,8 +519,9 @@ const RetrieveActivities = (props) => {
                 spacing={2}
               >
                 <Grid item className={classes.gridItem}>
+                  <Typography>NUSMods Link</Typography>
                   <TextField
-                    label="Enter NUSMODS link. E.g. 'https://nusmods.com/timetable/sem-1/share?CS1101S=TUT:09E,REC:07A,LEC:1'"
+                    label="E.g. 'https://nusmods.com/timetable/sem-1/share?CS1101S=TUT:09E,REC:07A,LEC:1'"
                     value={modsLink}
                     onChange={handleModsLinkChange}
                     required
@@ -588,12 +589,25 @@ const RetrieveActivities = (props) => {
           </Paper>
         </DialogContent>
         <DialogActions>
-          <Button onClick={handleDialogClose} variant="contained" color="primary">
-            Close
-          </Button>
-          <Button onClick={handleAddActivities} variant="contained" color="primary">
-            Add selected activities
-          </Button>
+          <Grid container direction="row" justify="space-between" alignContent="center">
+            <Grid item xs={4} />
+            <Grid item>
+              <Button onClick={handleDialogClose} color="primary">
+                Close
+              </Button>
+            </Grid>
+            <Grid container item justify="flex-end" xs={4}>
+              <Grid item>
+                <Button
+                  onClick={handleAddActivities}
+                  color="primary"
+                  style={{ textAlign: "right" }}
+                >
+                  Add selected activities
+                </Button>
+              </Grid>
+            </Grid>
+          </Grid>
         </DialogActions>
       </Dialog>
     </>

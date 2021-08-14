@@ -14,17 +14,13 @@ import {
   InputLabel,
   Select,
   MenuItem,
-  ListItem,
-  ListItemIcon,
-  ListItemText,
   Snackbar,
 } from "@material-ui/core";
 import PropTypes from "prop-types";
 import DateFnsUtils from "@date-io/date-fns";
 import { MuiPickersUtilsProvider, DateTimePicker, TimePicker } from "@material-ui/pickers";
-import reminderService from "../../services/reminderService";
-import localService from "../../services/localService";
-import AddIcon from "@material-ui/icons/Add";
+import reminderService from "../../../services/reminderService";
+import localService from "../../../services/localService";
 import Alert from "@material-ui/lab/Alert";
 import AlertTitle from "@material-ui/lab/AlertTitle";
 
@@ -47,7 +43,6 @@ const addReminderButton = (props) => {
   const [date, setDate] = useState(1);
   const [endDateTime, setEndDateTime] = useState(roundUpDateTime(currentDateTime));
   const [recurring, setRecurring] = useState(false);
-  const [dialogOpen, setDialogOpen] = useState(false);
   const [reminderName, setReminderName] = useState("");
   const [description, setDescription] = useState("");
 
@@ -56,7 +51,7 @@ const addReminderButton = (props) => {
   const [frequency, setFrequency] = useState("weekly");
   const [menuItemArray, setMenuItemArray] = useState([
     <MenuItem value={-1} key={-1}>
-      Choose an existing reminder...
+      Create new Reminder
     </MenuItem>,
   ]);
   const [currentAlert, setCurrentAlert] = useState({ severity: "", message: "" });
@@ -96,12 +91,8 @@ const addReminderButton = (props) => {
     setEndDateTime(currentDateTime);
   };
 
-  const handleDialogClickOpen = () => {
-    setDialogOpen(true);
-  };
-
   const handleDialogClose = () => {
-    setDialogOpen(false);
+    props.setDialogOpen(false);
   };
 
   const closeDialogAddReminder = () => {
@@ -200,11 +191,11 @@ const addReminderButton = (props) => {
   };
 
   useEffect(() => {
-    if (dialogOpen === true) {
+    if (props.dialogOpen === true) {
       setMenuItemArray(
         [
           <MenuItem value={-1} key={-1}>
-            Choose an existing reminder...
+            Create new reminder
           </MenuItem>,
         ].concat(
           templateReminders.map((templateReminder, index) => (
@@ -218,10 +209,10 @@ const addReminderButton = (props) => {
   }, [templateReminders]);
 
   useEffect(() => {
-    if (dialogOpen === true) {
+    if (props.dialogOpen === true) {
       getTemplateReminders();
     }
-  }, [dialogOpen]);
+  }, [props.dialogOpen]);
 
   const weeklyMenuItems = [
     "Monday",
@@ -242,6 +233,10 @@ const addReminderButton = (props) => {
     );
   }
 
+  const handleSetAddActivity = () => {
+    props.setAddActivity(true);
+  };
+
   return (
     <>
       <Snackbar open={snackbarOpen} autoHideDuration={3000} onClose={handleSnackbarClose}>
@@ -249,14 +244,8 @@ const addReminderButton = (props) => {
           <AlertTitle>{currentAlert.message}</AlertTitle>
         </Alert>
       </Snackbar>
-      <ListItem button onClick={handleDialogClickOpen} key="Add Reminder">
-        <ListItemIcon>
-          <AddIcon />
-        </ListItemIcon>
-        <ListItemText primary="Reminder" />
-      </ListItem>
       <Dialog
-        open={dialogOpen}
+        open={props.dialogOpen}
         onClose={handleDialogClose}
         aria-labelledby="form-dialog-title"
         fullWidth
@@ -401,12 +390,19 @@ const addReminderButton = (props) => {
           </MuiPickersUtilsProvider>
         </DialogContent>
         <DialogActions>
-          <Button onClick={handleDialogClose} color="primary">
-            Cancel
-          </Button>
-          <Button onClick={closeDialogAddReminder} color="primary">
-            Add Reminder
-          </Button>
+          <Grid container direction="row" justify="space-between" alignItems="center">
+            <Grid item>
+              <Button onClick={handleSetAddActivity}>ADD ACTIVITY INSTEAD</Button>
+            </Grid>
+            <Grid item>
+              <Button onClick={handleDialogClose} color="primary">
+                Cancel
+              </Button>
+              <Button onClick={closeDialogAddReminder} color="primary">
+                Add Reminder
+              </Button>
+            </Grid>
+          </Grid>
         </DialogActions>
       </Dialog>
     </>
@@ -416,6 +412,9 @@ const addReminderButton = (props) => {
 addReminderButton.propTypes = {
   plannerDataUpdate: PropTypes.bool,
   setPlannerDataUpdate: PropTypes.func,
+  setAddActivity: PropTypes.func,
+  dialogOpen: PropTypes.bool,
+  setDialogOpen: PropTypes.func,
 };
 
 export default addReminderButton;

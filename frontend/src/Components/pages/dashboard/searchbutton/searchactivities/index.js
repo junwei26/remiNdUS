@@ -11,22 +11,18 @@ import {
   Typography,
   IconButton,
   Tooltip,
-  ListItem,
-  ListItemIcon,
-  ListItemText,
   Snackbar,
 } from "@material-ui/core";
 import Alert from "@material-ui/lab/Alert";
 import AlertTitle from "@material-ui/lab/AlertTitle";
 import PropTypes from "prop-types";
 import { DataGrid, GridToolbar } from "@material-ui/data-grid";
-import activityService from "../../services/activityService";
-import localService from "../../services/localService";
+import activityService from "../../../services/activityService";
+import localService from "../../../services/localService";
 import RefreshIcon from "@material-ui/icons/Refresh";
 import EditIcon from "@material-ui/icons/Edit";
 import DeleteForeverIcon from "@material-ui/icons/Delete";
 import EditActivityDisplay from "./editactivitydisplay";
-import SearchIcon from "@material-ui/icons/Search";
 
 const useStyles = makeStyles(() => ({
   root: {
@@ -146,7 +142,6 @@ const SearchActivities = (props) => {
   ];
 
   const classes = useStyles();
-  const [dialogOpen, setDialogOpen] = useState(false);
   const [activityList, setActivityList] = useState(loadingActivityList);
   const [editingActivity, setEditingActivity] = useState(false);
 
@@ -164,12 +159,8 @@ const SearchActivities = (props) => {
     setSnackbarOpen(false);
   };
 
-  const handleDialogClickOpen = () => {
-    setDialogOpen(true);
-  };
-
   const handleDialogClose = () => {
-    setDialogOpen(false);
+    props.setDialogOpen(false);
   };
 
   const handleDataGridSelectionChange = (e) => {
@@ -219,10 +210,10 @@ const SearchActivities = (props) => {
   };
 
   useEffect(() => {
-    if (dialogOpen === true) {
+    if (props.dialogOpen === true) {
       getAllActivities();
     }
-  }, [dialogOpen]);
+  }, [props.dialogOpen]);
 
   const handleEditActivity = () => {
     if (!selectedRow) {
@@ -271,6 +262,10 @@ const SearchActivities = (props) => {
     }
   };
 
+  const handleSetSearchActivity = () => {
+    props.setSearchActivity(false);
+  };
+
   return (
     <>
       <Snackbar open={snackbarOpen} autoHideDuration={3000} onClose={handleSnackbarClose}>
@@ -278,14 +273,8 @@ const SearchActivities = (props) => {
           <AlertTitle>{currentAlert.message}</AlertTitle>
         </Alert>
       </Snackbar>
-      <ListItem button onClick={handleDialogClickOpen} key="Search Activity">
-        <ListItemIcon>
-          <SearchIcon />
-        </ListItemIcon>
-        <ListItemText primary="Activities" />
-      </ListItem>
       <Dialog
-        open={dialogOpen}
+        open={props.dialogOpen}
         onClose={handleDialogClose}
         aria-labelledby="form-dialog-title"
         fullWidth
@@ -396,12 +385,16 @@ const SearchActivities = (props) => {
               </Grid>
             </DialogContent>
             <DialogActions>
-              <Grid container direction="row" justify="center" alignItems="center">
-                <Grid item style={{ width: "20%" }}>
+              <Grid container direction="row" justify="space-between" alignItems="center">
+                <Grid item xs={4}>
+                  <Button onClick={handleSetSearchActivity}>SEARCH REMINDERS INSTEAD</Button>
+                </Grid>
+                <Grid item>
                   <Button onClick={handleDialogClose} color="primary" fullWidth>
                     Close
                   </Button>
                 </Grid>
+                <Grid item xs={4}></Grid>
               </Grid>
             </DialogActions>
           </>
@@ -414,6 +407,9 @@ const SearchActivities = (props) => {
 SearchActivities.propTypes = {
   plannerDataUpdate: PropTypes.bool,
   setPlannerDataUpdate: PropTypes.func,
+  setSearchActivity: PropTypes.func,
+  dialogOpen: PropTypes.bool,
+  setDialogOpen: PropTypes.func,
 };
 
 export default SearchActivities;
