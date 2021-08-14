@@ -3,8 +3,7 @@ import { makeStyles } from "@material-ui/core/styles";
 // import { Grid, Divider } from "@material-ui/core";
 import { List, ListItem } from "@material-ui/core";
 import PropTypes from "prop-types";
-import AddActivityButton from "../addactivitybutton";
-import AddReminderButton from "../addreminderbutton";
+import AddButton from "../addbutton";
 import SearchActivities from "../searchactivities";
 import SearchReminders from "../searchreminders";
 import RetrieveActivities from "../retrieveactivities";
@@ -30,9 +29,8 @@ const BottomBar = (props) => {
 
   return (
     <List className={classes.root}>
-      <ListItem button component={AddActivityButton} {...props}></ListItem>
+      <ListItem button component={AddButton} {...props}></ListItem>
       <ListItem button component={SearchActivities} {...props}></ListItem>
-      <ListItem button component={AddReminderButton} {...props}></ListItem>
       <ListItem button component={SearchReminders} {...props}></ListItem>
       <ListItem button component={RetrieveActivities} {...props}></ListItem>
     </List>

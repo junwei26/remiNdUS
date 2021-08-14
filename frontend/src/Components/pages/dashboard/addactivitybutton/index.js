@@ -14,9 +14,6 @@ import {
   InputLabel,
   Select,
   MenuItem,
-  ListItem,
-  ListItemIcon,
-  ListItemText,
   Snackbar,
 } from "@material-ui/core";
 import PropTypes from "prop-types";
@@ -27,7 +24,6 @@ import { MuiPickersUtilsProvider, DateTimePicker, TimePicker } from "@material-u
 import activityService from "../../services/activityService";
 import localService from "../../services/localService";
 import userService from "../../services/userService";
-import AddIcon from "@material-ui/icons/Add";
 
 const useStyles = makeStyles(() => ({
   card: {
@@ -54,7 +50,6 @@ const AddActivityButton = (props) => {
   const [description, setDescription] = useState("");
   const [activityTag, setActivityTag] = useState("");
   const [recurring, setRecurring] = useState(false);
-  const [dialogOpen, setDialogOpen] = useState(false);
 
   const [templateActivities, setTemplateActivities] = useState([]);
   const [chosenTemplateActivity, setChosenTemplateActivity] = useState(-1);
@@ -156,12 +151,8 @@ const AddActivityButton = (props) => {
     setEndDateTime(currentDateTime);
   };
 
-  const handleDialogClickOpen = () => {
-    setDialogOpen(true);
-  };
-
   const handleDialogClose = () => {
-    setDialogOpen(false);
+    props.setDialogOpen(false);
   };
 
   const closeDialogAddActivity = () => {
@@ -299,7 +290,7 @@ const AddActivityButton = (props) => {
   };
 
   useEffect(() => {
-    if (dialogOpen === true) {
+    if (props.dialogOpen === true) {
       setTemplateActivitiesMenuItemArray(
         [
           <MenuItem value={-1} key={-1}>
@@ -317,7 +308,7 @@ const AddActivityButton = (props) => {
   }, [templateActivities]);
 
   useEffect(() => {
-    if (dialogOpen === true) {
+    if (props.dialogOpen === true) {
       setActivityTagMenuItemArray(
         [
           <MenuItem value={-1} key={-1}>
@@ -338,11 +329,11 @@ const AddActivityButton = (props) => {
   }, [activityTags]);
 
   useEffect(() => {
-    if (dialogOpen === true) {
+    if (props.dialogOpen === true) {
       getTemplateActivities();
       getActivityTags();
     }
-  }, [dialogOpen]);
+  }, [props.dialogOpen]);
 
   const weeklyMenuItems = [
     "Monday",
@@ -362,6 +353,9 @@ const AddActivityButton = (props) => {
       </MenuItem>
     );
   }
+  const handleSetAddActivity = () => {
+    props.setAddActivity(false);
+  };
 
   return (
     <>
@@ -370,14 +364,8 @@ const AddActivityButton = (props) => {
           <AlertTitle>{currentAlert.message}</AlertTitle>
         </Alert>
       </Snackbar>
-      <ListItem button onClick={handleDialogClickOpen} key="Add Activity">
-        <ListItemIcon>
-          <AddIcon />
-        </ListItemIcon>
-        <ListItemText primary="Activity" />
-      </ListItem>
       <Dialog
-        open={dialogOpen}
+        open={props.dialogOpen}
         onClose={handleDialogClose}
         aria-labelledby="form-dialog-title"
         fullWidth
@@ -581,12 +569,19 @@ const AddActivityButton = (props) => {
           </MuiPickersUtilsProvider>
         </DialogContent>
         <DialogActions>
-          <Button onClick={handleDialogClose} color="primary">
-            Cancel
-          </Button>
-          <Button onClick={closeDialogAddActivity} color="primary">
-            Add Activity
-          </Button>
+          <Grid container direction="row" justify="space-between" alignItems="center">
+            <Grid item>
+              <Button onClick={handleSetAddActivity}>ADD REMINDER INSTEAD</Button>
+            </Grid>
+            <Grid item>
+              <Button onClick={handleDialogClose} color="primary">
+                Cancel
+              </Button>
+              <Button onClick={closeDialogAddActivity} color="primary">
+                Add Activity
+              </Button>
+            </Grid>
+          </Grid>
         </DialogActions>
       </Dialog>
     </>
@@ -596,6 +591,9 @@ const AddActivityButton = (props) => {
 AddActivityButton.propTypes = {
   plannerDataUpdate: PropTypes.bool,
   setPlannerDataUpdate: PropTypes.func,
+  setAddActivity: PropTypes.func,
+  dialogOpen: PropTypes.bool,
+  setDialogOpen: PropTypes.func,
 };
 
 export default AddActivityButton;
