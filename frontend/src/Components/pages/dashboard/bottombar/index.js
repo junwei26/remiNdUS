@@ -4,8 +4,7 @@ import { makeStyles } from "@material-ui/core/styles";
 import { List, ListItem } from "@material-ui/core";
 import PropTypes from "prop-types";
 import AddButton from "../addbutton";
-import SearchActivities from "../searchactivities";
-import SearchReminders from "../searchreminders";
+import SearchButton from "../searchbutton";
 import RetrieveActivities from "../retrieveactivities";
 
 const useStyles = makeStyles((theme) => ({
@@ -30,8 +29,7 @@ const BottomBar = (props) => {
   return (
     <List className={classes.root}>
       <ListItem button component={AddButton} {...props}></ListItem>
-      <ListItem button component={SearchActivities} {...props}></ListItem>
-      <ListItem button component={SearchReminders} {...props}></ListItem>
+      <ListItem button component={SearchButton} {...props}></ListItem>
       <ListItem button component={RetrieveActivities} {...props}></ListItem>
     </List>
   );

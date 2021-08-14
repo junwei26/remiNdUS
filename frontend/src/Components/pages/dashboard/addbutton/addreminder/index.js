@@ -19,8 +19,8 @@ import {
 import PropTypes from "prop-types";
 import DateFnsUtils from "@date-io/date-fns";
 import { MuiPickersUtilsProvider, DateTimePicker, TimePicker } from "@material-ui/pickers";
-import reminderService from "../../services/reminderService";
-import localService from "../../services/localService";
+import reminderService from "../../../services/reminderService";
+import localService from "../../../services/localService";
 import Alert from "@material-ui/lab/Alert";
 import AlertTitle from "@material-ui/lab/AlertTitle";
 

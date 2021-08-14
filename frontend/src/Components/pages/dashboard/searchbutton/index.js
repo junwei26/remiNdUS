@@ -1,13 +1,13 @@
 import React, { useState } from "react";
 import { ListItem, ListItemIcon } from "@material-ui/core";
-import AddIcon from "@material-ui/icons/Add";
 import PropTypes from "prop-types";
-import AddActivity from "./addactivity";
-import AddReminder from "./addreminder";
+import SearchReminders from "./searchreminders";
+import SearchActivities from "./searchactivities";
+import SearchIcon from "@material-ui/icons/Search";
 
-const AddButton = (props) => {
-  // State between add activity or add reminder mode
-  const [addActivity, setAddActivity] = useState(true);
+const SearchButton = (props) => {
+  // State between search activity or search reminder mode
+  const [searchActivity, setSearchActivity] = useState(true);
   const [dialogOpen, setDialogOpen] = useState(false);
 
   const handleDialogClickOpen = () => {
@@ -16,24 +16,24 @@ const AddButton = (props) => {
 
   return (
     <>
-      <ListItem button onClick={handleDialogClickOpen} key="Add">
+      <ListItem button onClick={handleDialogClickOpen} key="Search Reminder">
         <ListItemIcon>
-          <AddIcon />
+          <SearchIcon />
         </ListItemIcon>
       </ListItem>
-      {addActivity ? (
-        <AddActivity
+      {searchActivity ? (
+        <SearchActivities
           plannerDataUpdate={props.plannerDataUpdate}
           setPlannerDataUpdate={props.setPlannerDataUpdate}
-          setAddActivity={setAddActivity}
+          setSearchActivity={setSearchActivity}
           dialogOpen={dialogOpen}
           setDialogOpen={setDialogOpen}
         />
       ) : (
-        <AddReminder
+        <SearchReminders
           plannerDataUpdate={props.plannerDataUpdate}
           setPlannerDataUpdate={props.setPlannerDataUpdate}
-          setAddActivity={setAddActivity}
+          setSearchActivity={setSearchActivity}
           dialogOpen={dialogOpen}
           setDialogOpen={setDialogOpen}
         />
@@ -42,9 +42,9 @@ const AddButton = (props) => {
   );
 };
 
-AddButton.propTypes = {
+SearchButton.propTypes = {
   plannerDataUpdate: PropTypes.bool,
   setPlannerDataUpdate: PropTypes.func,
 };
 
-export default AddButton;
+export default SearchButton;

@@ -19,8 +19,8 @@ import AlertTitle from "@material-ui/lab/AlertTitle";
 import DateFnsUtils from "@date-io/date-fns";
 import { MuiPickersUtilsProvider, DateTimePicker, TimePicker } from "@material-ui/pickers";
 import PropTypes from "prop-types";
-import reminderService from "../../../services/reminderService";
-import localService from "../../../services/localService";
+import reminderService from "../../../../services/reminderService";
+import localService from "../../../../services/localService";
 
 const useStyles = makeStyles(() => ({
   card: {

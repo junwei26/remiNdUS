@@ -11,22 +11,18 @@ import {
   Typography,
   IconButton,
   Tooltip,
-  ListItem,
-  ListItemIcon,
-  ListItemText,
   Snackbar,
 } from "@material-ui/core";
 import Alert from "@material-ui/lab/Alert";
 import AlertTitle from "@material-ui/lab/AlertTitle";
 import PropTypes from "prop-types";
 import { DataGrid, GridToolbar } from "@material-ui/data-grid";
-import reminderService from "../../services/reminderService";
-import localService from "../../services/localService";
+import reminderService from "../../../services/reminderService";
+import localService from "../../../services/localService";
 import RefreshIcon from "@material-ui/icons/Refresh";
 import EditIcon from "@material-ui/icons/Edit";
 import DeleteForeverIcon from "@material-ui/icons/Delete";
 import EditReminderDisplay from "./editreminderdisplay";
-import SearchIcon from "@material-ui/icons/Search";
 
 const useStyles = makeStyles(() => ({
   root: {
@@ -115,7 +111,6 @@ const SearchReminders = (props) => {
   ];
 
   const classes = useStyles();
-  const [dialogOpen, setDialogOpen] = useState(false);
   const [reminderList, setReminderList] = useState(loadingReminderList);
   const [editingReminder, setEditingReminder] = useState(false);
 
@@ -133,12 +128,8 @@ const SearchReminders = (props) => {
     setSnackbarOpen(false);
   };
 
-  const handleDialogClickOpen = () => {
-    setDialogOpen(true);
-  };
-
   const handleDialogClose = () => {
-    setDialogOpen(false);
+    props.setDialogOpen(false);
   };
 
   const handleDataGridSelectionChange = (e) => {
@@ -188,10 +179,10 @@ const SearchReminders = (props) => {
   };
 
   useEffect(() => {
-    if (dialogOpen === true) {
+    if (props.dialogOpen === true) {
       getAllReminders();
     }
-  }, [dialogOpen]);
+  }, [props.dialogOpen]);
 
   const handleEditReminders = () => {
     if (!selectedRow) {
@@ -246,6 +237,10 @@ const SearchReminders = (props) => {
     }
   };
 
+  const handleSetSearchActivity = () => {
+    props.setSearchActivity(true);
+  };
+
   return (
     <>
       <Snackbar open={snackbarOpen} autoHideDuration={3000} onClose={handleSnackbarClose}>
@@ -253,14 +248,8 @@ const SearchReminders = (props) => {
           <AlertTitle>{currentAlert.message}</AlertTitle>
         </Alert>
       </Snackbar>
-      <ListItem button onClick={handleDialogClickOpen} key="Search Reminder">
-        <ListItemIcon>
-          <SearchIcon />
-        </ListItemIcon>
-        <ListItemText primary="Reminders" />
-      </ListItem>
       <Dialog
-        open={dialogOpen}
+        open={props.dialogOpen}
         onClose={handleDialogClose}
         aria-labelledby="form-dialog-title"
         fullWidth
@@ -371,12 +360,16 @@ const SearchReminders = (props) => {
               </Grid>
             </DialogContent>
             <DialogActions>
-              <Grid container direction="row" justify="center" alignItems="center">
-                <Grid item style={{ width: "20%" }}>
+              <Grid container direction="row" justify="space-between" alignItems="center">
+                <Grid item xs={4}>
+                  <Button onClick={handleSetSearchActivity}>SEARCH ACTIVITIES INSTEAD</Button>
+                </Grid>
+                <Grid item>
                   <Button onClick={handleDialogClose} color="primary" fullWidth>
                     Close
                   </Button>
                 </Grid>
+                <Grid item xs={4}></Grid>
               </Grid>
             </DialogActions>
           </>
@@ -389,6 +382,9 @@ const SearchReminders = (props) => {
 SearchReminders.propTypes = {
   plannerDataUpdate: PropTypes.bool,
   setPlannerDataUpdate: PropTypes.func,
+  setSearchActivity: PropTypes.func,
+  dialogOpen: PropTypes.bool,
+  setDialogOpen: PropTypes.func,
 };
 
 export default SearchReminders;

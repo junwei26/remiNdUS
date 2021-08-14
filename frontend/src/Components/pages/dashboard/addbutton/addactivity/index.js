@@ -21,9 +21,9 @@ import DateFnsUtils from "@date-io/date-fns";
 import Alert from "@material-ui/lab/Alert";
 import AlertTitle from "@material-ui/lab/AlertTitle";
 import { MuiPickersUtilsProvider, DateTimePicker, TimePicker } from "@material-ui/pickers";
-import activityService from "../../services/activityService";
-import localService from "../../services/localService";
-import userService from "../../services/userService";
+import activityService from "../../../services/activityService";
+import localService from "../../../services/localService";
+import userService from "../../../services/userService";
 
 const useStyles = makeStyles(() => ({
   card: {

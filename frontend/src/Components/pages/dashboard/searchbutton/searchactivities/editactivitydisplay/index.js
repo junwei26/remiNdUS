@@ -19,9 +19,9 @@ import { MuiPickersUtilsProvider, DateTimePicker, TimePicker } from "@material-u
 import Alert from "@material-ui/lab/Alert";
 import AlertTitle from "@material-ui/lab/AlertTitle";
 import PropTypes from "prop-types";
-import activityService from "../../../services/activityService";
-import localService from "../../../services/localService";
-import userService from "../../../services/userService";
+import activityService from "../../../../services/activityService";
+import localService from "../../../../services/localService";
+import userService from "../../../../services/userService";
 
 const useStyles = makeStyles(() => ({
   card: {
