@@ -7,7 +7,7 @@ const { REACT_APP_URL } = process.env;
 
 const LandingPage = () => {
   useEffect(() => {
-    if (localStorage.getItem("isLoggedIn") === true) {
+    if (localStorage.getItem("isLoggedIn") === "true") {
       window.location.replace(REACT_APP_URL + "/dashboard");
     }
   }, []);
