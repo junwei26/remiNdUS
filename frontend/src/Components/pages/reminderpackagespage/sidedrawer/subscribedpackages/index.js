@@ -236,9 +236,53 @@ const SubscribedPackages = (props) => {
       });
   };
 
+  const unshareReminderPackages = () => {
+    const reminderPackageIds = [];
+    for (let i = 0; i < selectedRows.length; ++i) {
+      reminderPackageIds.push(selectedRows[i].reminderPackageId);
+    }
+
+    reminderPackageService
+      .shareReminderPackages(reminderPackageIds, false)
+      .then(() => {
+        setCurrentAlert({
+          severity: "success",
+          message: "Successfully unshared reminder packages!",
+        });
+        setSnackbarOpen(true);
+        refreshPackages();
+      })
+      .catch((error) => {
+        setCurrentAlert({
+          severity: "error",
+          message: `Issue unsharing reminder package. Error status code: ${error.response.status}. ${error.response.data.message}`,
+        });
+        setSnackbarOpen(true);
+      });
+  };
+
   const handleSubmitSharePackages = (e) => {
     e.preventDefault();
-    shareReminderPackages();
+    if (selectedRows.length === 0) {
+      setCurrentAlert({
+        severity: "error",
+        message: `Please select a reminder package to share/unshare`,
+      });
+      setSnackbarOpen(true);
+    } else {
+      let allShared = true;
+      for (let i = 0; i < selectedRows.length; ++i) {
+        if (!selectedRows[i].public) {
+          allShared = false;
+        }
+      }
+
+      if (allShared) {
+        unshareReminderPackages();
+      } else {
+        shareReminderPackages();
+      }
+    }
   };
 
   useEffect(() => {
@@ -354,7 +398,7 @@ const SubscribedPackages = (props) => {
                   </Tooltip>
                 </Grid>
                 <Grid item>
-                  <Tooltip title="Share" aria-label="share">
+                  <Tooltip title="Share/Unshare" aria-label="share/unshare">
                     <IconButton
                       onClick={handleSubmitSharePackages}
                       variant="contained"
