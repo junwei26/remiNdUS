@@ -104,7 +104,7 @@ const Analytics = () => {
                 />
               </Grid>
               <Grid item className={classes.right}>
-                <Button className={classes.button} onClick={handleClickOpen}>
+                <Button className={classes.button} onClick={handleClickOpen} variant="outlined">
                   Daily breakdown
                 </Button>
               </Grid>
