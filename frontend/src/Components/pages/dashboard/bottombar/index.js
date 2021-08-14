@@ -1,7 +1,7 @@
 import React from "react";
 import { makeStyles } from "@material-ui/core/styles";
 // import { Grid, Divider } from "@material-ui/core";
-import { List, ListItem } from "@material-ui/core";
+import { List, ListItem, Divider } from "@material-ui/core";
 import PropTypes from "prop-types";
 import AddButton from "../addbutton";
 import SearchButton from "../searchbutton";
@@ -29,7 +29,9 @@ const BottomBar = (props) => {
   return (
     <List className={classes.root}>
       <ListItem button component={AddButton} {...props}></ListItem>
+      <Divider orientation="vertical" flexItem />
       <ListItem button component={SearchButton} {...props}></ListItem>
+      <Divider orientation="vertical" flexItem />
       <ListItem button component={RetrieveActivities} {...props}></ListItem>
     </List>
   );

@@ -16,7 +16,7 @@ const SearchButton = (props) => {
 
   return (
     <>
-      <ListItem button onClick={handleDialogClickOpen} key="Search Reminder">
+      <ListItem button onClick={handleDialogClickOpen} key="Search">
         <ListItemIcon>
           <SearchIcon />
         </ListItemIcon>
