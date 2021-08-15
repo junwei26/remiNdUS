@@ -1,16 +1,9 @@
 import React, { useState } from "react";
-// import { makeStyles } from "@material-ui/core/styles";
-// import Sidedrawer from "./sidedrawer";
 import BottomBar from "./bottombar";
 import ReminderList from "./reminderlist";
 import { Grid } from "@material-ui/core";
 import TimeTracker from "./timetracker";
 import Planner from "./planner";
-// const drawerWidth = 240;
-
-// const useStyles = makeStyles(() => ({
-//   topBar: {},
-// }));
 
 const Dashboard = () => {
   // const classes = useStyles();
@@ -19,7 +12,6 @@ const Dashboard = () => {
   return (
     <>
       <BottomBar
-        // className={classes.topBar}
         plannerDataUpdate={plannerDataUpdate}
         setPlannerDataUpdate={setPlannerDataUpdate}
         style={{
@@ -28,15 +20,7 @@ const Dashboard = () => {
           position: "fixed",
         }}
       />
-      <Grid
-        container
-        item
-        direction="row"
-        justify="flex-start"
-        alignItems="flex-start"
-        spacing={2}
-        // style={{ width: `calc(100% - ${drawerWidth}px)`, marginLeft: drawerWidth }}
-      >
+      <Grid container item direction="row" justify="flex-start" alignItems="flex-start" spacing={2}>
         <Grid item xs>
           <Planner
             plannerDataUpdate={plannerDataUpdate}

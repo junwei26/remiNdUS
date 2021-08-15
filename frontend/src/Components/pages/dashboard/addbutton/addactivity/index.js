@@ -203,7 +203,7 @@ const AddActivityButton = (props) => {
             templateActivityId
           )
           .then(() => {
-            setCurrentAlert({ severity: "success", message: "Succesfully created activity" });
+            setCurrentAlert({ severity: "success", message: "Activity created" });
             setSnackbarOpen(true);
             props.setPlannerDataUpdate(!props.plannerDataUpdate);
             handleDialogClose();
@@ -236,7 +236,7 @@ const AddActivityButton = (props) => {
           .then(() => {
             setCurrentAlert({
               severity: "success",
-              message: "Succesfully created activity",
+              message: "Activity created",
             });
             setSnackbarOpen(true);
             props.setPlannerDataUpdate(!props.plannerDataUpdate);

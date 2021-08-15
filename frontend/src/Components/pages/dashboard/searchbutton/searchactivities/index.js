@@ -247,7 +247,7 @@ const SearchActivities = (props) => {
         .then(() => {
           setCurrentAlert({
             severity: "success",
-            message: "Successfully deleted activity",
+            message: "Activity deleted",
           });
           setSnackbarOpen(true);
           props.setPlannerDataUpdate(!props.plannerDataUpdate);

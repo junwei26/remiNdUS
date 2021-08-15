@@ -120,7 +120,7 @@ const addReminderButton = (props) => {
           templateReminderId
         )
         .then(() => {
-          setCurrentAlert({ severity: "success", message: "Succesfully created reminder" });
+          setCurrentAlert({ severity: "success", message: "Reminder created" });
           setSnackbarOpen(true);
           props.setPlannerDataUpdate(!props.plannerDataUpdate);
         })
@@ -145,7 +145,7 @@ const addReminderButton = (props) => {
           templateReminderId
         )
         .then(() => {
-          setCurrentAlert({ severity: "success", message: "Succesfully created reminder" });
+          setCurrentAlert({ severity: "success", message: "Reminder created" });
           setSnackbarOpen(true);
           props.setPlannerDataUpdate(!props.plannerDataUpdate);
         })

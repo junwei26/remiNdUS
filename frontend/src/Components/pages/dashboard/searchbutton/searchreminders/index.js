@@ -224,7 +224,7 @@ const SearchReminders = (props) => {
           selectedRow.reminderType === "planned" ? "plannedReminders" : "recurringReminders"
         )
         .then(() => {
-          setCurrentAlert({ severity: "success", message: "Successfully deleted reminder" });
+          setCurrentAlert({ severity: "success", message: "Reminder deleted" });
           setSnackbarOpen(true);
         })
         .catch((error) => {
